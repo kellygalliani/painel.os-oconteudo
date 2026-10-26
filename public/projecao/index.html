@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projeção oconteudo</title>
+<link rel="stylesheet" href="../../Marca/fonts/fonts.css">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+  /* Cores oficiais da marca oconteudo (guia-oficial-marca-oconteudo.html). Só modo claro. */
+  :root {
+    color-scheme: light;
+    --ink: #090909;
+    --paper: #efede8;
+    --white: #fffefa;
+    --orange: #ff7139;
+    --amber: #ff9b54;
+    --pink: #ff2f73;
+    --violet: #5b2cff;
+    --cyan: #18e5e8;
+    --red: #ef233c;
+    --grad: linear-gradient(125deg, var(--orange), var(--amber), var(--pink), var(--violet), var(--cyan));
+
+    --bg: var(--paper);
+    --surface: var(--white);
+    --surface-2: #f6f4ef;
+    --calc: #f7f5f0;
+    --line: #e4e1d9;
+    --line-strong: #d3cfc4;
+    --text: var(--ink);
+    --text-2: #4f4c46;
+    --text-3: #8a867c;
+
+    /* Células que vocês digitam */
+    --in-bg: #e7f6e9;
+    --in-bg-focus: #d6f0da;
+    --in-line: #a9dcb1;
+    --in-mark: #1f9d3a;
+
+    --neg: #d11a2f;
+    --pos: #12803a;
+
+    /* Séries dos gráficos: validadas (CVD e normal) para o fundo claro */
+    --s1: #ff7139; --s2: #5b2cff; --s3: #0fb5b8; --s4: #ff2f73; --s5: #6b6862;
+    --bar-pos: #5b2cff; --bar-neg: #ef233c;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: "Instrument Sans", system-ui, sans-serif; }
+  .serif { font-family: "Newsreader", Georgia, serif; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+  .muted { color: var(--text-2); }
+  .faint { color: var(--text-3); }
+  .brand-bar { height: 5px; background: var(--grad); }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .num { font-variant-numeric: tabular-nums; }
+  .neg { color: var(--neg) !important; }
+  .pos { color: var(--pos) !important; }
+
+  /* Botões */
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; }
+  .btn:hover { background: var(--surface-2); }
+  .btn-ghost { border-color: transparent; background: transparent; color: var(--text-2); padding: 5px 8px; }
+  .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+  .btn-add { width: 100%; justify-content: center; border-style: dashed; padding: 14px; color: var(--text-2); background: transparent; }
+  .btn-add:hover { color: var(--text); border-color: var(--orange); background: #fff6f1; }
+  .btn-mini { font-size: 12px; padding: 4px 10px; border-style: dashed; color: var(--text-2); background: transparent; }
+  .btn-mini:hover { border-color: var(--orange); color: var(--text); background: #fff6f1; }
+
+  /* Campos */
+  .field { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 9px; padding: 6px 9px; font-size: 13px; color: var(--text); outline: none; }
+  .field:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,113,57,.18); }
+  .field.green { background: var(--in-bg); border-color: var(--in-line); }
+  .label { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+
+  /* Grade estilo Excel */
+  .sheet-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table.sheet { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+  .sheet th, .sheet td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .sheet tr:last-child td { border-bottom: none; }
+  .sheet th:last-child, .sheet td:last-child { border-right: none; }
+  .sheet thead th { background: var(--surface-2); color: var(--text-2); font-weight: 600; font-size: 11px; padding: 6px 10px; text-align: right; }
+  .sheet thead th .mo { display: block; font-weight: 500; color: var(--text-3); text-transform: lowercase; }
+  .sheet .rowh { position: sticky; left: 0; z-index: 1; background: var(--surface); text-align: left; padding: 6px 10px; min-width: 250px; font-weight: 500; }
+  .sheet thead .rowh { background: var(--surface-2); z-index: 2; }
+  .sheet .rowh .n { display: inline-block; width: 20px; color: var(--text-3); font-weight: 600; font-size: 11px; }
+  .sheet .rowh .sub { color: var(--text-3); font-weight: 400; font-size: 11px; margin-left: 4px; }
+  .sheet td.calc { background: var(--calc); text-align: right; padding: 6px 10px; color: var(--text); min-width: 96px; }
+  .sheet td.total { background: var(--surface-2); font-weight: 600; text-align: right; padding: 6px 10px; min-width: 112px; }
+  .sheet td.in { padding: 0; min-width: 96px; background: var(--in-bg); }
+  .sheet td.in input { width: 100%; border: none; background: transparent; text-align: right; padding: 6px 10px; font: inherit; color: var(--ink); font-weight: 600; outline: none; font-variant-numeric: tabular-nums; }
+  .sheet td.in .cell { display: flex; align-items: center; }
+  .sheet td.in .u { color: #4c8a58; font-size: 11px; font-weight: 600; padding: 0 0 0 8px; }
+  .sheet td.in .u + input { padding-left: 4px; }
+  .sheet td.in input + .u { padding: 0 8px 0 0; }
+  .sheet td.in input:has(+ .u) { padding-right: 3px; }
+  .sheet td.in { position: relative; }
+  .sheet td.in .reinv { position: absolute; top: 1px; right: 1px; width: 11px; height: 11px; border-radius: 3px; border: none; background: transparent; color: var(--in-mark); font-size: 10px; line-height: 10px; font-weight: 700; cursor: pointer; opacity: .8; padding: 0; z-index: 1; }
+  .sheet td.in .reinv:hover { opacity: 1; background: var(--in-mark); color: #fff; border-color: var(--in-mark); }
+  .sheet td.in input:focus { background: var(--in-bg-focus); box-shadow: inset 0 0 0 2px var(--in-mark); }
+  .sheet tr.inrow .rowh { background: #f3fbf4; }
+  .sheet tr.strong td, .sheet tr.strong .rowh { font-weight: 700; }
+  .sheet tr.sep td { border-top: 2px solid var(--line-strong); }
+  .sheet tr.minor .rowh { padding-left: 34px; color: var(--text-2); font-weight: 400; font-size: 12px; }
+  .sheet tr.minor td.calc { color: var(--text-2); font-size: 12px; }
+  .sheet tr.group td { background: var(--surface-2); padding: 5px 10px; }
+  .sheet tr.group .rowh { background: var(--surface-2); }
+  .sheet tr.big td.calc, .sheet tr.big td.total { font-size: 14px; }
+  .tag-in { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--in-bg); border: 1px solid var(--in-mark); margin-right: 6px; vertical-align: middle; }
+  .row-act { font-size: 11px; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--in-line); background: var(--surface); cursor: pointer; margin-left: 4px; color: var(--text-2); opacity: .75; }
+  .row-act:hover { opacity: 1; border-color: var(--in-mark); }
+  .bump-name { border: 1px solid transparent; background: transparent; font-weight: 600; font-size: 12px; padding: 2px 6px; border-radius: 6px; color: var(--ink); width: 190px; outline: none; }
+  .bump-name:hover { border-color: var(--line-strong); background: var(--surface); }
+  .bump-name:focus { border-color: var(--orange); background: var(--surface); }
+
+  /* KPI */
+  .kpi { padding: 14px 16px; position: relative; overflow: hidden; }
+  .kpi .v { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  .kpi.hero { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .kpi.hero .label, .kpi.hero .faint { color: #b9b5ab; }
+  .kpi.hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--grad); }
+
+  /* Composição e gráfico */
+  .stack { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+  .stack span { display: block; height: 100%; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .chart { display: flex; align-items: stretch; gap: 6px; height: 140px; }
+  .chart .col { flex: 1; display: flex; flex-direction: column; min-width: 18px; position: relative; }
+  .chart .half { flex: 1; display: flex; }
+  .chart .half.top { align-items: flex-end; }
+  .chart .half.bot { align-items: flex-start; }
+  .chart .bar { width: 100%; max-width: 46px; margin: 0 auto; }
+  .chart .bar.p { background: var(--bar-pos); border-radius: 4px 4px 0 0; }
+  .chart .bar.n { background: var(--bar-neg); border-radius: 0 0 4px 4px; }
+  .chart .col:hover .bar { filter: brightness(1.12); }
+  .chart .zero { border-top: 1px solid var(--line-strong); }
+  .chart-labels { display: flex; gap: 6px; }
+  .chart-labels span { flex: 1; text-align: center; font-size: 11px; color: var(--text-3); min-width: 18px; }
+  #tip { position: fixed; pointer-events: none; z-index: 50; background: var(--ink); color: var(--white); font-size: 12px; border-radius: 8px; padding: 8px 10px; display: none; line-height: 1.5; min-width: 180px; }
+  #tip .r { display: flex; justify-content: space-between; gap: 14px; }
+
+  /* Chips de produto nos custos */
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--text-3); background: transparent; user-select: none; }
+  .chip.on { color: var(--ink); background: #fff1ea; border-color: var(--orange); }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; opacity: .35; }
+  .chip.on .dot { opacity: 1; }
+
+  .pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+</style>
+</head>
+<body class="min-h-screen">
+<div class="brand-bar"></div>
+
+<div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+  <!-- Cabeçalho -->
+  <header class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-6">
+    <div>
+      <p class="label mb-1">oconteudo · Chapéu Financeiro</p>
+      <h1 class="serif text-3xl sm:text-5xl font-semibold tracking-tight">Projeção de <span class="grad-text">vendas</span></h1>
+      <p class="muted text-sm mt-2 max-w-xl"><span class="tag-in"></span>As células verdes são as que vocês mudam. O resto se calcula sozinho.</p>
+    </div>
+    <div class="flex flex-wrap items-end gap-3">
+      <label class="flex flex-col gap-1"><span class="label">Começa em</span>
+        <input type="month" class="field green" data-g="start"></label>
+      <label class="flex flex-col gap-1"><span class="label">Meses</span>
+        <input type="number" min="1" max="36" class="field green w-20" data-g="months"></label>
+      <label class="flex flex-col gap-1"><span class="label" title="A Meta cobra PIS/Cofins 9,25% + ISS 2,9% por fora desde 01/01/2026">Imposto da Meta (%)</span>
+        <input type="text" inputmode="decimal" class="field green w-24 num text-right" data-g="adTax"></label>
+      <div class="flex gap-2">
+        <button class="btn" data-act="export">Exportar</button>
+        <button class="btn" data-act="import">Importar</button>
+        <button class="btn btn-ghost" data-act="reset" title="Volta para os valores de exemplo">Restaurar exemplo</button>
+        <input type="file" accept="application/json" id="importFile" class="hidden">
+      </div>
+    </div>
+  </header>
+
+  <!-- Resumo -->
+  <section class="mb-8">
+    <div id="kpis" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4"></div>
+    <div class="grid gap-4">
+      <div class="card p-4">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="font-semibold">Lucro por mês</h2>
+          <span class="text-xs faint">todos os produtos somados</span>
+        </div>
+        <div id="chart"></div>
+      </div>
+      <div class="card p-4 min-w-0">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="font-semibold">Consolidado</h2>
+          <span class="text-xs faint">soma de todos os produtos</span>
+        </div>
+        <div id="consolidado"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Produtos -->
+  <section class="mb-8">
+    <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+      <h2 class="serif text-3xl font-semibold">Produtos</h2>
+      <span class="text-xs faint">cada produto tem o próprio anúncio; os order bumps aproveitam o mesmo checkout</span>
+    </div>
+    <div id="produtos" class="flex flex-col gap-5"></div>
+    <button class="btn btn-add mt-4" data-act="add-product">+ Adicionar produto</button>
+  </section>
+
+  <!-- Custos -->
+  <section class="mb-8">
+    <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+      <h2 class="serif text-3xl font-semibold">Custos</h2>
+      <span class="text-xs faint">escolha em quais produtos cada custo entra e como ele se divide</span>
+    </div>
+    <div id="custos" class="flex flex-col gap-3"></div>
+    <button class="btn btn-add mt-3" data-act="add-cost">+ Adicionar custo</button>
+    <div class="card p-4 mt-4 min-w-0">
+      <h3 class="font-semibold mb-1">Quanto cada custo pesa em cada produto</h3>
+      <p class="text-xs faint mb-3">Total do período inteiro.</p>
+      <div id="matriz"></div>
+    </div>
+  </section>
+
+  <!-- Como a conta é feita -->
+  <details class="card p-4 mb-10">
+    <summary class="font-semibold flex items-center justify-between">Como a conta é feita <span class="faint text-sm">abrir</span></summary>
+    <div class="text-sm muted mt-3 space-y-2 max-w-3xl">
+      <p><b>Investimento</b> é o dinheiro que sai do caixa para o anúncio. A Meta cobra o imposto por fora (PIS/Cofins 9,25% + ISS 2,9% = 12,15%), então a planilha já desconta: de R$ 1.000 investidos, R$ 891,66 viram anúncio de verdade. É esse valor que compra os cliques.</p>
+      <p><b>Cliques</b> = valor que vai para os anúncios ÷ custo por clique. O custo por clique depende dos anúncios.</p>
+      <p><b>Vendas</b> = cliques × taxa de conversão. A taxa de conversão depende da página de venda: de cada 100 pessoas que clicam, quantas compram.</p>
+      <p><b>Faturamento</b> = vendas × ticket + o que os order bumps vendem.</p>
+      <p><b>Order bump</b> não recebe anúncio. Vendas do bump = vendas do produto × % de quem leva. Cada bump é calculado sobre quem comprou o produto principal.</p>
+      <p><b>Custo por aquisição (CPA)</b> = investimento ÷ vendas. Quanto custou, em anúncio, trazer cada comprador.</p>
+      <p><b>Custos</b> são as taxas, impostos e despesas fixas da seção Custos. Fixo por mês: vale inteiro em cada produto escolhido, ou se divide igualmente, ou proporcional ao faturamento. % do faturamento e R$ por venda: cada produto paga sobre o que ele vende.</p>
+      <p><b>Fixo por ano</b> é dividido em 12 e entra um pedaço em cada mês (R$ 47 por ano = R$ 3,92 por mês).</p>
+      <p><b>Taxa da Hotmart:</b> 9,9% + R$ 1,00 por venda aprovada, a taxa-base para produtor no Brasil. Fora da conta, porque dependem de escolha de vocês: juros de parcelamento (o comprador paga, a não ser que vocês ofereçam parcelado sem juros), antecipação de recebíveis e a tarifa de saque.</p>
+      <p><b>Cada mês é independente.</b> Clique em qualquer célula verde e digite. O botão <b>repetir →</b> copia o último mês que vocês editaram naquela linha para todos os meses seguintes.</p>
+      <p><b>O "+" na célula de investimento</b> (do M2 em diante) reinveste: soma o lucro do mês anterior com o investimento do mês anterior e coloca o resultado naquele mês. Use só nos meses em que quiser reinvestir tudo; nos meses de platô, digite o valor ou use repetir →.</p>
+      <p><b>Lucro</b> = faturamento − investimento − custos.</p>
+      <p><b>ROAS</b> (retorno sobre o investimento em anúncio) = faturamento ÷ investimento.</p>
+      <p>Os valores ficam salvos neste navegador. Para mandar para a sócia, use <b>Exportar</b> e, do outro lado, <b>Importar</b>.</p>
+    </div>
+  </details>
+</div>
+
+<div id="tip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var KEY = "oconteudo-projecao-v2", OLD_KEY = "oconteudo-projecao-v1";
+  var SLOTS = 5;
+  var MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+  /* ---------- utilidades ---------- */
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function parseBR(v) {
+    if (typeof v === "number") return v;
+    var s = String(v || "").replace(/R\$|%|\s|x/gi, "");
+    if (s.indexOf(",") > -1) s = s.replace(/\./g, "").replace(",", ".");
+    var n = parseFloat(s);
+    return isFinite(n) ? n : 0;
+  }
+  function nf(n, d) { return (n || 0).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function nfin(n) { return (n || 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 }); }
+  var FMT = {
+    brl0: function (n) { return (n < 0 ? "−R$ " : "R$ ") + nf(Math.abs(n), 0); },
+    brl2: function (n) { return (n < 0 ? "−R$ " : "R$ ") + nf(Math.abs(n), 2); },
+    int:  function (n) { return nf(Math.round(n), 0); },
+    pct:  function (n) { return nf(n, 1) + "%"; },
+    x:    function (n) { return nf(n, 2) + "x"; }
+  };
+  function fmt(kind, n) { if (n == null || !isFinite(n)) return "—"; return FMT[kind](n); }
+  function color(i) { return "var(--s" + ((i % SLOTS) + 1) + ")"; }
+  function resize(arr, n) { while (arr.length < n) arr.push(arr.length ? arr[arr.length - 1] : 0); arr.length = n; return arr; }
+  // Valor exibido numa célula verde: dinheiro sempre com 2 casas (R$ 1,50), porcentagem com até 2.
+  function cellVal(unit, v) { var n = parseBR(v); return unit === "brl" ? nf(n, 2) : nfin(n); }
+  function sum(a) { var t = 0; for (var i = 0; i < a.length; i++) t += a[i] || 0; return t; }
+  function fill(v, n) { var a = []; for (var i = 0; i < n; i++) a.push(v); return a; }
+
+  /* ---------- estado ---------- */
+  function exemplo() {
+    var n = 8;
+    var p = {
+      id: uid(), name: "oconteudo · plug and play", color: 0, open: true,
+      inv:   [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
+      cpc:   fill(0.8, n),
+      conv:  fill(2, n),
+      preco: fill(97, n),
+      bumps: [
+        { id: uid(), name: "Order bump 1", price: fill(37, n), take: fill(30, n) },
+        { id: uid(), name: "Order bump 2", price: fill(27, n), take: fill(15, n) }
+      ]
+    };
+    return {
+      v: 3, start: "2026-11", months: n, adTax: 12.15,
+      products: [p],
+      costs: custosPadrao([p.id])
+    };
+  }
+  function custosPadrao(ids) {
+    function c(name, type, value, base, note) {
+      return { id: uid(), name: name, type: type, value: value, from: 1, products: ids.slice(), alloc: "igual", base: base || "tudo", note: note };
+    }
+    return [
+      c("Hotmart · 9,9% de cada venda", "pct", 9.9, "tudo", "Parte percentual da taxa-base da Hotmart para produtor no Brasil (9,9% + R$ 1,00 por venda aprovada). Cai para 8,9% acima de R$ 500 mil por ano. Confira em Hotmart > Minha conta > Taxas."),
+      c("Hotmart · R$ 1,00 por venda", "venda", 1, "tudo", "Parte fixa da taxa da Hotmart. Conta também cada order bump, porque na Hotmart o bump é cobrado como uma venda própria (cenário cauteloso)."),
+      c("Imposto sobre faturamento", "pct", 6, "tudo", "Exemplo: Simples Nacional, Anexo III, primeira faixa (6%). Se o CNPJ for MEI, troque por um custo fixo por mês com o valor do DAS. Confirme com a contabilidade."),
+      c("Claude", "fixo", 110, "tudo", "Assinatura, média por mês."),
+      c("Codex", "fixo", 120, "tudo", "Assinatura, média por mês."),
+      c("Hospedagem", "anual", 47, "tudo", "R$ 47 por ano, dividido em 12 meses. Vercel e Supabase estão no plano gratuito por enquanto.")
+    ];
+  }
+
+  var S;
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY) || localStorage.getItem(OLD_KEY);
+      if (raw) { S = JSON.parse(raw); normalize(); return; }
+    } catch (e) {}
+    S = exemplo(); normalize();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function normalize() {
+    S.months = Math.max(1, Math.min(36, Math.round(parseBR(S.months)) || 8));
+    if (!S.start) S.start = "2026-11";
+    if (S.adTax == null) S.adTax = 12.15;
+    S.products = S.products || []; S.costs = S.costs || [];
+    var tax = parseBR(S.adTax) / 100;
+    S.products.forEach(function (p) {
+      // versão 1 guardava a verba sem imposto; vira investimento com imposto
+      if (!p.inv && p.verba) { p.inv = p.verba.map(function (v) { return Math.round(parseBR(v) * (1 + tax) * 100) / 100; }); delete p.verba; }
+      ["inv", "cpc", "conv", "preco"].forEach(function (f) { p[f] = resize(p[f] || [], S.months); });
+      p.bumps = (p.bumps || []).map(function (b) {
+        if (!Array.isArray(b.price)) b.price = fill(parseBR(b.price), S.months);
+        if (!Array.isArray(b.take)) b.take = fill(parseBR(b.take), S.months);
+        resize(b.price, S.months); resize(b.take, S.months);
+        return b;
+      });
+      if (p.open == null) p.open = true;
+    });
+    var ids = S.products.map(function (p) { return p.id; });
+    // versão 3: troca os custos de exemplo pelos custos reais (Hotmart, imposto, Claude, Codex, hospedagem)
+    if ((S.v || 1) < 3) S.costs = custosPadrao(ids.slice(0, 1));
+    S.costs.forEach(function (c) {
+      c.products = (c.products || []).filter(function (id) { return ids.indexOf(id) > -1; });
+      c.from = Math.max(1, Math.min(S.months, c.from || 1));
+    });
+    S.v = 3;
+  }
+  function nextColor() {
+    var used = S.products.map(function (p) { return p.color; });
+    for (var i = 0; i < 64; i++) if (used.indexOf(i) === -1) return i;
+    return S.products.length;
+  }
+  function prodById(id) { for (var i = 0; i < S.products.length; i++) if (S.products[i].id === id) return S.products[i]; return null; }
+  function bumpById(p, id) { for (var i = 0; i < p.bumps.length; i++) if (p.bumps[i].id === id) return p.bumps[i]; return null; }
+  function costById(id) { for (var i = 0; i < S.costs.length; i++) if (S.costs[i].id === id) return S.costs[i]; return null; }
+  // devolve o array editável de uma linha verde (do produto ou de um bump)
+  function arrOf(pid, bid, field) {
+    var p = prodById(pid); if (!p) return null;
+    if (bid) { var b = bumpById(p, bid); return b ? b[field] : null; }
+    return p[field];
+  }
+  function monthLabel(m) {
+    var parts = (S.start || "2026-01").split("-"); var y = +parts[0], mo = +parts[1] - 1 + m;
+    y += Math.floor(mo / 12); mo = ((mo % 12) + 12) % 12;
+    return MESES[mo] + "/" + String(y).slice(2);
+  }
+
+  /* ---------- cálculo ---------- */
+  var R;
+  function compute() {
+    var n = S.months, tax = parseBR(S.adTax) / 100;
+    var P = {};
+    S.products.forEach(function (p) {
+      var r = { inv: [], ads: [], cliq: [], vend: [], fatP: [], fatB: [], fat: [], vendB: [], custo: [], lucro: [], cpa: [], roas: [], bump: {} };
+      p.bumps.forEach(function (b) { r.bump[b.id] = { v: [], f: [] }; });
+      for (var m = 0; m < n; m++) {
+        var inv = parseBR(p.inv[m]), cpc = parseBR(p.cpc[m]), conv = parseBR(p.conv[m]) / 100, preco = parseBR(p.preco[m]);
+        var ads = inv / (1 + tax);
+        var cliq = cpc > 0 ? ads / cpc : 0, vend = cliq * conv, fatP = vend * preco;
+        var fatB = 0, vendB = 0;
+        p.bumps.forEach(function (b) {
+          var bv = vend * parseBR(b.take[m]) / 100, bf = bv * parseBR(b.price[m]);
+          r.bump[b.id].v.push(bv); r.bump[b.id].f.push(bf); vendB += bv; fatB += bf;
+        });
+        r.inv.push(inv); r.ads.push(ads); r.cliq.push(cliq); r.vend.push(vend);
+        r.fatP.push(fatP); r.fatB.push(fatB); r.fat.push(fatP + fatB); r.vendB.push(vendB); r.custo.push(0);
+      }
+      P[p.id] = r;
+    });
+
+    // Custos
+    var CT = {};
+    S.costs.forEach(function (c) {
+      var ps = c.products.filter(function (id) { return P[id]; });
+      CT[c.id] = {}; ps.forEach(function (id) { CT[c.id][id] = 0; });
+      if (!ps.length) return;
+      var val = parseBR(c.value);
+      if (c.type === "anual") val = val / 12;
+      for (var m = 0; m < n; m++) {
+        if (m + 1 < (c.from || 1)) continue;
+        var share = {};
+        if (c.type === "fixo" || c.type === "anual") {
+          if (c.alloc === "inteiro") ps.forEach(function (id) { share[id] = val; });
+          else if (c.alloc === "proporcional") {
+            var tot = 0; ps.forEach(function (id) { tot += P[id].fat[m]; });
+            ps.forEach(function (id) { share[id] = tot > 0 ? val * P[id].fat[m] / tot : val / ps.length; });
+          } else ps.forEach(function (id) { share[id] = val / ps.length; });
+        } else if (c.type === "pct") {
+          ps.forEach(function (id) { share[id] = (c.base === "produto" ? P[id].fatP[m] : P[id].fat[m]) * val / 100; });
+        } else {
+          ps.forEach(function (id) { share[id] = (c.base === "produto" ? P[id].vend[m] : P[id].vend[m] + P[id].vendB[m]) * val; });
+        }
+        ps.forEach(function (id) { P[id].custo[m] += share[id]; CT[c.id][id] += share[id]; });
+      }
+    });
+
+    // Resultado por produto + efeito dos bumps
+    S.products.forEach(function (p) {
+      var r = P[p.id];
+      for (var m = 0; m < n; m++) {
+        r.lucro.push(r.fat[m] - r.inv[m] - r.custo[m]);
+        r.cpa.push(r.vend[m] > 0 ? r.inv[m] / r.vend[m] : null);
+        r.roas.push(r.inv[m] > 0 ? r.fat[m] / r.inv[m] : null);
+      }
+      var T = { vend: sum(r.vend), fatP: sum(r.fatP), fatB: sum(r.fatB), fat: sum(r.fat), inv: sum(r.inv), custo: sum(r.custo), lucro: sum(r.lucro), vendB: sum(r.vendB) };
+      var varCom = 0, varSem = 0;
+      S.costs.forEach(function (c) {
+        if (c.type === "fixo" || c.type === "anual" || c.products.indexOf(p.id) === -1) return;
+        var val = parseBR(c.value);
+        for (var m = 0; m < n; m++) {
+          if (m + 1 < (c.from || 1)) continue;
+          if (c.type === "pct") {
+            varCom += (c.base === "produto" ? r.fatP[m] : r.fat[m]) * val / 100;
+            varSem += r.fatP[m] * val / 100;
+          } else {
+            varCom += (c.base === "produto" ? r.vend[m] : r.vend[m] + r.vendB[m]) * val;
+            varSem += r.vend[m] * val;
+          }
+        }
+      });
+      T.ticketSem = T.vend > 0 ? T.fatP / T.vend : null;
+      T.ticketCom = T.vend > 0 ? T.fat / T.vend : null;
+      T.margemSem = T.vend > 0 ? (T.fatP - varSem) / T.vend : null;
+      T.margemCom = T.vend > 0 ? (T.fat - varCom) / T.vend : null;
+      T.cpa = T.vend > 0 ? T.inv / T.vend : null;
+      T.roasSem = T.inv > 0 ? T.fatP / T.inv : null;
+      T.roasCom = T.inv > 0 ? T.fat / T.inv : null;
+      r.T = T;
+    });
+
+    // Consolidado
+    var keys = ["inv", "ads", "cliq", "vend", "fatP", "fatB", "fat", "vendB", "custo", "lucro"];
+    var C = { acum: [], roas: [], cpa: [] };
+    keys.forEach(function (k) { C[k] = []; });
+    var acc = 0;
+    for (var m = 0; m < n; m++) {
+      var o = {}; keys.forEach(function (k) { o[k] = 0; });
+      S.products.forEach(function (p) { var r = P[p.id]; keys.forEach(function (k) { o[k] += r[k][m]; }); });
+      keys.forEach(function (k) { C[k].push(o[k]); });
+      acc += o.lucro; C.acum.push(acc);
+      C.roas.push(o.inv > 0 ? o.fat / o.inv : null);
+      C.cpa.push(o.vend > 0 ? o.inv / o.vend : null);
+    }
+    R = { P: P, C: C, CT: CT };
+  }
+
+  /* ---------- grade ---------- */
+  // linha: { n, label, sub, kind:'in'|'calc', fmt, tfmt, values, key, pid, bid, field, cls, grow, dot, group(html) }
+  function sheet(rows) {
+    var cols = S.months, h = '<div class="sheet-wrap"><table class="sheet num"><thead><tr><th class="rowh"></th>';
+    for (var m = 0; m < cols; m++) h += "<th>M" + (m + 1) + '<span class="mo">' + monthLabel(m) + "</span></th>";
+    h += "<th>Total</th></tr></thead><tbody>";
+    rows.forEach(function (r) {
+      if (r.group != null) { h += '<tr class="group ' + (r.cls || "") + '"><td class="rowh">' + r.group + '</td><td colspan="' + (cols + 1) + '"></td></tr>'; return; }
+      var isIn = r.kind === "in";
+      h += '<tr class="' + (r.cls || "") + (isIn ? " inrow" : "") + '"><td class="rowh">';
+      if (r.n) h += '<span class="n">' + r.n + "</span>";
+      if (r.dot) h += '<span class="dot mr-2 align-middle" style="background:' + r.dot + '"></span>';
+      h += esc(r.label);
+      if (r.sub) h += '<span class="sub">' + esc(r.sub) + "</span>";
+      if (isIn) {
+        var ref = 'data-pid="' + r.pid + '"' + (r.bid ? ' data-bid="' + r.bid + '"' : "") + ' data-field="' + r.field + '"';
+        h += '<button class="row-act" data-act="fill" ' + ref + ' title="Copia o último mês que você editou nesta linha para todos os meses seguintes">repetir →</button>';
+        if (r.grow) h += '<button class="row-act" data-act="grow" ' + ref + ' title="Crescer X% ao mês a partir do primeiro mês">+% ao mês</button>';
+      }
+      h += "</td>";
+      for (var m = 0; m < cols; m++) {
+        if (isIn) {
+          h += '<td class="in"><div class="cell">' + (r.unit === "brl" ? '<span class="u">R$</span>' : "") + '<input type="text" inputmode="decimal" data-unit="' + (r.unit || "") + '" data-pid="' + r.pid + '"' + (r.bid ? ' data-bid="' + r.bid + '"' : "") + ' data-field="' + r.field + '" data-m="' + m + '" value="' + cellVal(r.unit, r.values[m]) + '">' + (r.unit === "pct" ? '<span class="u">%</span>' : "") + (r.reinvest && m > 0 ? '<button class="reinv" data-act="reinvest" data-pid="' + r.pid + '" data-m="' + m + '" title="Reinvestir: lucro do mês anterior + investimento do mês anterior">+</button>' : "") + "</div></td>";
+        } else {
+          h += '<td class="calc" data-out="' + r.key + ":" + m + '" data-fmt="' + r.fmt + '"></td>';
+        }
+      }
+      h += '<td class="total" data-out="' + r.key + ':T" data-fmt="' + (r.tfmt || r.fmt) + '"></td></tr>';
+    });
+    return h + "</tbody></table></div>";
+  }
+
+  /* ---------- render ---------- */
+  function renderHeader() {
+    $('[data-g="start"]').val(S.start);
+    $('[data-g="months"]').val(S.months);
+    $('[data-g="adTax"]').val(nfin(parseBR(S.adTax)));
+  }
+
+  function renderConsolidado() {
+    $("#consolidado").html(sheet([
+      { label: "Cliques", key: "C:cliq", fmt: "int" },
+      { label: "Vendas", key: "C:vend", fmt: "int", cls: "strong" },
+      { label: "Faturamento", key: "C:fat", fmt: "brl0", cls: "strong big" },
+      { label: "dos order bumps", key: "C:fatB", fmt: "brl0", cls: "minor" },
+      { label: "Investimento", key: "C:inv", fmt: "brl0", cls: "sep" },
+      { label: "vai para os anúncios", key: "C:ads", fmt: "brl0", cls: "minor" },
+      { label: "Custo por aquisição (CPA)", key: "C:cpa", fmt: "brl2" },
+      { label: "Custos", key: "C:custo", fmt: "brl0" },
+      { label: "Lucro", key: "C:lucro", fmt: "brl0", cls: "strong big sep" },
+      { label: "Lucro acumulado", key: "C:acum", fmt: "brl0" },
+      { label: "ROAS", sub: "(retorno sobre o anúncio)", key: "C:roas", fmt: "x" }
+    ]));
+  }
+
+  function renderProdutos() {
+    var tax = nfin(parseBR(S.adTax));
+    var h = "";
+    S.products.forEach(function (p) {
+      var c = color(p.color), k = "P:" + p.id + ":";
+      h += '<article class="card overflow-hidden" data-product="' + p.id + '">';
+      h += '<div class="flex flex-wrap items-center gap-3 px-4 py-3" style="border-bottom:1px solid var(--line)">';
+      h += '<span class="dot" style="width:14px;height:14px;background:' + c + '"></span>';
+      h += '<input class="field font-semibold text-lg flex-1 min-w-[200px]" style="border-color:transparent;background:transparent" data-pid="' + p.id + '" data-field="name" value="' + esc(p.name) + '" aria-label="Nome do produto">';
+      h += '<span class="pill num" data-out="' + k + 'lucroPill" data-fmt="brl0"></span>';
+      h += '<button class="btn btn-ghost" data-act="toggle" data-pid="' + p.id + '">' + (p.open ? "Recolher" : "Abrir") + "</button>";
+      h += '<button class="btn btn-ghost" data-act="dup" data-pid="' + p.id + '">Duplicar</button>';
+      h += '<button class="btn btn-ghost" data-act="del-product" data-pid="' + p.id + '">Remover</button>';
+      h += "</div>";
+      if (p.open) {
+        h += '<div class="p-4 grid gap-4">';
+        var rows = [
+          { n: 1, label: "Custo por clique (CPC)", sub: "em reais", kind: "in", pid: p.id, field: "cpc", unit: "brl", values: p.cpc, key: k + "cpcT", tfmt: "brl2" },
+          { n: 2, label: "Cliques", key: k + "cliq", fmt: "int" },
+          { n: 3, label: "Taxa de conversão", kind: "in", pid: p.id, field: "conv", unit: "pct", values: p.conv, key: k + "convT", tfmt: "pct" },
+          { n: 4, label: "Vendas", sub: "pessoas que compraram", key: k + "vend", fmt: "int", cls: "strong" },
+          { n: 5, label: "Faturamento", sub: "produto + order bumps", key: k + "fat", fmt: "brl0", cls: "strong big" },
+          { n: 6, label: "Investimento", kind: "in", pid: p.id, field: "inv", unit: "brl", reinvest: true, values: p.inv, key: k + "inv", tfmt: "brl0", grow: true },
+          { label: "vai para os anúncios (sem os " + tax + "% de imposto)", key: k + "ads", fmt: "brl0", cls: "minor" },
+          { n: 7, label: "Custo por aquisição (CPA)", key: k + "cpa", fmt: "brl2" },
+          { n: 8, label: "Custos", sub: "taxas, impostos e fixos", key: k + "custo", fmt: "brl0" },
+          { label: "Lucro", key: k + "lucro", fmt: "brl0", cls: "strong big sep" },
+          { n: 9, label: "Ticket (preço)", kind: "in", pid: p.id, field: "preco", unit: "brl", values: p.preco, key: k + "precoT", tfmt: "brl2", cls: "sep" }
+        ];
+        rows.push({ group: '<span class="n" style="display:inline-block;width:20px;color:var(--text-3);font-weight:600;font-size:11px">10</span><span class="label">Order bumps</span>' });
+        p.bumps.forEach(function (b, i) {
+          var bk = "B:" + p.id + ":" + b.id + ":";
+          rows.push({ group: '<span class="dot mr-1 align-middle" style="background:' + color(i + 1) + '"></span><input class="bump-name" data-pid="' + p.id + '" data-bid="' + b.id + '" data-field="name" value="' + esc(b.name) + '" aria-label="Nome do order bump"><button class="btn btn-ghost" style="padding:2px 6px;font-size:12px" data-act="del-bump" data-pid="' + p.id + '" data-bid="' + b.id + '" title="Remover este order bump">✕</button>' });
+          rows.push({ label: "Preço", kind: "in", pid: p.id, bid: b.id, field: "price", unit: "brl", values: b.price, key: bk + "priceT", tfmt: "brl2" });
+          rows.push({ label: "Quem leva", kind: "in", pid: p.id, bid: b.id, field: "take", unit: "pct", values: b.take, key: bk + "takeT", tfmt: "pct" });
+          rows.push({ label: "Vendas", key: bk + "v", fmt: "int", cls: "minor" });
+          rows.push({ label: "Faturamento", key: bk + "f", fmt: "brl0", cls: "minor" });
+        });
+        if (!p.bumps.length) rows.push({ group: '<span class="text-xs faint">Nenhum order bump neste produto.</span>' });
+        h += sheet(rows);
+        h += '<div><button class="btn btn-mini" data-act="add-bump" data-pid="' + p.id + '">+ Order bump</button></div>';
+        h += '<div data-insight="' + p.id + '" class="min-w-0"></div>';
+        h += "</div>";
+      }
+      h += "</article>";
+    });
+    if (!S.products.length) h = '<div class="card p-8 text-center muted">Nenhum produto ainda.</div>';
+    $("#produtos").html(h);
+  }
+
+  function opt(v, label, cur) { return '<option value="' + v + '"' + (String(cur) === v ? " selected" : "") + ">" + esc(label) + "</option>"; }
+
+  function renderCustos() {
+    var h = "";
+    S.costs.forEach(function (c) {
+      h += '<div class="card p-4" data-cost="' + c.id + '"><div class="grid gap-3 lg:grid-cols-[minmax(200px,1.4fr)_170px_120px_140px_auto] items-end">';
+      h += '<label class="flex flex-col gap-1"><span class="label">Custo</span><input class="field" data-cid="' + c.id + '" data-field="name" value="' + esc(c.name) + '"></label>';
+      h += '<label class="flex flex-col gap-1"><span class="label">Tipo</span><select class="field" data-cid="' + c.id + '" data-field="type">' +
+        opt("fixo", "Fixo por mês (R$)", c.type) + opt("anual", "Fixo por ano (R$)", c.type) + opt("pct", "% do faturamento", c.type) + opt("venda", "R$ por venda", c.type) + "</select></label>";
+      h += '<label class="flex flex-col gap-1"><span class="label">' + (c.type === "pct" ? "Valor (%)" : "Valor (R$)") + '</span><input class="field green num text-right" inputmode="decimal" data-cid="' + c.id + '" data-field="value" value="' + nfin(parseBR(c.value)) + '"></label>';
+      h += '<label class="flex flex-col gap-1"><span class="label">A partir de</span><select class="field" data-cid="' + c.id + '" data-field="from">';
+      for (var m = 1; m <= S.months; m++) h += opt(String(m), "M" + m + " · " + monthLabel(m - 1), String(c.from || 1));
+      h += "</select></label>";
+      h += '<button class="btn btn-ghost justify-self-end" data-act="del-cost" data-cid="' + c.id + '">Remover</button></div>';
+
+      h += '<input class="field w-full mt-2 text-xs muted" style="background:var(--surface-2);border-color:transparent" placeholder="Observação: de onde vem esse valor" data-cid="' + c.id + '" data-field="note" value="' + esc(c.note || "") + '">';
+      h += '<div class="flex flex-wrap items-center gap-2 mt-3"><span class="label mr-1">Entra em</span>';
+      S.products.forEach(function (p) {
+        var on = c.products.indexOf(p.id) > -1;
+        h += '<span class="chip' + (on ? " on" : "") + '" data-act="chip" data-cid="' + c.id + '" data-pid="' + p.id + '"><span class="dot" style="background:' + color(p.color) + '"></span>' + esc(p.name) + "</span>";
+      });
+      if (S.products.length > 1) h += '<button class="btn btn-ghost text-xs" data-act="chip-all" data-cid="' + c.id + '">todos</button>';
+      if (!c.products.length) h += '<span class="text-xs neg">Este custo não entra em nenhum produto.</span>';
+      h += "</div>";
+
+      h += '<div class="flex flex-wrap items-center gap-2 mt-3">';
+      if (c.type === "fixo" || c.type === "anual") {
+        if (c.type === "anual") h += '<span class="text-xs muted mr-2 num">= ' + fmt("brl2", parseBR(c.value) / 12) + ' por mês</span>';
+        h += '<span class="label mr-1">Como divide</span><select class="field" data-cid="' + c.id + '" data-field="alloc"' + (c.products.length < 2 ? " disabled" : "") + ">" +
+          opt("igual", "Dividir igualmente entre os produtos", c.alloc) +
+          opt("proporcional", "Dividir proporcional ao faturamento", c.alloc) +
+          opt("inteiro", "Valor inteiro em cada produto", c.alloc) + "</select>";
+        if (c.products.length < 2) h += '<span class="text-xs faint">com um produto só, o valor vai inteiro para ele</span>';
+      } else {
+        h += '<span class="label mr-1">Calcula sobre</span><select class="field" data-cid="' + c.id + '" data-field="base">' +
+          opt("tudo", c.type === "pct" ? "Faturamento do produto + bumps" : "Vendas do produto + bumps", c.base) +
+          opt("produto", c.type === "pct" ? "Só o faturamento do produto" : "Só as vendas do produto", c.base) + "</select>";
+        h += '<span class="text-xs faint">cada produto paga sobre o que ele mesmo vende</span>';
+      }
+      h += "</div></div>";
+    });
+    if (!S.costs.length) h = '<div class="card p-6 text-center muted">Nenhum custo ainda.</div>';
+    $("#custos").html(h);
+  }
+
+  function render() { normalize(); compute(); renderHeader(); renderConsolidado(); renderProdutos(); renderCustos(); refresh(); }
+
+  /* ---------- atualização sem redesenhar ---------- */
+  function ratio(a, b, k) { var x = sum(b); return x > 0 ? sum(a) / x * (k || 1) : null; }
+  function outValue(key) {
+    var parts = key.split(":"), last = parts[parts.length - 1], isT = last === "T", idx = +last;
+    if (parts[0] === "C") {
+      var f = parts[1], arr = R.C[f];
+      if (!isT) return arr[idx];
+      if (f === "roas") return ratio(R.C.fat, R.C.inv);
+      if (f === "cpa") return ratio(R.C.inv, R.C.vend);
+      if (f === "acum") return arr[arr.length - 1];
+      return sum(arr);
+    }
+    if (parts[0] === "B") {
+      var r0 = R.P[parts[1]]; if (!r0) return null;
+      var bf = parts[3];
+      if (bf === "priceT") { var bb = R.P[parts[1]].bump[parts[2]]; return ratio(bb.f, bb.v); }
+      if (bf === "takeT") return ratio(r0.bump[parts[2]].v, r0.vend, 100);
+      var ba = r0.bump[parts[2]][bf];
+      return isT ? sum(ba) : ba[idx];
+    }
+    if (parts[0] === "P") {
+      var r = R.P[parts[1]], g = parts[2];
+      if (!r) return null;
+      if (g === "lucroPill") return r.T.lucro;
+      if (isT) {
+        if (g === "cpa") return r.T.cpa;
+        if (g === "cpcT") return ratio(r.ads, r.cliq);
+        if (g === "convT") return ratio(r.vend, r.cliq, 100);
+        if (g === "precoT") return r.T.ticketSem;
+        return sum(r[g]);
+      }
+      return r[g][idx];
+    }
+    return null;
+  }
+
+  function refresh() {
+    compute();
+    $("[data-out]").each(function () {
+      var key = this.getAttribute("data-out"), kind = this.getAttribute("data-fmt");
+      var v = outValue(key), txt = fmt(kind, v);
+      if (key.indexOf(":lucroPill") > -1) txt = "Lucro " + txt;
+      this.textContent = txt;
+      this.classList.toggle("neg", (kind === "brl0" || kind === "brl2") && v != null && v < -0.004);
+    });
+    renderKpis(); renderChart(); renderInsights(); renderMatriz();
+    save();
+  }
+
+  function renderKpis() {
+    var C = R.C, fat = sum(C.fat), inv = sum(C.inv), custo = sum(C.custo), lucro = sum(C.lucro), vend = sum(C.vend), vendB = sum(C.vendB);
+    var items = [
+      ["Faturamento", fmt("brl0", fat), sum(C.fatB) > 0 ? fmt("brl0", sum(C.fatB)) + " vieram dos order bumps" : ""],
+      ["Investimento", fmt("brl0", inv), fmt("brl0", sum(C.ads)) + " foram para os anúncios"],
+      ["Custos", fmt("brl0", custo), "taxas, impostos e fixos"],
+      ["Lucro", fmt("brl0", lucro), fat > 0 ? "margem de " + nf(lucro / fat * 100, 1) + "%" : "", true],
+      ["ROAS", inv > 0 ? fmt("x", fat / inv) : "—", "volta a cada R$ 1 investido"],
+      ["Vendas", fmt("int", vend), fmt("int", vendB) + " order bumps"]
+    ];
+    var h = "";
+    items.forEach(function (it) {
+      var neg = it[3] && lucro < 0;
+      h += '<div class="card kpi' + (it[3] ? " hero" : "") + '"><div class="label">' + it[0] + '</div><div class="v num' + (neg ? " neg" : "") + '">' + it[1] + '</div><div class="text-xs faint mt-1 num">' + it[2] + "</div></div>";
+    });
+    $("#kpis").html(h);
+  }
+
+  function renderChart() {
+    var L = R.C.lucro, max = 0;
+    L.forEach(function (v) { max = Math.max(max, Math.abs(v)); });
+    var hasNeg = L.some(function (v) { return v < 0; }), hasPos = L.some(function (v) { return v > 0; });
+    var h = '<div class="chart">';
+    L.forEach(function (v, m) {
+      var pct = max > 0 ? Math.abs(v) / max * 100 : 0;
+      h += '<div class="col" data-tip="' + m + '">';
+      if (hasPos || !hasNeg) h += '<div class="half top">' + (v > 0 ? '<div class="bar p" style="height:' + Math.max(pct, 1) + '%"></div>' : "") + "</div>";
+      if (hasNeg) h += '<div class="half bot' + (hasPos ? " zero" : "") + '">' + (v < 0 ? '<div class="bar n" style="height:' + Math.max(pct, 1) + '%"></div>' : "") + "</div>";
+      h += "</div>";
+    });
+    h += '</div><div class="chart-labels mt-2">';
+    L.forEach(function (v, m) { h += "<span>" + monthLabel(m) + "</span>"; });
+    h += "</div>";
+    var last = R.C.acum[R.C.acum.length - 1];
+    h += '<p class="text-xs faint mt-3 num">Acumulado no período: <b class="' + (last < 0 ? "neg" : "") + '" style="color:var(--ink)">' + fmt("brl0", last) + "</b>" + (hasNeg ? ' · <span style="color:var(--bar-neg)">■</span> meses com prejuízo' : "") + "</p>";
+    $("#chart").html(h);
+  }
+
+  function renderInsights() {
+    S.products.forEach(function (p) {
+      var box = $('[data-insight="' + p.id + '"]'); if (!box.length) return;
+      var r = R.P[p.id], T = r.T;
+      var segs = [{ name: "Produto", v: T.fatP, c: color(0) }];
+      p.bumps.forEach(function (b, i) { segs.push({ name: b.name, v: sum(r.bump[b.id].f), c: color(i + 1) }); });
+      var tot = T.fat;
+      var h = '<div class="rounded-2xl p-4" style="background:var(--surface-2);border:1px solid var(--line)">';
+      h += '<h3 class="label mb-3">O efeito dos order bumps neste produto</h3>';
+      h += '<div class="grid lg:grid-cols-[1fr_1.4fr] gap-4 items-start">';
+
+      h += "<div>";
+      h += '<div class="stack mb-2">';
+      segs.forEach(function (s) { if (tot > 0 && s.v > 0) h += '<span title="' + esc(s.name) + ": " + fmt("brl0", s.v) + '" style="width:' + (s.v / tot * 100) + "%;background:" + s.c + '"></span>'; });
+      h += '</div><div class="flex flex-col gap-1">';
+      segs.forEach(function (s) {
+        h += '<span class="text-sm muted inline-flex items-center gap-2 num"><span class="dot" style="background:' + s.c + '"></span><span class="flex-1">' + esc(s.name) + "</span><b style=\"color:var(--ink)\">" + fmt("brl0", s.v) + "</b>" + (tot > 0 ? '<span class="faint w-12 text-right">' + nf(s.v / tot * 100, 0) + "%</span>" : "") + "</span>";
+      });
+      h += "</div></div>";
+
+      function cmp(label, sem, com, kind) {
+        var diff = (sem != null && com != null) ? com - sem : null;
+        return '<div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><div class="label mb-1">' + label + '</div>' +
+          '<div class="flex items-baseline gap-2 num"><span class="faint line-through text-sm">' + fmt(kind, sem) + '</span><span class="text-lg font-bold">' + fmt(kind, com) + "</span></div>" +
+          '<div class="text-xs faint num">' + (diff != null && Math.abs(diff) > 0.0001 ? (diff > 0 ? "+" : "−") + fmt(kind, Math.abs(diff)) + " com os bumps" : "sem bumps ativos") + "</div></div>";
+      }
+      h += "<div>";
+      h += '<div class="grid sm:grid-cols-3 gap-2 mb-3">';
+      h += cmp("Ticket médio", T.ticketSem, T.ticketCom, "brl2");
+      h += cmp("ROAS", T.roasSem, T.roasCom, "x");
+      h += cmp("Dá para pagar por venda", T.margemSem, T.margemCom, "brl2");
+      h += "</div>";
+      if (T.cpa != null && T.margemCom != null) {
+        var ok = T.cpa <= T.margemCom, okSem = T.cpa <= T.margemSem, msg;
+        if (ok && !okSem) msg = "<b>Os order bumps salvam a conta.</b> O CPA de " + fmt("brl2", T.cpa) + " passa do que o produto sozinho aguenta (" + fmt("brl2", T.margemSem) + "), mas cabe com os bumps (" + fmt("brl2", T.margemCom) + ").";
+        else if (ok) msg = "<b>Cada venda se paga.</b> O CPA de " + fmt("brl2", T.cpa) + " fica abaixo dos " + fmt("brl2", T.margemCom) + " que sobram por venda. Folga de " + fmt("brl2", T.margemCom - T.cpa) + ".";
+        else msg = "<b>Cada venda dá prejuízo.</b> O CPA de " + fmt("brl2", T.cpa) + " passa dos " + fmt("brl2", T.margemCom) + " que sobram por venda, mesmo com os bumps. Faltam " + fmt("brl2", T.cpa - T.margemCom) + " por venda.";
+        h += '<p class="text-sm rounded-xl p-3" style="background:var(--surface);border:1px solid ' + (ok ? "#a9dcb1" : "#f3b0b8") + '"><span class="' + (ok ? "pos" : "neg") + ' font-bold">' + (ok ? "✓ " : "✕ ") + "</span>" + msg + "</p>";
+      }
+      h += '<p class="text-xs faint mt-2">"Dá para pagar por venda" é o que sobra de cada venda depois das taxas e impostos, antes do anúncio e dos custos fixos. Se o CPA passar disso, a venda dá prejuízo.</p>';
+      h += "</div></div></div>";
+      box.html(h);
+    });
+  }
+
+  function renderMatriz() {
+    if (!S.costs.length || !S.products.length) { $("#matriz").html('<p class="text-sm faint">Sem custos ou produtos.</p>'); return; }
+    var h = '<div class="sheet-wrap"><table class="sheet num"><thead><tr><th class="rowh">Custo</th>';
+    S.products.forEach(function (p) { h += '<th><span class="dot mr-1 align-middle" style="background:' + color(p.color) + '"></span>' + esc(p.name) + "</th>"; });
+    h += "<th>Total</th></tr></thead><tbody>";
+    var colTot = {}; S.products.forEach(function (p) { colTot[p.id] = 0; });
+    S.costs.forEach(function (c) {
+      var t = 0;
+      h += '<tr><td class="rowh">' + esc(c.name) + "</td>";
+      S.products.forEach(function (p) {
+        var v = R.CT[c.id] && R.CT[c.id][p.id];
+        if (v == null) h += '<td class="calc faint">—</td>';
+        else { h += '<td class="calc">' + fmt("brl0", v) + "</td>"; t += v; colTot[p.id] += v; }
+      });
+      h += '<td class="total">' + fmt("brl0", t) + "</td></tr>";
+    });
+    var all = 0;
+    h += '<tr class="strong sep"><td class="rowh">Total</td>';
+    S.products.forEach(function (p) { h += '<td class="calc">' + fmt("brl0", colTot[p.id]) + "</td>"; all += colTot[p.id]; });
+    h += '<td class="total">' + fmt("brl0", all) + "</td></tr></tbody></table></div>";
+    $("#matriz").html(h);
+  }
+
+  /* ---------- eventos ---------- */
+  var $d = $(document);
+
+  // Redesenha depois que o foco já foi para o próximo campo, e devolve o foco a ele.
+  function later(fn) {
+    setTimeout(function () {
+      var a = document.activeElement, sel = null;
+      if (a && a !== document.body) {
+        sel = ["data-pid", "data-bid", "data-cid", "data-field", "data-m", "data-g"].map(function (k) {
+          var v = a.getAttribute(k); return v == null ? "" : "[" + k + '="' + v + '"]';
+        }).join("");
+        sel = sel ? a.tagName.toLowerCase() + sel : null;
+      }
+      var y = window.scrollY;
+      fn();
+      window.scrollTo(0, y);
+      if (sel) { var b = document.querySelector(sel); if (b) b.focus(); }
+    }, 0);
+  }
+
+  // Configuração geral
+  $d.on("change", "[data-g]", function () {
+    var g = this.getAttribute("data-g");
+    if (g === "months") S.months = Math.max(1, Math.min(36, Math.round(parseBR(this.value)) || 1));
+    else if (g === "start") S.start = this.value || S.start;
+    else S.adTax = parseBR(this.value);
+    later(render);
+  });
+  $d.on("input", '[data-g="adTax"]', function () { S.adTax = parseBR(this.value); refresh(); });
+
+  // Último mês editado em cada linha verde, para o botão "repetir →"
+  var lastEdit = {};
+  function rowId(el) { return [el.getAttribute("data-pid"), el.getAttribute("data-bid") || "", el.getAttribute("data-field")].join("|"); }
+
+  // Células verdes mês a mês (produto e order bumps)
+  $d.on("input", "td.in input", function () {
+    var arr = arrOf(this.getAttribute("data-pid"), this.getAttribute("data-bid"), this.getAttribute("data-field"));
+    if (!arr) return;
+    arr[+this.getAttribute("data-m")] = parseBR(this.value);
+    lastEdit[rowId(this)] = +this.getAttribute("data-m");
+    refresh();
+  });
+  $d.on("blur", "td.in input", function () { this.value = cellVal(this.getAttribute("data-unit"), this.value); });
+
+  // Nomes
+  $d.on("input", '[data-field="name"][data-pid]', function () {
+    var p = prodById(this.getAttribute("data-pid")); if (!p) return;
+    var bid = this.getAttribute("data-bid");
+    if (bid) { var b = bumpById(p, bid); if (b) b.name = this.value; }
+    else p.name = this.value;
+    save();
+  });
+  $d.on("change", '[data-field="name"][data-pid]', function () {
+    if (this.getAttribute("data-bid")) later(function () { renderInsights(); });
+    else later(function () { renderCustos(); renderMatriz(); });
+  });
+
+  // Custos
+  $d.on("input", "[data-cid][data-field]", function () {
+    var c = costById(this.getAttribute("data-cid")); if (!c) return;
+    var f = this.getAttribute("data-field");
+    if (f === "name") { c.name = this.value; save(); return; }
+    if (f === "note") { c.note = this.value; save(); return; }
+    if (f === "value") { c.value = parseBR(this.value); refresh(); }
+  });
+  $d.on("change", "[data-cid][data-field]", function () {
+    var c = costById(this.getAttribute("data-cid")); if (!c) return;
+    var f = this.getAttribute("data-field");
+    if (f === "type" || f === "alloc" || f === "base") c[f] = this.value;
+    else if (f === "from") c.from = +this.value;
+    else if (f === "value") { c.value = parseBR(this.value); this.value = nfin(c.value); return; }
+    else if (f === "name") { later(renderMatriz); return; }
+    else if (f === "note") return;
+    later(function () { renderCustos(); refresh(); });
+  });
+
+  // Ações
+  $d.on("click", "[data-act]", function () {
+    var act = this.getAttribute("data-act"), pid = this.getAttribute("data-pid"), cid = this.getAttribute("data-cid"), bid = this.getAttribute("data-bid");
+    var p = pid ? prodById(pid) : null, c = cid ? costById(cid) : null;
+    var y = window.scrollY, n = S.months;
+    switch (act) {
+      case "add-product":
+        var np = { id: uid(), name: "Novo produto", color: nextColor(), open: true,
+          inv: fill(1000, n), cpc: fill(0.8, n), conv: fill(2, n), preco: fill(97, n),
+          bumps: [{ id: uid(), name: "Order bump 1", price: fill(27, n), take: fill(20, n) },
+                  { id: uid(), name: "Order bump 2", price: fill(17, n), take: fill(10, n) }] };
+        S.products.push(np);
+        render();
+        var el = document.querySelector('[data-product="' + np.id + '"]');
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      case "dup":
+        if (!p) return;
+        var cp = clone(p); cp.id = uid(); cp.name = p.name + " (cópia)"; cp.color = nextColor();
+        cp.bumps.forEach(function (b) { b.id = uid(); });
+        S.products.splice(S.products.indexOf(p) + 1, 0, cp);
+        break;
+      case "del-product":
+        if (!p || !confirm('Remover "' + p.name + '"?')) return;
+        S.products.splice(S.products.indexOf(p), 1);
+        break;
+      case "toggle": if (p) p.open = !p.open; break;
+      case "add-bump":
+        if (p) p.bumps.push({ id: uid(), name: "Order bump " + (p.bumps.length + 1), price: fill(27, n), take: fill(10, n) });
+        break;
+      case "del-bump":
+        if (!p) return;
+        var bb = bumpById(p, bid);
+        if (!bb || !confirm('Remover "' + bb.name + '"?')) return;
+        p.bumps = p.bumps.filter(function (b) { return b.id !== bid; });
+        break;
+      case "fill":
+        var a1 = arrOf(pid, bid, this.getAttribute("data-field")); if (!a1) return;
+        var from = lastEdit[rowId(this)] || 0;
+        for (var m = from + 1; m < n; m++) a1[m] = a1[from];
+        break;
+      case "reinvest":
+        if (!p) return;
+        var rm = +this.getAttribute("data-m"); if (!(rm > 0)) return;
+        // linha 6 do mês anterior (o valor digitado, que já inclui o imposto da Meta) + lucro do mês anterior
+        // arredondado para reais, igual ao que aparece na tela, para a soma bater com a conta de cabeça
+        var novo = Math.max(0, Math.round((parseBR(p.inv[rm - 1]) + Math.round(R.P[p.id].lucro[rm - 1])) * 100) / 100);
+        p.inv[rm] = novo;
+        lastEdit[[p.id, "", "inv"].join("|")] = rm;
+        var cell = document.querySelector('td.in input[data-pid="' + p.id + '"][data-field="inv"][data-m="' + rm + '"]');
+        if (cell) cell.value = cellVal("brl", novo);
+        refresh();
+        return;
+      case "grow":
+        var a2 = arrOf(pid, bid, this.getAttribute("data-field")); if (!a2) return;
+        var g = prompt("Crescer quantos % por mês, a partir do primeiro mês?", "20");
+        if (g == null) return;
+        var rate = parseBR(g) / 100;
+        for (var k = 1; k < n; k++) a2[k] = Math.round(parseBR(a2[k - 1]) * (1 + rate) * 100) / 100;
+        break;
+      case "add-cost":
+        S.costs.push({ id: uid(), name: "Novo custo", type: "fixo", value: 0, from: 1, products: S.products.map(function (x) { return x.id; }), alloc: "igual", base: "tudo" });
+        render();
+        var ce = document.querySelector("#custos > div:last-child input");
+        if (ce) { ce.focus(); ce.select(); }
+        return;
+      case "del-cost":
+        if (c) S.costs.splice(S.costs.indexOf(c), 1);
+        break;
+      case "chip":
+        if (!c) return;
+        var i = c.products.indexOf(pid);
+        if (i > -1) c.products.splice(i, 1); else c.products.push(pid);
+        break;
+      case "chip-all":
+        if (c) c.products = c.products.length === S.products.length ? [] : S.products.map(function (x) { return x.id; });
+        break;
+      case "export":
+        var blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
+        var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+        a.download = "projecao-oconteudo-" + new Date().toISOString().slice(0, 10) + ".json";
+        document.body.appendChild(a); a.click(); a.remove();
+        return;
+      case "import": $("#importFile").trigger("click"); return;
+      case "reset":
+        if (!confirm("Apagar tudo e voltar para os valores de exemplo?")) return;
+        S = exemplo();
+        break;
+      default: return;
+    }
+    render();
+    window.scrollTo(0, y);
+  });
+
+  $("#importFile").on("change", function () {
+    var file = this.files && this.files[0]; if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try { var obj = JSON.parse(rd.result); if (!obj.products) throw 0; S = obj; render(); }
+      catch (e) { alert("Arquivo inválido."); }
+    };
+    rd.readAsText(file);
+    this.value = "";
+  });
+
+  // Tooltip do gráfico
+  var $tip = $("#tip");
+  $d.on("mousemove", "[data-tip]", function (e) {
+    var m = +this.getAttribute("data-tip"), C = R.C, lucro = C.lucro[m];
+    $tip.html("<b>M" + (m + 1) + " · " + monthLabel(m) + "</b>" +
+      '<div class="r"><span>Faturamento</span><span>' + fmt("brl0", C.fat[m]) + "</span></div>" +
+      '<div class="r"><span>Investimento</span><span>' + fmt("brl0", C.inv[m]) + "</span></div>" +
+      '<div class="r"><span>Custos</span><span>' + fmt("brl0", C.custo[m]) + "</span></div>" +
+      '<div class="r"><span>' + (lucro < 0 ? "Prejuízo" : "Lucro") + "</span><b>" + fmt("brl0", lucro) + "</b></div>")
+      .css({ display: "block", left: Math.min(e.clientX + 14, window.innerWidth - 210), top: e.clientY + 14 });
+  });
+  $d.on("mouseleave", "[data-tip]", function () { $tip.hide(); });
+
+  // Ponte com o OS oconteudo: o painel carrega e pede os dados por postMessage.
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin || !e.data) return;
+    if (e.data.tipo === "carregar") { S = e.data.dados; render(); }
+    if (e.data.tipo === "pedir") parent.postMessage({ tipo: "dados", dados: S }, location.origin);
+  });
+
+  load();
+  render();
+  if (parent !== window) parent.postMessage({ tipo: "pronto" }, location.origin);
+})();
+</script>
+</body>
+</html>

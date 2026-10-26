@@ -1,0 +1,36 @@
+{
+  "_sobre": "Cenário A de dedicação (D-016). Anne em tempo parcial, Kelly com 5h por dia útil. Rodar: npm run cenario:aplicar",
+  "socias": {
+    "kelly": "kellycs.global@gmail.com",
+    "anne": null
+  },
+  "capacidades": {
+    "kelly": [300, 300, 300, 300, 300, 0, 0],
+    "anne": [90, 90, 90, 90, 90, 0, 0]
+  },
+  "capacidade_padrao": [90, 90, 90, 90, 90, 0, 0],
+  "donas": {
+    "r14": { "kelly": null },
+    "r23": { "anne": null },
+    "r01": { "kelly": null, "anne": null },
+    "r11": { "kelly": null },
+    "r16": { "kelly": null },
+    "r12": { "kelly": 45, "anne": 60 },
+    "r22": { "kelly": null },
+    "r15": { "anne": null },
+    "r18": { "anne": null },
+    "r24": { "anne": null },
+    "r02": { "kelly": null, "anne": null },
+    "r32": { "kelly": null },
+    "r31": { "kelly": null },
+    "m1": { "kelly": null },
+    "m2": { "kelly": null },
+    "m3": { "kelly": null },
+    "m4": { "kelly": null },
+    "m6": { "anne": null },
+    "m5": { "kelly": null },
+    "m7": { "kelly": null, "anne": null },
+    "t1": { "kelly": null }
+  },
+  "tarefas_dona": "kelly"
+}

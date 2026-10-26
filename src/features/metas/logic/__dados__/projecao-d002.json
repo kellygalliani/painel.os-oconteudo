@@ -1,0 +1,196 @@
+{
+  "v": 3,
+  "start": "2026-11",
+  "months": 12,
+  "adTax": 12.15,
+  "products": [
+    {
+      "id": "zi2xtfr",
+      "name": "oconteudo · plug and play",
+      "color": 0,
+      "open": true,
+      "cpc": [
+        2,
+        2,
+        2,
+        2,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5
+      ],
+      "conv": [
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "preco": [
+        97,
+        97,
+        97,
+        97,
+        97,
+        97,
+        97,
+        97,
+        97,
+        97,
+        97,
+        97
+      ],
+      "bumps": [
+        {
+          "id": "0zcvwi4",
+          "name": "Order bump 1",
+          "price": [
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47
+          ],
+          "take": [
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15
+          ]
+        }
+      ],
+      "inv": [
+        1200,
+        1707,
+        2683,
+        4562,
+        8179,
+        16191,
+        32643,
+        32643,
+        32643,
+        32643,
+        32643,
+        32643
+      ]
+    }
+  ],
+  "costs": [
+    {
+      "id": "0a5rup4",
+      "name": "Hotmart · 9,9% de cada venda",
+      "type": "pct",
+      "value": 9.9,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo",
+      "note": "Parte percentual da taxa-base da Hotmart para produtor no Brasil (9,9% + R$ 1,00 por venda aprovada). Cai para 8,9% acima de R$ 500 mil por ano. Confira em Hotmart > Minha conta > Taxas."
+    },
+    {
+      "id": "1p3564i",
+      "name": "Hotmart · R$ 1,00 por venda",
+      "type": "venda",
+      "value": 1,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo",
+      "note": "Parte fixa da taxa da Hotmart. Conta também cada order bump, porque na Hotmart o bump é cobrado como uma venda própria (cenário cauteloso)."
+    },
+    {
+      "id": "1lrs0uf",
+      "name": "Imposto sobre faturamento",
+      "type": "pct",
+      "value": 6,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo",
+      "note": "Exemplo: Simples Nacional, Anexo III, primeira faixa (6%). Se o CNPJ for MEI, troque por um custo fixo por mês com o valor do DAS. Confirme com a contabilidade."
+    },
+    {
+      "id": "lumtj2m",
+      "name": "Claude",
+      "type": "fixo",
+      "value": 110,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo",
+      "note": "Assinatura, média por mês."
+    },
+    {
+      "id": "f78kl1p",
+      "name": "Codex",
+      "type": "fixo",
+      "value": 120,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo",
+      "note": "Assinatura, média por mês."
+    },
+    {
+      "id": "9qrle8u",
+      "name": "Hospedagem",
+      "type": "anual",
+      "value": 47,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo",
+      "note": "R$ 47 por ano, dividido em 12 meses. Vercel e Supabase estão no plano gratuito por enquanto."
+    },
+    {
+      "id": "ubarmdz",
+      "name": "Contabilidade",
+      "type": "fixo",
+      "value": 369,
+      "from": 1,
+      "products": [
+        "zi2xtfr"
+      ],
+      "alloc": "igual",
+      "base": "tudo"
+    }
+  ]
+}
