@@ -38,7 +38,7 @@ export function FormNovaSenha() {
   const [estado, acao, enviando] = useActionState(definirPrimeiraSenha, undefined);
   return (
     <form action={acao} className="flex flex-col gap-4">
-      <Campo nome="senha" rotulo="Nova senha (10 ou mais, com letras e números)" auto="new-password" />
+      <Campo nome="senha" rotulo="Nova senha (6 caracteres ou mais)" auto="new-password" />
       <Campo nome="confirmar" rotulo="Repita a senha" auto="new-password" />
       <Mensagem estado={estado} />
       <Button type="submit" disabled={enviando}>{enviando ? "Salvando…" : "Salvar e entrar"}</Button>

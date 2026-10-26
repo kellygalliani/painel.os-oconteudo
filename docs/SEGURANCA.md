@@ -4,11 +4,8 @@ O básico, bem feito. Duas usuárias, nenhum dado de cliente.
 
 ## Login
 - **E-mail e senha** pelo Supabase Auth. Sem link mágico na v1.
-- **Cadastro desligado** em `supabase/config.toml`:
-  - `[auth] enable_signup = false`
-  - `[auth.email] enable_signup = false`
-  - `enable_confirmations = false`
-- **Senha:** no mínimo 10 caracteres, com letras e números (`minimum_password_length = 10`, `password_requirements = "letters_digits"`).
+- **Cadastro desligado** em `supabase/config.toml` por `[auth] enable_signup = false`. Atenção: `[auth.email] enable_signup` fica `true`, porque com `false` o Supabase desliga o login por e-mail inteiro (aconteceu em 26/10/2026). `enable_confirmations = false`.
+- **Senha:** no mínimo 6 caracteres (`minimum_password_length = 6`, sem exigência de tipo), por escolha das sócias.
 - **Mensagem de erro genérica:** "E-mail ou senha incorretos." Nunca dizer se o e-mail existe.
 - O limite de tentativas é o padrão do Supabase Auth. Não desligar.
 

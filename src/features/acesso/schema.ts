@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-const senha = z
-  .string()
-  .min(10, "Use 10 caracteres ou mais.")
-  .regex(/[a-zA-Z]/, "Use letras e números.")
-  .regex(/\d/, "Use letras e números.");
+const senha = z.string().min(6, "Use 6 caracteres ou mais.");
 
 export const entrarSchema = z.object({ email: z.string().trim().toLowerCase().email(), senha: z.string().min(1) });
 
