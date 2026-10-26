@@ -13,10 +13,18 @@ const sql = readdirSync(pasta).map((f) => readFileSync(new URL(f, pasta), "utf8"
 const tabelas = [...sql.matchAll(/create table (?:if not exists )?public\.(\w+)/gi)].map((m) => m[1]);
 const visitante = createClient(url, anon, { auth: { persistSession: false } });
 
+// Antes de tudo: o endereço responde como Supabase? (um erro de URL não pode passar por "bloqueado")
+const saude = await fetch(`${url}/rest/v1/`, { headers: { apikey: anon } }).catch(() => null);
+if (!saude || saude.headers.get("content-type")?.includes("text/html")) {
+  console.error(`✗ ${url} não responde como um projeto Supabase. Confira NEXT_PUBLIC_SUPABASE_URL (formato https://<ref>.supabase.co).`);
+  process.exit(1);
+}
+const bloqueio = (e) => !!e && !/<!DOCTYPE|fetch failed|ENOTFOUND/i.test(e.message ?? "");
+
 let falhas = 0;
 for (const t of tabelas) {
   const { data, error } = await visitante.from(t).select("*").limit(1);
-  const ok = !!error || (data ?? []).length === 0;
+  const ok = error ? bloqueio(error) : (data ?? []).length === 0;
   if (!ok) falhas++;
   console.log(`${ok ? "✓" : "✗"} ${t}: ${error ? "bloqueado" : `${data.length} linhas visíveis`}`);
 }
