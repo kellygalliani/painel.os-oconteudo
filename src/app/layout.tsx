@@ -22,11 +22,20 @@ const newsreader = localFont({
 export const metadata: Metadata = {
   title: { default: "OS oconteudo", template: "%s · OS oconteudo" },
   description: "Painel interno da oconteudo.",
-  icons: { icon: "/brand/icone-gradiente.svg" },
+  icons: { icon: "/brand/icone-gradiente.svg", apple: "/icones/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "OS oconteudo", statusBarStyle: "default" },
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fffefa" },
+    { media: "(prefers-color-scheme: dark)", color: "#14081f" },
+  ],
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
