@@ -58,6 +58,11 @@ Mais: `alter table naies add column trilha_id uuid null references trilhas on de
 | `objetivos` | `periodo text` (ex.: '2026-T4', '2027'), `indicador text`, `valor numeric`, `unidade text` (ex.: 'vendas', 'R$'), `nota text null`, `ordem int` |
 | `realizado_mensal` | `mes date pk` (dia 1), `faturamento numeric`, `investimento_anuncio numeric`, `vendas int`, `order_bumps int`, `nota text null` |
 
+## 0008_videos
+| Tabela | Colunas |
+|---|---|
+| `naie_videos` | `naie_id references naies on delete cascade`, `idioma text check in ('pt','en')`, `chave text unique` (caminho no R2: `naies/<naie>/<idioma>-<tempo>.<ext>`), `nome_original`, `tamanho_bytes bigint`; unique (`naie_id`, `idioma`) |
+
 ## 0006_pago
 | Tabela | Colunas |
 |---|---|

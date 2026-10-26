@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { exigirSocia } from "@/lib/auth/exigir-socia";
 import { somarDias } from "@/lib/datas";
+import { apagarObjeto, r2Configurado, urlDeDownload } from "@/lib/r2";
 import { erro, ok, type Resultado } from "@/lib/utils";
 import { contar } from "../logic/contagem";
 import { lerNaieMd } from "../logic/ler-md";
@@ -93,6 +94,9 @@ export async function escolherTrilha(naieId: string, trilhaId: string | null): P
 export async function apagarNaie(naieId: string): Promise<Resultado> {
   const socia = await exigirSocia();
   if (!uuid.safeParse(naieId).success) return erro("Dados inválidos");
+  // Os vídeos saem do armazenamento antes da NAIE (o registro sai junto, em cascata).
+  const { data: videos } = await socia.db.from("naie_videos").select("chave").eq("naie_id", naieId);
+  if (videos?.length && r2Configurado()) for (const v of videos) await apagarObjeto(v.chave).catch(() => {});
   const { error } = await socia.db.from("naies").delete().eq("id", naieId);
   if (error) return erro(FALHOU);
   atualizar();
@@ -158,7 +162,13 @@ export async function dadosDaPasta(naieId: string): Promise<Resultado<{ pasta: P
   if (!naie) return erro("NAIE não encontrada.");
   let trilha: { nome: string; arquivo: string } | null = null;
   if (naie.trilhaId) trilha = (await socia.db.from("trilhas").select("nome, arquivo").eq("id", naie.trilhaId).maybeSingle()).data;
-  const pasta = montarPasta(naie, trilha);
+  // Vídeo enviado no painel vira um link direto de 7 dias na pasta (a Máquina baixa por ele).
+  const link = async (idioma: "pt" | "en") => {
+    const v = naie.videos[idioma];
+    return v && r2Configurado() ? urlDeDownload(v.chave, v.nome) : null;
+  };
+  const [pt, en] = await Promise.all([link("pt"), link("en")]);
+  const pasta = montarPasta({ ...naie, linkBrutoPt: pt ?? naie.linkBrutoPt, linkBrutoEn: en ?? naie.linkBrutoEn }, trilha);
   let trilhaUrl: string | null = null;
   if (trilha) trilhaUrl = (await socia.db.storage.from("trilhas").createSignedUrl(trilha.arquivo, 600)).data?.signedUrl ?? null;
   return ok({ pasta, trilhaUrl });

@@ -27,6 +27,8 @@ export type Ficha = {
   pilula_en?: string;
 };
 
+export type VideoBruto = { chave: string; nome: string; tamanho: number };
+
 export type Versao = { idioma: Idioma; titulos: string[]; tituloEscolhido: number | null; roteiro: string; contagem: Contagem };
 
 export type Naie = {
@@ -46,6 +48,7 @@ export type Naie = {
   linkReferencia: string | null;
   trilhaId: string | null;
   versoes: Partial<Record<Idioma, Versao>>;
+  videos: Partial<Record<Idioma, VideoBruto>>;
 };
 
 /** Resultado do leitor de .md, antes de ir para o banco. */

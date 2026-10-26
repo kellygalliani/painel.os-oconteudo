@@ -7,3 +7,4 @@ export { ListaNaies, ChipTipo } from "./components/Lista";
 export { Importar } from "./components/Importar";
 export { FormNaie } from "./components/FormNaie";
 export { LeituraNaie, type TrilhaOpcao } from "./components/Leitura";
+export { prepararEnvioVideo, confirmarVideo, apagarVideos, linkDoVideo } from "./server/videos";
