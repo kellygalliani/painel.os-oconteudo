@@ -1,16 +1,23 @@
 // Converte as trilhas para MP3 192 kbps e sobe no bucket privado "trilhas" (ARCHITECTURE.md, T-03).
 // Uso: npm run trilhas:subir -- --zip "<caminho do zip>"   ou   --pasta "<pasta com mp3/wav>"
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, extname, join } from "node:path";
+import { basename, dirname, extname, join } from "node:path";
+import { unzipSync } from "fflate";
 import { admin, argumento } from "./_admin.mjs";
 
 const zip = argumento("zip");
 let pasta = argumento("pasta");
 const temp = mkdtempSync(join(tmpdir(), "trilhas-"));
 if (zip) {
-  execFileSync("tar", ["-xf", String(zip), "-C", temp]);
+  // Extrai em JavaScript: o tar do Git Bash não abre .zip.
+  for (const [nome, bytes] of Object.entries(unzipSync(readFileSync(String(zip))))) {
+    if (nome.endsWith("/")) continue;
+    const destino = join(temp, nome);
+    mkdirSync(dirname(destino), { recursive: true });
+    writeFileSync(destino, bytes);
+  }
   pasta = temp;
 }
 if (!pasta) {
