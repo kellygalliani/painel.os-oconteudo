@@ -11,7 +11,7 @@ import { BlocoCopiavel } from "@/components/shared/BlocoCopiavel";
 import { Secao } from "@/components/shared/ui-base";
 import { ddmm, DIAS_LONGOS, diaDaSemana } from "@/lib/datas";
 import { cn } from "@/lib/utils";
-import { TETO_CARACTERES } from "../logic/contagem";
+import { paragrafos as paragrafosDe, TETO_CARACTERES } from "../logic/contagem";
 import { apagarNaie, dadosDaPasta, escolherTitulo, escolherTrilha, mudarStatusNaie } from "../server/actions";
 import { QUEM_GRAVA, STATUS, type Idioma, type Naie, type Versao } from "../schema";
 import { FormNaie } from "./FormNaie";
@@ -58,27 +58,73 @@ function Contagem({ v }: { v: Versao }) {
   );
 }
 
+const PARTES = ["Alavanca", "Desenvolvimento", "Conexão", "CTA"];
+
 function ModoGravacao({ naie, aoFechar }: { naie: Naie; aoFechar: () => void }) {
   const [idioma, setIdioma] = useState<Idioma>("pt");
+  const [tamanho, setTamanho] = useState(26);
   const v = naie.versoes[idioma];
+  const paragrafos = paragrafosDe(v?.roteiro ?? "");
+  const pilula = idioma === "pt" ? naie.ficha.pilula_pt : naie.ficha.pilula_en;
+
   useEffect(() => {
+    try {
+      const salvo = Number(localStorage.getItem("os-gravacao-tamanho"));
+      if (salvo >= 18 && salvo <= 48) setTamanho(salvo);
+    } catch {}
     const esc = (e: KeyboardEvent) => e.key === "Escape" && aoFechar();
     window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
+    // Tela acesa enquanto grava.
+    let trava: { release: () => Promise<void> } | null = null;
+    (navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } }).wakeLock
+      ?.request("screen")
+      .then((t) => (trava = t))
+      .catch(() => {});
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", esc);
+      void trava?.release();
+      document.body.style.overflow = "";
+    };
   }, [aoFechar]);
+
+  const mudarTamanho = (d: number) => {
+    const t = Math.min(48, Math.max(18, tamanho + d));
+    setTamanho(t);
+    try {
+      localStorage.setItem("os-gravacao-tamanho", String(t));
+    } catch {}
+  };
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background px-5 py-6 md:px-16" role="dialog" aria-label="Modo gravação">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex gap-1">
-            {(["pt", "en"] as const).map((i) => (
-              <Button key={i} size="sm" variant={idioma === i ? "default" : "outline"} disabled={!naie.versoes[i]} onClick={() => setIdioma(i)}>{i.toUpperCase()}</Button>
-            ))}
-          </div>
+    <div className="fixed inset-0 z-50 flex flex-col bg-background" role="dialog" aria-label="Modo gravação">
+      <div className="flex items-center justify-between gap-2 border-b px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+        <div className="flex gap-1">
+          {(["pt", "en"] as const).map((i) => (
+            <Button key={i} size="sm" variant={idioma === i ? "default" : "outline"} disabled={!naie.versoes[i]} onClick={() => setIdioma(i)}>{i.toUpperCase()}</Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={() => mudarTamanho(-2)} aria-label="Diminuir letra">A−</Button>
+          <Button variant="outline" size="sm" onClick={() => mudarTamanho(2)} aria-label="Aumentar letra">A+</Button>
           <Button variant="ghost" size="icon" onClick={aoFechar} aria-label="Fechar"><X className="size-5" /></Button>
         </div>
-        <p className="text-lg font-semibold text-muted-foreground">{titulo(v)}</p>
-        <div className="whitespace-pre-wrap text-[28px] leading-[1.5] md:text-[34px]">{v?.roteiro}</div>
+      </div>
+      <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-[50vh] pt-5 md:px-16">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          <div className="rounded-lg bg-foreground px-4 py-3 text-background">
+            <p className="text-[11px] font-semibold uppercase tracking-wider opacity-70">Título fixo</p>
+            <p className="text-lg font-semibold leading-snug">{titulo(v)}</p>
+          </div>
+          {pilula && <p className="text-muted-foreground" style={{ fontSize: tamanho * 0.75 }}>Pílula: {pilula}</p>}
+          {paragrafos.map((p, i) => (
+            <section key={i} className="flex flex-col gap-1">
+              {paragrafos.length === 4 && <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{PARTES[i]}</span>}
+              <p className="whitespace-pre-wrap leading-[1.55]" style={{ fontSize: tamanho }}>{p}</p>
+            </section>
+          ))}
+          {!paragrafos.length && <p className="text-muted-foreground">Sem roteiro {idioma.toUpperCase()}.</p>}
+        </div>
       </div>
     </div>
   );
@@ -155,8 +201,8 @@ function BaixarPasta({ naieId }: { naieId: string }) {
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     });
   return (
-    <Button onClick={baixar} disabled={pend}>
-      <Download className="size-4" /> {pend ? "Preparando…" : "Baixar pasta de edição"}
+    <Button variant="outline" onClick={baixar} disabled={pend}>
+      <Download className="size-4" /> {pend ? "Preparando…" : "Baixar pasta"}
     </Button>
   );
 }
@@ -199,7 +245,7 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
           <span>· grava: {QUEM_GRAVA[naie.quemGrava]}</span>
         </div>
         <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">{naie.tituloCurto}</h1>
-        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Status">
+        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0" role="radiogroup" aria-label="Status">
           {STATUS.map(([k, r]) => (
             <button
               key={k}
@@ -212,20 +258,20 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
                   if (!res.ok) toast.error(res.erro);
                 });
               }}
-              className={cn("rounded-full border px-3 py-1 text-sm", status === k ? "bg-foreground text-background" : "bg-card")}
+              className={cn("shrink-0 rounded-full border px-3 py-1.5 text-sm", status === k ? "bg-foreground text-background" : "bg-card")}
             >
               {r}
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          <Button size="lg" className="col-span-2 sm:col-span-1" onClick={() => setGravando(true)}><Maximize2 className="size-4" /> Gravar (modo leitura)</Button>
           <BaixarPasta naieId={naie.id} />
-          <Button variant="outline" onClick={() => setGravando(true)}><Maximize2 className="size-4" /> Modo gravação</Button>
           <Button variant="outline" onClick={() => setEditando(true)}><Pencil className="size-4" /> Editar</Button>
         </div>
       </header>
 
-      <div className="flex gap-1 lg:hidden">
+      <div className="sticky top-0 z-10 -mx-4 flex gap-1 bg-background/95 px-4 py-2 backdrop-blur lg:hidden">
         {(["pt", "en"] as const).map((i) => (
           <Button key={i} size="sm" variant={idiomaCel === i ? "default" : "outline"} onClick={() => setIdiomaCel(i)}>{i.toUpperCase()}</Button>
         ))}
