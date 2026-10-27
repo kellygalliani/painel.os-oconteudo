@@ -25,6 +25,7 @@ export type Ficha = {
   buscas_apoio?: string[];
   pilula_pt?: string;
   pilula_en?: string;
+  fontes?: string;
 };
 
 export type VideoBruto = { chave: string; nome: string; tamanho: number };

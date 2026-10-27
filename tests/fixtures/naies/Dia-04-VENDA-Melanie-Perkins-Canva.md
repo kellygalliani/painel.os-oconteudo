@@ -1,4 +1,4 @@
-# Dia 04 (Quinta) · NAIEV Venda 1 · Melanie Perkins (100 Recusas até o Império do Canva)
+# Dia 04 (Quinta) · NAIEV Venda 1 · Melanie Perkins (Mais de 100 recusas antes do Canva)
 
 ## Ficha
 
@@ -14,8 +14,8 @@
 
 ## Apuração e Buscas de Vídeo de Apoio (B-Roll)
 
-- **Fato em 1 frase:** Aos 19 anos, dando aulas na Austrália, Melanie Perkins viu alunos travarem em softwares difíceis, levou mais de 100 "nãos" no Vale do Silício e construiu o Canva (US$ 25 bilhões) para devolver tempo a quem cria.
-- **Números de escala:** 19 anos, 2007 (Perth, Austrália), mais de 100 investidores recusaram, 3 anos dormindo no chão da casa do irmão, lançado em 2013, 170 milhões de usuários, US$ 25 bilhões.
+- **Fato em 1 frase:** Em 2007, Melanie Perkins começou com anuários escolares online, enfrentou mais de 100 recusas de investidores e lançou o Canva em 2013.
+- **Números de escala:** Mais de 100 recusas de investidores; Fusion Books começou em 2007; Canva foi lançado em 2013 após cerca de três anos buscando investimento.
 - **O que buscar de vídeo de apoio (YouTube / Google Vídeos Curtos / TikTok):**
   1. `"Melanie Perkins Canva story"` (fotos dela jovem na sala da mãe em Perth e apresentando no Vale do Silício).
   2. Na hora da **CTA (últimos 25 segundos)**: colocar na tela dividida a **gravação da sua própria tela** mostrando a pasta do computador + o comando + o Reel saindo pronto na Máquina de Reels!
@@ -25,39 +25,41 @@
 ## 🇧🇷 Versão PT (Português — Formato Contínuo NAIEV)
 
 **OPÇÕES DE TÍTULO FIXO (Manchete na tela durante toda a Alavanca — 8 a 13s):**
-- [x] **Opção 1:** Essa professora de 19 anos levou mais de 100 "nãos" de investidores e criou uma empresa de 25 bilhões na sala da mãe! (117 carac.)
-- [ ] **Opção 2:** Riram dela quando disse que qualquer pessoa criaria artes lindas em minutos, e hoje o Canva vale 25 bilhões de dólares (118 carac.)
-- [ ] **Opção 3:** QUE REVIRAVOLTA! Rejeitada mais de 100 vezes, jovem professora transforma ideia simples em império de US$ 25 bilhões (116 carac.)
+- [x] **Opção 1:** Melanie ouviu mais de 100 nãos antes de lançar a ideia que virou o Canva (72 carac.)
+- [ ] **Opção 2:** Mais de 100 investidores recusaram a ideia que depois virou o Canva (67 carac.)
+- [ ] **Opção 3:** Ela começou com anuários escolares e depois criou o Canva (57 carac.)
 
 **Roteiro Contínuo (Pronto para leitura fluida):**
 
-Impressionante! Essa professora de 19 anos levou mais de 100 portas na cara porque diziam que era impossível criar artes lindas em minutos, e construiu um império de 25 bilhões.
+Melanie Perkins ouviu mais de 100 “nãos” antes de transformar uma tarefa complicada numa ferramenta de design que qualquer pessoa podia usar.
 
-Em 2007, lá em Perth, na Austrália, a Melanie Perkins dava aulas de design na faculdade e via uma cena que dava agonia. Os alunos passavam um semestre inteiro tentando aprender programas complexos como o Photoshop só para mudar a cor de um botão ou montar um panfleto simples. Era lento, técnico e fazia quase todo mundo desistir na metade. Sem dinheiro, usando a sala de estar da mãe como escritório, ela e o namorado criaram primeiro um sistema simples de anuários escolares. Quando viram que funcionava, ela voou para o Vale do Silício com a ideia do Canva: qualquer pessoa conseguir criar um design profissional em minutos, sem perder horas em ferramentas difíceis. Só que aí começou o massacre. Mais de 100 investidores rejeitaram o projeto na lata. Eles riam e diziam que trabalho visual de qualidade exigia horas de operação manual. A Melanie passou 3 anos ouvindo não atrás de não e dormindo no chão da casa do irmão, até que conseguiu o primeiro investimento e lançou a plataforma em 2013. Hoje o Canva tem mais de 170 milhões de usuários e chegou a valer 25 bilhões de dólares por devolver o tempo de quem cria.
+Em 2007, em Perth, na Austrália, Melanie ensinava design para colegas da universidade e percebia como era difícil criar anuários usando programas complexos. Ela e o namorado, Cliff Obrecht, começaram com uma solução para aquele problema: uma ferramenta online para escolas montarem anuários. O projeto, chamado Fusion Books, nasceu na sala de estar da mãe dela. Só que Melanie percebeu que a mesma dificuldade aparecia em outros trabalhos de design e começou a apresentar uma ideia maior: o Canva. Para tirar aquilo do papel, foi atrás de investidores no Vale do Silício. Vieram mais de 100 recusas. Melanie passou meses em San Francisco apresentando a ideia e buscando talento técnico. Pedia conselhos, revisava o pitch e tentava explicar cada vez melhor quem precisava daquela ferramenta e por quê. Depois de três anos, conseguiu investimento e lançou o Canva em 2013. A ideia era simples de explicar: tornar a criação visual mais acessível, sem exigir que cada pessoa virasse especialista em software. Melanie não perdeu de vista o problema que tinha visto nas aulas.
 
-Talvez essa história tenha cruzado o seu caminho hoje porque a mesma trava manual que parava os alunos da Melanie ainda prende os seus vídeos na galeria do celular. Eu sempre amei gravar, mas odiava perder horas da noite cortando erros e subindo imagens na mão.
+Talvez seus vídeos também estejam parados não por falta de assunto, mas porque cada edição manual parece outra tarefa inteira. Eu gostava de gravar; o que me cansava era perder a noite cortando erros e encaixando imagens uma por uma. Foi por isso que criei a Máquina de Reels. A ferramenta não substitui sua ideia; ela tira da frente a parte repetitiva da edição, que consome tempo sem mostrar o que você tem de melhor.
 
-E eu quero tirar esse peso da sua rotina agora. Comente MÁQUINA aqui embaixo. Como eu odiava editar, criei a Máquina de Reels: três inteligências que você instala no computador para ter a sua própria editora. Você grava, joga na pasta, escreve uma frase em português e recebe um Reel igual a este, com tela dividida, título, cortes precisos e no seu estilo, pronto em até 5 minutos, além de transformar qualquer podcast em vários cortes prontos. Digite MÁQUINA nos comentários que eu te mando no direct um vídeo mostrando ela editando na minha tela. Criar conteúdo não precisa engolir a sua noite quando a tecnologia trabalha para a sua voz ir mais longe.
+Ela reúne três skills para editar Reels, criar templates e separar cortes de podcast. Com a Máquina instalada e os arquivos organizados, ela monta o Reel no seu estilo, com cortes, vídeos de apoio, título, legenda e trilha; a edição pode levar até cinco minutos. Comente MÁQUINA e eu te mando no direct uma demonstração real e o link com os detalhes, para você ver a edição acontecendo e decidir se combina com sua rotina.
 
-`[Alavanca: 177] | [Desenvolvimento: 1.121] | [Conexão: 261] | [CTA: 639] | [TOTAL: 2.198 / 2.200 caracteres com espaços]`
+`[Alavanca: 141] | [Desenvolvimento: 1070] | [Conexão: 419] | [CTA: 422] | [TOTAL: 2052 / 2.200 caracteres com espaços]`
 
 ---
 
 ## 🇺🇸 Versão EN (English — Continuous NAIEV Format)
 
 **FIXED TITLES (On-screen headline during the entire Hook — 8 to 13s):**
-- [x] **Option 1:** This 19-year-old teacher got rejected over 100 times by investors and built a $25 billion company in her mom’s house! (117 chars)
-- [ ] **Option 2:** They laughed when she said anyone could create pro designs in minutes, and today Canva is worth 25 billion dollars! (115 chars)
-- [ ] **Option 3:** WHAT A TURNAROUND! Rejected over 100 times, young teacher turns a simple idea into a $25 billion design empire (110 chars)
+- [x] **Option 1:** Melanie heard no from over 100 investors before Canva launched (62 chars)
+- [ ] **Option 2:** More than 100 investors rejected the idea that became Canva (59 chars)
+- [ ] **Option 3:** She started with online yearbooks, then built Canva (51 chars)
 
 **Continuous Script:**
 
-Unbelievable! This 19-year-old teacher got rejected over 100 times because investors said you couldn’t make pro designs in minutes, and she built a 25-billion-dollar empire.
+Melanie Perkins heard “no” more than 100 times before turning a complicated design task into a tool anyone could use.
 
-Back in 2007 in Perth, Australia, Melanie Perkins was teaching design students at university and kept watching the exact same frustration unfold. Students spent an entire semester trying to learn complicated software like Photoshop just to resize a photo or put together a simple flyer. It was slow, technical, and made most people quit before they even started. With no money, working from her mom’s living room rug, she and her boyfriend first built a simple online tool for school yearbooks. Once that worked, she flew to Silicon Valley with the pitch for Canva: letting anyone create professional visuals in minutes without spending hours fighting complex timelines. And that is when the doors slammed shut. Over 100 investors turned her down flat. They told her real creative work required hours of manual labor inside heavy software. Melanie spent three years hearing no after no and sleeping on her brother’s floor until she finally landed her first check and launched in 2013. Today, Canva has over 170 million users and reached a 25-billion-dollar valuation simply by giving creators their time back.
+In 2007, in Perth, Australia, Melanie was teaching design to fellow university students and saw how difficult it was to make yearbooks with complicated software. She and her boyfriend, Cliff Obrecht, started with a solution to that problem: an online tool that helped schools build yearbooks. The project, called Fusion Books, began in her mother’s living room. Melanie noticed the same difficulty in other design work and began pitching a bigger idea: Canva. To get it off the ground, she went looking for investors in Silicon Valley. More than 100 said no. She spent months in San Francisco pitching the idea and looking for technical talent. She asked for advice, revised her pitch, and kept making clearer who needed the tool and why. After three years, she secured investment and launched Canva in 2013. The idea was simple to explain: make visual creation more accessible without requiring everyone to become a software expert. She never lost sight of the problem she first saw in class.
 
-Maybe this story found you today because the exact same manual bottleneck that stopped Melanie’s students is still trapping your videos inside your camera roll. I always loved filming, but I hated losing two hours every night trimming mistakes and syncing b-roll by hand.
+Maybe your videos are waiting too, not because you have nothing to say, but because each manual edit feels like another whole job. I liked filming; what wore me down was losing the evening cutting mistakes and placing images one by one. That is why I built the Reels Machine. The tool doesn’t replace your idea; it removes the repetitive editing work that takes time without showing what you do best. You keep the creative choices.
 
-And I want to take that weight off your shoulders right now. Comment MACHINE down below. Because I hated editing, I built the Reels Machine: three AI skills you install once on your computer so you have your own personal video editor. You record, drop your files in a folder, type one sentence, and get a Reel just like this—with split screen, headline, clean cuts, captions, and your exact style—ready in under 5 minutes, plus a skill that turns any podcast into viral clips. Type MACHINE in the comments and I’ll DM you a video of it editing on my screen. Sharing your work shouldn’t swallow your evenings when technology can do the heavy lifting for you.
+It includes three skills for editing Reels, creating templates, and pulling clips from a podcast. With the Machine installed and your files organized, it builds a Reel in your style, with cuts, supporting footage, a title, captions, and music; the edit can take up to five minutes. Comment MACHINE and I’ll DM you a real demo and the details link, so you can watch the edit before deciding whether it fits your workflow. The demo shows exactly how the process works.
 
-`[Hook: 173] | [Story: 1.109] | [Connection: 271] | [CTA: 645] | [TOTAL: 2.198 / 2,200 characters with spaces]`
+`[Hook: 117] | [Story: 993] | [Connection: 431] | [CTA: 466] | [TOTAL: 2007 / 2,200 characters with spaces]`
+
+**Fontes consultadas:** [Canva — lições da jornada e uso de feedback](https://www.canva.com/newsroom/news/melanie-perkins-21-questions-part-2/); [Fortune — início do projeto e mais de 100 recusas](https://fortune.com/longform/melanie-perkins-canva-founder-ceo-interview/).

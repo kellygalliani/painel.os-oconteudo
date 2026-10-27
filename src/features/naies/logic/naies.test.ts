@@ -34,13 +34,32 @@ describe("leitor de .md", () => {
     expect(d1.ficha.campos?.["Origem da história"]).toContain("159");
     expect(d1.ficha.pilula_pt).toBeTruthy();
     expect(lidas[3].n.tituloCurto).toBe("Melanie Perkins");
-    expect(lidas[3].n.versoes.pt!.roteiro).toMatch(/^Impressionante!/);
+    expect(lidas[3].n.versoes.pt!.roteiro.length).toBeGreaterThan(1500);
+    expect(lidas[2].n.tituloCurto).toBe("Susan Boyle");
+    expect(lidas[2].n.ficha.fontes).toContain("ITV");
   });
   it("sem a seção EN, só PT e um aviso", () => {
     const texto = readFileSync(join(PASTA, arquivos[0]), "utf8").split("## 🇺🇸")[0];
     const n = lerNaieMd(arquivos[0], texto);
     expect(n.versoes.en).toBeUndefined();
     expect(n.avisos).toContain("Sem versão EN");
+  });
+});
+
+describe("formatos diferentes", () => {
+  it("quebra de linha do Windows (CRLF) dá o mesmo resultado que LF", () => {
+    const lf = readFileSync(join(PASTA, arquivos[0]), "utf8").replace(/\r\n/g, "\n");
+    const a = lerNaieMd(arquivos[0], lf);
+    const b = lerNaieMd(arquivos[0], lf.replace(/\n/g, "\r\n"));
+    expect(b.versoes).toEqual(a.versoes);
+    expect(b.avisos).toEqual([]);
+  });
+  it("títulos sem caixinha e seção 'English Version' (Dia 03)", () => {
+    const n = lidas[2].n;
+    expect(n.versoes.pt!.titulos).toHaveLength(3);
+    expect(n.versoes.pt!.tituloEscolhido).toBe(0);
+    expect(n.versoes.en!.titulos[0]).toMatch(/^At 47/);
+    expect(n.versoes.en!.roteiro).not.toMatch(/Contagem|Fontes/);
   });
 });
 

@@ -51,9 +51,10 @@ function lerVersao(corpo: string): { versao: Omit<Versao, "idioma">; pilula?: st
   let atual: Rotulo | null = null;
 
   for (const linha of corpo.split("\n")) {
-    const t = linha.match(/^- \[( |x|X)\]\s*\*\*(?:Opção|Option)\s*\d+:\*\*\s*(.+)$/);
+    // Com ou sem a caixinha: "- [x] **Opção 1:**" ou "- **Opção 1:**".
+    const t = linha.match(/^\s*[-*] (?:\[( |x|X)\]\s*)?\*\*(?:Opção|Opcao|Option)\s*\d+:\*\*\s*(.+)$/i);
     if (t) {
-      if (t[1].toLowerCase() === "x") escolhido = titulos.length;
+      if (t[1]?.toLowerCase() === "x") escolhido = titulos.length;
       titulos.push(t[2].replace(/\s*\(\d[\d.,]*\s*(carac\.?|caracteres|chars?|characters)\)\s*$/i, "").trim());
       atual = null;
       continue;
@@ -63,7 +64,8 @@ function lerVersao(corpo: string): { versao: Omit<Versao, "idioma">; pilula?: st
       atual = rotuloDe(rot[1]);
       continue;
     }
-    if (/^`\[/.test(linha.trim()) || /^---/.test(linha.trim())) {
+    // Linha "**Rótulo:** texto" (Contagem, Fontes...) ou separador encerra o bloco atual.
+    if (/^`\[/.test(linha.trim()) || /^---/.test(linha.trim()) || /^\*\*[^*]+:\*\*\s*\S/.test(linha)) {
       atual = null;
       continue;
     }
@@ -82,7 +84,9 @@ function lerVersao(corpo: string): { versao: Omit<Versao, "idioma">; pilula?: st
 }
 
 /** Lê um .md no formato de Roteiros/Semana-01-Rumo-10k (docs/ROTEIRO.md, etapa 6). */
-export function lerNaieMd(nomeArquivo: string, texto: string): NaieLida {
+export function lerNaieMd(nomeArquivo: string, bruto: string): NaieLida {
+  // Arquivos salvos no Windows vêm com CRLF; o "." das expressões não casa com \r.
+  const texto = bruto.replace(/\r\n?/g, "\n").replace(/^\uFEFF/, "");
   const avisos: string[] = [];
   const h1 = texto.match(/^# (.+)$/m)?.[1] ?? "";
   const tipo = tipoDe(nomeArquivo, h1);
@@ -101,13 +105,20 @@ export function lerNaieMd(nomeArquivo: string, texto: string): NaieLida {
       ficha.apuracao = s.corpo.trim();
       ficha.buscas_apoio = [...s.corpo.matchAll(/`([^`]+)`/g)].map((m) => m[1].replace(/^"|"$/g, "").trim());
     } else {
-      const idioma: Idioma | null = /vers[ãa]o pt/i.test(s.titulo) ? "pt" : /vers[ãa]o en/i.test(s.titulo) ? "en" : null;
+      const idioma: Idioma | null = /🇺🇸|vers[ãa]o en|english|ingl[êe]s/i.test(s.titulo)
+        ? "en"
+        : /🇧🇷|vers[ãa]o pt|portugu/i.test(s.titulo)
+          ? "pt"
+          : null;
       if (!idioma) continue;
       const { versao, pilula } = lerVersao(s.corpo);
       versoes[idioma] = versao;
       if (pilula) ficha[idioma === "pt" ? "pilula_pt" : "pilula_en"] = pilula;
     }
   }
+
+  const fontes = texto.match(/^\*\*Fontes consultadas:\*\*\s*(.+)$/im)?.[1] ?? secoes(texto).find((s) => /^fontes/i.test(s.titulo))?.corpo.trim();
+  if (fontes) ficha.fontes = fontes;
 
   if (!versoes.pt) avisos.push("Sem versão PT");
   else if (!versoes.pt.roteiro) avisos.push("Roteiro PT vazio");

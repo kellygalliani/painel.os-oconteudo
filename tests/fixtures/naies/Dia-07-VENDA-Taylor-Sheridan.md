@@ -14,8 +14,8 @@
 
 ## Apuração e Buscas de Vídeo de Apoio (B-Roll)
 
-- **Fato em 1 frase:** Despejado e com apenas US$ 800 na conta aos 40 anos após ouvir de um executivo que era substituível, o ator Taylor Sheridan comprou um software de roteiro, recusou entregar o controle criativo de *Yellowstone* para salas de roteiristas de Hollywood e construiu um império televisivo de US$ 1 bilhão.
-- **Números de escala:** Quase 20 anos como ator secundário, 40 anos de idade, US$ 800 no banco, recusou salas de 10 roteiristas, mais de 15 milhões de espectadores por episódio em *Yellowstone*, acordo de US$ 1 bilhão.
+- **Fato em 1 frase:** Depois de quase 20 anos como ator e de ouvir que era substituível, Taylor Sheridan decidiu contar as próprias histórias; mais tarde, escreveu *Sicario* e *Hell or High Water* e criou *Yellowstone*.
+- **Números de escala:** Quase 20 anos trabalhando como ator; US$ 800 no banco quando vendeu um roteiro, segundo entrevista de Sheridan.
 - **O que buscar de vídeo de apoio (YouTube / Google Vídeos Curtos / TikTok):**
   1. `"Taylor Sheridan interview 60 minutes"` ou `"Taylor Sheridan Yellowstone behind the scenes"`.
   2. `"Taylor Sheridan Sons of Anarchy"` (ele como ator secundário antes de pedir demissão).
@@ -26,39 +26,41 @@
 ## 🇧🇷 Versão PT (Português — Formato Contínuo NAIEV)
 
 **OPÇÕES DE TÍTULO FIXO (Manchete na tela durante toda a Alavanca — 8 a 13s):**
-- [x] **Opção 1:** Com US$ 800 no banco e despejado, esse ator dormiu no carro para proteger seu roteiro e criou uma série de 1 bilhão! (116 carac.)
-- [ ] **Opção 2:** Disseram que ele era substituível aos 40 anos, então ele largou tudo e criou o maior sucesso da TV americana sozinho! (118 carac.)
-- [ ] **Opção 3:** QUE REVIRAVOLTA! Ele recusou milhões para não perder o estilo da própria obra e fechou contrato de US$ 1 bilhão (112 carac.)
+- [x] **Opção 1:** Taylor Sheridan ouviu que era substituível e decidiu contar as próprias histórias (81 carac.)
+- [ ] **Opção 2:** Depois de quase 20 anos como ator, Taylor Sheridan passou a escrever os próprios roteiros (89 carac.)
+- [ ] **Opção 3:** Com US$ 800 no banco, Taylor Sheridan decidiu apostar na própria escrita (72 carac.)
 
 **Roteiro Contínuo (Pronto para leitura fluida):**
 
-Que reviravolta! Com 800 dólares no banco e despejado de casa, esse ator dormiu dentro do carro para não vender o próprio roteiro, e criou uma série de 1 bilhão de dólares.
+Disseram a Taylor Sheridan que ele era substituível. No dia em que vendeu um roteiro, tinha US$ 800 no banco e uma decisão: contar as próprias histórias.
 
-O nome dele é Taylor Sheridan. Durante quase 20 anos em Los Angeles, ele foi aquele ator secundário que recebia cachê baixo e mal conseguia pagar as contas. Aos 40 anos, quando a esposa engravidou, um produtor ofereceu um salário ridículo para renovar o contrato dele na TV e disse na cara dele que ele era substituível. No mesmo dia, com apenas 800 dólares na conta, o Taylor pediu demissão, comprou um programa de computador de escrever roteiros e decidiu ser dono das próprias histórias. Quando escreveu o projeto de Yellowstone, grandes emissoras quiseram comprar, mas exigiam que uma sala com dez roteiristas mudasse tudo o que ele criava. Ele bateu o pé e recusou milhões porque sabia que, se dependesse da mão de terceiros, a identidade da obra ia sumir. Para bancar a própria visão no começo, ele chegou a dormir no carro e em barracas, escreveu cada episódio sozinho no próprio ritmo e exigiu controle total. Resultado: Yellowstone virou a série mais assistida dos Estados Unidos, com mais de 15 milhões de espectadores por episódio, e rendeu um contrato histórico de 1 bilhão de dólares.
+Taylor Sheridan passou quase 20 anos trabalhando como ator, esperando ser chamado para contar histórias escritas por outras pessoas. Quando um executivo disse que ele era substituível, decidiu mudar de lugar: queria escrever as próprias histórias. Quando decidiu sair, ele não começou de um dia para o outro com uma série de sucesso. A esposa comprou para ele o Final Draft, e ele escreveu o roteiro de *Sicario*, que chegou ao cinema em 2015. Depois veio *Hell or High Water*, indicado ao Oscar de roteiro original em 2017. Só em 2018 *Yellowstone* estreou na televisão. Foram anos entre a decisão de escrever e o projeto que o público passou a associar ao nome dele. Naquele período, ele vendeu um roteiro e contou depois que tinha apenas US$ 800 na conta no dia da venda. Só que aquele começo apertado não virou a história inteira. A virada não foi simplesmente deixar de ser ator; foi parar de esperar que alguém escolhesse o papel certo para ele e começar a construir os projetos que queria ver na tela. E foi assim, roteiro por roteiro, que uma carreira de ator secundário deu lugar à de roteirista e criador de séries.
 
-Talvez essa história tenha aparecido no seu domingo porque você também sabe o quanto dói perder a sua identidade ou a sua noite tentando colocar o seu trabalho no mundo. Eu nunca quis depender de editor e detestava perder minhas noites editando vídeo na mão.
+Talvez essa história tenha cruzado seu domingo porque você sabe o que quer dizer nos seus vídeos, mas a edição manual pode transformar sua voz em mais uma tarefa interminável. Eu gostava de gravar; não queria terceirizar meu estilo nem passar a noite montando cada Reel. Foi por isso que criei a Máquina de Reels. Você continua decidindo o que quer contar; a ferramenta assume o trabalho repetitivo de montar o vídeo sem transformar sua noite inteira em linha do tempo.
 
-E é por isso que você pode começar a sua segunda-feira com os vídeos da semana prontos. Comente MÁQUINA aqui embaixo. Eu criei a Máquina de Reels: três inteligências no computador que editam os seus vídeos exatamente no seu estilo, sem abrir linha do tempo e sem depender de ninguém. Você grava, joga na pasta, escreve uma frase e recebe o Reel editado em até 5 minutos, com tela dividida, legenda, título e trilha, ou transforma um podcast inteiro em vários cortes prontos. Digite MÁQUINA que eu te envio no direct a demonstração dela trabalhando na minha tela. Quando você assume o controle da sua ferramenta, a sua mensagem nunca mais fica refém da falta de tempo.
+Ela reúne três skills para editar Reels, criar templates e separar cortes de podcast. Com a Máquina instalada e seus arquivos organizados, você recebe um Reel no seu estilo, com cortes, vídeos de apoio, título, legenda e trilha; a edição pode levar até cinco minutos. Comente MÁQUINA e eu te mando no direct a demonstração e o link com os detalhes. Veja a edição acontecendo e escolha se a Máquina faz sentido para você.
 
-`[Alavanca: 172] | [Desenvolvimento: 1.097] | [Conexão: 258] | [CTA: 667] | [TOTAL: 2.194 / 2.200 caracteres com espaços]`
+`[Alavanca: 153] | [Desenvolvimento: 1119] | [Conexão: 469] | [CTA: 420] | [TOTAL: 2164 / 2.200 caracteres com espaços]`
 
 ---
 
 ## 🇺🇸 Versão EN (English — Continuous NAIEV Format)
 
 **FIXED TITLES (On-screen headline during the entire Hook — 8 to 13s):**
-- [x] **Option 1:** Down to $800 and evicted, this actor slept in his car to protect his script and built a $1 billion TV empire! (110 chars)
-- [ ] **Option 2:** Hollywood told him he was replaceable at 40, so he quit acting and wrote the biggest show in America by himself! (112 chars)
-- [ ] **Option 3:** WHAT A TURNAROUND! He walked away from millions to keep his creative style and landed a $1 billion deal (103 chars)
+- [x] **Option 1:** Taylor Sheridan was told he was replaceable, so he started writing his own stories (82 chars)
+- [ ] **Option 2:** After nearly 20 years as an actor, Taylor Sheridan began writing his own scripts (80 chars)
+- [ ] **Option 3:** With $800 in the bank, Taylor Sheridan bet on his own writing (61 chars)
 
 **Continuous Script:**
 
-What a turnaround! Down to his last 800 dollars and evicted from his apartment, this actor slept in his car rather than hand over his script, and built a billion-dollar TV empire.
+Taylor Sheridan was told he was replaceable. The day he sold a script, he had $800 in the bank and a decision: tell his own stories.
 
-His name is Taylor Sheridan. For nearly 20 years in Los Angeles, he worked as a bit-part actor scraping by from paycheck to paycheck. At 40 years old, right when his wife was pregnant, a network executive offered him a laughable renewal rate and told him to his face that he was completely replaceable. That very day, with just 800 dollars left in his bank account, Taylor quit acting, bought screenwriting software on his computer, and decided to own his work from start to finish. When he wrote the pilot for Yellowstone, major studios wanted it, but they insisted on handing it over to a room of ten writers who would change his voice and drag the process out for months. He walked away from millions because he knew that if he relied on middlemen, his style would disappear. Early on, he even slept in his car and in tents while writing every episode himself on his own terms. The result? Yellowstone became the most-watched show in America, drawing over 15 million viewers an episode and earning him a historic billion-dollar production deal.
+Taylor Sheridan spent nearly 20 years working as an actor, waiting to be chosen for stories written by other people. When an executive told him he was replaceable, he decided to change places: he wanted to write his own stories. When he made that choice, he didn?t jump straight into a successful TV series. His wife bought him Final Draft, and he wrote *Sicario*, which reached theaters in 2015. Then came *Hell or High Water*, nominated for the Academy Award for Original Screenplay in 2017. *Yellowstone* didn?t premiere on television until 2018. Years passed between deciding to write and the project most people now connect with his name. Around that time, he sold a script and later said he had only $800 in the bank on the day it sold. That tight beginning, though, wasn’t the whole story. The turning point wasn’t simply leaving acting; it was stopping the wait for someone else to choose the right role and starting to build the projects he wanted to see on screen. Script by script, a career as a supporting actor gave way to one as a screenwriter and series creator.
 
-Maybe this story found you this Sunday night because you know how frustrating it is to lose your voice or your whole evening just trying to get your content out into the world. I never wanted to rely on an editor, and I hated spending my nights editing videos by hand.
+Maybe this story found you on a Sunday because you know what you want to say in your videos, but manual editing can turn your voice into one more endless task. I liked filming; I didn’t want to outsource my style or spend the night assembling every Reel. That is why I built the Reels Machine. You still decide what you want to say; the tool takes on the repetitive editing work without turning your whole evening into a timeline.
 
-And that is why you can start your Monday morning with your whole week of content already edited. Comment MACHINE down below. I built the Reels Machine: three AI skills you install on your computer that edit your videos in your exact style, without touching a timeline or waiting on anyone else. You film, drop your files into a folder, type one sentence, and get your finished Reel in under 5 minutes—complete with split screen, headline, clean cuts, and captions—or turn one podcast episode into multiple viral clips. Type MACHINE in the comments and I’ll DM you a screen recording of it working live. When you own the machine behind your content, your voice never gets held back by a lack of time.
+It includes three skills for editing Reels, creating templates, and pulling clips from a podcast. With the Machine installed and your files organized, you get a Reel in your style, with cuts, supporting footage, a title, captions, and music; the edit can take up to five minutes. Comment MACHINE and I’ll DM you the demo and a link with the details. Watch the edit happen and see whether the Machine fits your workflow.
 
-`[Hook: 179] | [Story: 1.047] | [Connection: 268] | [CTA: 700] | [TOTAL: 2.194 / 2,200 characters with spaces]`
+`[Hook: 132] | [Story: 1071] | [Connection: 430] | [CTA: 419] | [TOTAL: 2055 / 2,200 characters with spaces]`
+
+**Fontes consultadas:** [Entrevista de Sheridan — US$ 800 no banco quando vendeu um roteiro](https://bridleandbit.com/interviews/taylor-sheridan-2022/); [Deadline — transição de ator para roteirista](https://www.yahoo.com/entertainment/taylor-sheridan-triumphant-tv-return-163027155.html); [Academy Awards — indicação de *Hell or High Water*](https://www.oscars.org/oscars/ceremonies/2017/A--E); [Esquire — carreira e primeiro roteiro](https://www.esquire.com/entertainment/movies/a20717314/taylor-sheridan-sicario-day-of-the-soldado-yellowstone-interview-2018/).
