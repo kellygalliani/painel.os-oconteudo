@@ -102,10 +102,10 @@ function SeletorTrilha({ naieId, atual, trilhas }: { naieId: string; atual: stri
   const t = trilhas.find((x) => x.id === sel);
   if (!trilhas.length) return <p className="text-sm text-muted-foreground">Nenhuma trilha enviada ainda (veja Conteúdo › Trilhas).</p>;
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <select
         aria-label="Trilha"
-        className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm"
+        className="h-9 w-0 min-w-0 flex-1 truncate rounded-md border bg-background px-2 text-sm"
         value={sel}
         onChange={(e) => {
           setSel(e.target.value);
@@ -182,7 +182,7 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
   if (editando) return <FormNaie naie={naie} soDetalhes aoSalvar={() => setEditando(false)} />;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-6 overflow-x-clip">
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <ChipTipo tipo={naie.tipo} />
@@ -227,16 +227,16 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
 
       <DocumentoNaie key={naie.origemMd ?? naie.id} naie={naie} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Secao titulo="Trilha">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
+        <Secao titulo="Trilha" className="min-w-0">
           <SeletorTrilha naieId={naie.id} atual={naie.trilhaId} trilhas={trilhas} />
         </Secao>
-        <Secao titulo="Links">
+        <Secao titulo="Links" className="min-w-0">
           <ul className="flex flex-col gap-1 text-sm">
             {([["Bruto PT", naie.linkBrutoPt], ["Bruto EN", naie.linkBrutoEn], ["Referência", naie.linkReferencia]] as const).map(([r, l]) => (
-              <li key={r} className="flex gap-2">
+              <li key={r} className="flex min-w-0 gap-2">
                 <span className="w-24 shrink-0 text-muted-foreground">{r}</span>
-                {l ? <a href={l} target="_blank" rel="noreferrer" className="truncate underline underline-offset-2">{l}</a> : <span className="text-muted-foreground">não informado</span>}
+                {l ? <a href={l} target="_blank" rel="noreferrer" className="min-w-0 truncate underline underline-offset-2">{l}</a> : <span className="text-muted-foreground">não informado</span>}
               </li>
             ))}
           </ul>

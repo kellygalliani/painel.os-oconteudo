@@ -45,12 +45,12 @@ function BotaoCopiar({ texto, rotulo, aviso }: { texto: string; rotulo: string; 
 function TitulosFixos({ md, aoMudar }: { md: string; aoMudar: (novo: string) => void }) {
   const lida = useMemo(() => lerNaieMd("doc.md", md), [md]);
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
       {(["pt", "en"] as Idioma[]).map((idioma) => {
         const v = lida.versoes[idioma];
         if (!v?.titulos.length) return null;
         return (
-          <fieldset key={idioma} className="flex flex-col gap-1 rounded-xl border bg-card p-3">
+          <fieldset key={idioma} className="flex min-w-0 flex-col gap-1 rounded-xl border bg-card p-3">
             <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Título fixo {idioma.toUpperCase()} ·{" "}
               <span style={{ color: v.contagem.total > TETO_CARACTERES ? "var(--carga-alta)" : undefined }}>
@@ -99,7 +99,7 @@ export function DocumentoNaie({ naie }: { naie: Naie }) {
     );
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex min-w-0 flex-col gap-4">
       <TitulosFixos md={md} aoMudar={(novo) => salvar(novo, "Título escolhido.")} />
 
       <div className="sticky top-0 z-10 -mx-4 flex flex-wrap gap-2 bg-background/95 px-4 py-2 backdrop-blur md:mx-0 md:px-0">
@@ -110,9 +110,9 @@ export function DocumentoNaie({ naie }: { naie: Naie }) {
         </Button>
       </div>
 
-      <article className="flex flex-col gap-5 rounded-xl border bg-card p-4 md:p-6">
+      <article className="flex min-w-0 flex-col gap-5 rounded-xl border bg-card p-4 [overflow-wrap:anywhere] md:p-6">
         {trechos(md).map((t, i) => (
-          <div key={i} className="group relative flex flex-col gap-2">
+          <div key={i} className="group relative flex min-w-0 flex-col gap-2">
             {t.titulo && (
               <button
                 onClick={() => copiar(t.texto, `Copiado: ${t.titulo}.`)}
