@@ -96,20 +96,12 @@ Leva para o painel o `../Estratégia/Reestruturação/agenda-oconteudo.html`, co
 - Atalho: colar o texto de um `.md` e preencher sozinho.
 
 ### Leitura e edição (`/[id]`)
-- **Bem separada, com um botão Copiar em cada bloco:**
-  1. Título fixo escolhido (PT e EN).
-  2. Roteiro PT.
-  3. Roteiro EN.
-  4. Buscas de vídeo de apoio (B-roll).
-  5. Ficha: história, número no Banco, objeto-ponte, CTA (chamada para ação).
-- **Escolher o título fixo:** as opções aparecem como lista de escolha, e a escolhida fica marcada e salva.
-- **Contagem de caracteres** por parte (Alavanca, Desenvolvimento, Conexão, CTA e total, sobre o teto de 2.200), recalculada ao editar.
-- **Editar:** um botão Editar abre os campos e um botão Salvar grava.
-- **Status:** um botão por etapa (roteiro, gravada, editada, publicada).
-- **Links:** vídeo bruto PT, vídeo bruto EN, vídeo de referência.
-- **Trilha:** escolher da lista (favoritas primeiro), com play para ouvir ali mesmo.
-- **Modo gravação:** tela cheia, letra grande, só o roteiro do idioma escolhido.
-- **Baixar pasta de edição:** gera um `.zip` (ver abaixo).
+- **A NAIE é um documento só:** o `.md` inteiro aparece de uma vez, formatado, para ler de cima a baixo. Dá para selecionar e copiar qualquer parte, e cada seção tem um "Copiar seção".
+- **Copiar tudo PT** e **Copiar tudo EN:** o documento inteiro sem a seção do outro idioma. Ficha, apuração e fontes vão nos dois (mesmo em português no EN).
+- **Título fixo:** a escolha fica fora do texto (um seletor PT e um EN, com a contagem sobre 2.200), mas reescreve o `[x]` dentro do `.md`. O texto copiado já sai com o título certo marcado.
+- **Editar texto:** abre o `.md` inteiro para editar. Ao salvar, tipo, título curto, ficha, títulos, roteiros e contagem são lidos de volta do texto (`server/documento.ts`). NAIE criada pelo formulário ganha um `.md` no formato padrão.
+- **Editar detalhes:** data, semana, quem grava, status, template e links.
+- **Status**, **vídeos brutos PT e EN**, **trilha**, **links**, **Gravar (modo leitura)** e **Baixar pasta** continuam fora do texto.
 
 ### Pasta de edição (o `.zip`)
 Nome da pasta: `AAAA-MM-DD-tipo-titulo-curto`, sem acento e sem espaço. Por exemplo, `2026-11-02-geral-sixto-rodriguez/`.

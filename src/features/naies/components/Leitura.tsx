@@ -1,19 +1,18 @@
 "use client";
 
-import { avisar } from "@/components/shared/avisar";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { strToU8, zipSync } from "fflate";
 import { Download, Maximize2, Pause, Pencil, Play, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { BlocoCopiavel } from "@/components/shared/BlocoCopiavel";
 import { Secao } from "@/components/shared/ui-base";
 import { ddmm, DIAS_LONGOS, diaDaSemana } from "@/lib/datas";
 import { cn } from "@/lib/utils";
-import { paragrafos as paragrafosDe, TETO_CARACTERES } from "../logic/contagem";
-import { apagarNaie, dadosDaPasta, escolherTitulo, escolherTrilha, mudarStatusNaie } from "../server/actions";
+import { paragrafos as paragrafosDe } from "../logic/contagem";
+import { apagarNaie, dadosDaPasta, escolherTrilha, mudarStatusNaie } from "../server/actions";
 import { QUEM_GRAVA, STATUS, type Idioma, type Naie, type Versao } from "../schema";
+import { DocumentoNaie } from "./Documento";
 import { FormNaie } from "./FormNaie";
 import { ChipTipo } from "./Lista";
 import { VideosBrutos } from "./VideosBrutos";
@@ -22,43 +21,6 @@ import { apagarVideos } from "../server/videos";
 export type TrilhaOpcao = { id: string; nome: string; favorita: boolean; url: string | null };
 
 const titulo = (v?: Versao) => (v && v.tituloEscolhido != null ? v.titulos[v.tituloEscolhido] : v?.titulos[0]) ?? "";
-
-function EscolherTitulo({ naieId, idioma, v }: { naieId: string; idioma: Idioma; v: Versao }) {
-  const [sel, setSel] = useState(v.tituloEscolhido ?? 0);
-  const [, start] = useTransition();
-  return (
-    <fieldset className="flex flex-col gap-1.5 rounded-xl border bg-card p-4">
-      <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Título fixo {idioma.toUpperCase()}</legend>
-      {v.titulos.map((t, i) => (
-        <label key={i} className={cn("flex cursor-pointer items-start gap-2 rounded-lg p-2 text-sm", sel === i && "bg-muted font-medium")}>
-          <input
-            type="radio"
-            className="mt-1"
-            name={`titulo-${idioma}`}
-            checked={sel === i}
-            onChange={() => {
-              setSel(i);
-              start(async () => {
-                const r = await escolherTitulo(naieId, idioma, i);
-                avisar(r, "Título escolhido.");
-              });
-            }}
-          />
-          <span>{t} <span className="text-xs text-muted-foreground">({t.length})</span></span>
-        </label>
-      ))}
-    </fieldset>
-  );
-}
-
-function Contagem({ v }: { v: Versao }) {
-  const c = v.contagem;
-  return (
-    <p className="text-xs tabular-nums text-muted-foreground" style={{ color: c.total > TETO_CARACTERES ? "var(--carga-alta)" : undefined }}>
-      {c.alavanca != null && `Alavanca ${c.alavanca} · Desenvolvimento ${c.desenvolvimento} · Conexão ${c.conexao} · CTA ${c.cta} · `}Total {c.total} / {TETO_CARACTERES}
-    </p>
-  );
-}
 
 const PARTES = ["Alavanca", "Desenvolvimento", "Conexão", "CTA"];
 
@@ -213,29 +175,11 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [gravando, setGravando] = useState(false);
-  const [idiomaCel, setIdiomaCel] = useState<Idioma>("pt");
   const [confirmar, setConfirmar] = useState(false);
   const [status, setStatus] = useState(naie.status);
   const [, start] = useTransition();
-  const { pt, en } = naie.versoes;
-  const ficha = naie.ficha;
 
-  if (editando) return <FormNaie naie={naie} aoSalvar={() => setEditando(false)} />;
-
-  const colunaVersao = (idioma: Idioma, v?: Versao) => (
-    <div className={cn("flex min-w-0 flex-col gap-3", idiomaCel !== idioma && "hidden lg:flex")}>
-      {v ? (
-        <>
-          <BlocoCopiavel titulo={`Título fixo ${idioma.toUpperCase()}`} texto={titulo(v)} />
-          <BlocoCopiavel titulo={`Roteiro ${idioma.toUpperCase()}`} texto={v.roteiro} grande />
-          <Contagem v={v} />
-          {v.titulos.length > 1 && <EscolherTitulo naieId={naie.id} idioma={idioma} v={v} />}
-        </>
-      ) : (
-        <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">Sem versão {idioma.toUpperCase()}. Use Editar para escrever.</p>
-      )}
-    </div>
-  );
+  if (editando) return <FormNaie naie={naie} soDetalhes aoSalvar={() => setEditando(false)} />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -275,21 +219,13 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <Button size="lg" className="col-span-2 sm:col-span-1" onClick={() => setGravando(true)}><Maximize2 className="size-4" /> Gravar (modo leitura)</Button>
           <BaixarPasta naieId={naie.id} />
-          <Button variant="outline" onClick={() => setEditando(true)}><Pencil className="size-4" /> Editar</Button>
+          <Button variant="outline" onClick={() => setEditando(true)}><Pencil className="size-4" /> Editar detalhes</Button>
         </div>
       </header>
 
       <VideosBrutos naie={naie} />
 
-      <div className="sticky top-0 z-10 -mx-4 flex gap-1 bg-background/95 px-4 py-2 backdrop-blur lg:hidden">
-        {(["pt", "en"] as const).map((i) => (
-          <Button key={i} size="sm" variant={idiomaCel === i ? "default" : "outline"} onClick={() => setIdiomaCel(i)}>{i.toUpperCase()}</Button>
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        {colunaVersao("pt", pt)}
-        {colunaVersao("en", en)}
-      </div>
+      <DocumentoNaie key={naie.origemMd ?? naie.id} naie={naie} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Secao titulo="Trilha">
@@ -306,18 +242,6 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
           </ul>
         </Secao>
       </div>
-
-      {(ficha.pilula_pt || ficha.pilula_en) && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {ficha.pilula_pt && <BlocoCopiavel titulo="Pílula emocional PT (opcional)" texto={ficha.pilula_pt} />}
-          {ficha.pilula_en && <BlocoCopiavel titulo="Pílula emocional EN (opcional)" texto={ficha.pilula_en} />}
-        </div>
-      )}
-      {ficha.buscas_apoio?.length ? <BlocoCopiavel titulo="Buscas de vídeo de apoio (B-roll)" texto={ficha.buscas_apoio.join("\n")} /> : null}
-      {ficha.campos && Object.keys(ficha.campos).length > 0 && (
-        <BlocoCopiavel titulo="Ficha" texto={Object.entries(ficha.campos).map(([k, v]) => `${k}: ${v}`).join("\n")} />
-      )}
-      {ficha.apuracao && <BlocoCopiavel titulo="Apuração" texto={ficha.apuracao.replace(/\*\*/g, "")} />}
 
       <div className="border-t pt-4">
         {confirmar ? (

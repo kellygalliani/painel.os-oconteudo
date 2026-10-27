@@ -50,6 +50,8 @@ export type Naie = {
   trilhaId: string | null;
   versoes: Partial<Record<Idioma, Versao>>;
   videos: Partial<Record<Idioma, VideoBruto>>;
+  /** O documento .md da NAIE (null = gerado dos campos). */
+  origemMd: string | null;
 };
 
 /** Resultado do leitor de .md, antes de ir para o banco. */

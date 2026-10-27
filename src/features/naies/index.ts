@@ -8,3 +8,5 @@ export { Importar } from "./components/Importar";
 export { FormNaie } from "./components/FormNaie";
 export { LeituraNaie, type TrilhaOpcao } from "./components/Leitura";
 export { prepararEnvioVideo, confirmarVideo, apagarVideos, linkDoVideo } from "./server/videos";
+export { DocumentoNaie } from "./components/Documento";
+export { salvarDocumento } from "./server/documento";

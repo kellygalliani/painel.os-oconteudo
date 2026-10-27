@@ -29,6 +29,7 @@ export function mapearNaie(r: any): Naie {
     trilhaId: r.trilha_id,
     versoes,
     videos,
+    origemMd: r.origem_md ?? null,
   };
 }
 

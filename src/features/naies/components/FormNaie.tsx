@@ -70,7 +70,8 @@ function EditorVersao({ idioma, v, setV }: { idioma: "pt" | "en"; v: V; setV: (v
   );
 }
 
-export function FormNaie({ naie, aoSalvar }: { naie?: Naie | null; aoSalvar?: () => void }) {
+/** `soDetalhes`: edita data, quem grava, status, template e links; o texto se edita no documento. */
+export function FormNaie({ naie, aoSalvar, soDetalhes = false }: { naie?: Naie | null; aoSalvar?: () => void; soDetalhes?: boolean }) {
   const router = useRouter();
   const [f, setF] = useState<NaieForm>(() => inicialDe(naie));
   const [colar, setColar] = useState("");
@@ -142,10 +143,10 @@ export function FormNaie({ naie, aoSalvar }: { naie?: Naie | null; aoSalvar?: ()
           <Input id="ref" type="url" value={f.linkReferencia ?? ""} onChange={(e) => setF({ ...f, linkReferencia: e.target.value })} />
         </Campo>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      {!soDetalhes && <div className="grid gap-4 lg:grid-cols-2">
         <EditorVersao idioma="pt" v={f.pt} setV={(pt) => setF({ ...f, pt })} />
         <EditorVersao idioma="en" v={f.en ?? vazia()} setV={(en) => setF({ ...f, en })} />
-      </div>
+      </div>}
       <div className="flex gap-2">
         <Button onClick={salvar} disabled={pend}>{pend ? "Salvando…" : "Salvar"}</Button>
         {aoSalvar && <Button variant="ghost" onClick={aoSalvar}>Cancelar</Button>}

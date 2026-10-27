@@ -87,6 +87,7 @@ const naie = (parcial: Partial<Naie> = {}): Naie => ({
   linkReferencia: null,
   trilhaId: null,
   videos: {},
+  origemMd: null,
   versoes: {
     pt: { idioma: "pt", titulos: ["Título A", "Título B"], tituloEscolhido: 1, roteiro: "Texto PT", contagem: { total: 8 } },
   },
