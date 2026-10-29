@@ -32,6 +32,7 @@ export async function salvarNaie(entrada: unknown): Promise<Resultado<{ id: stri
   const linha = {
     semana: n.semana || null,
     data_prevista: n.dataPrevista,
+    editar_em: n.editarEm,
     tipo: n.tipo,
     formato: n.formato,
     titulo_curto: n.tituloCurto,

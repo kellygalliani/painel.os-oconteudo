@@ -379,7 +379,7 @@ Passos marcados com **⏸ Kelly** precisam de uma ação ou de um dado da Kelly.
    - Actions: `salvarNaie`, `escolherTitulo`, `mudarStatusNaie`, `salvarLinks`, `apagarNaie` (com confirmação).
 8. **NAIEs na agenda:** `features/naies/logic/naies-na-agenda.ts` gera itens `ItemDoDia` (o tipo vem de `features/agenda/index.ts`):
    - **Publicar <título curto>:** na `data_prevista`, 10 min, Kelly. No fim de semana, 0 min e a nota "agendado na sexta". Fica `feito` quando o status é `publicada`.
-   - **Editar <título curto>:** 2 dias úteis antes da `data_prevista`, 20 min, Kelly, no máximo 2 por dia; se passar disso, vai para o dia útil anterior. Fica `feito` quando o status é `editada` ou `publicada`.
+   - **Editar <título curto>:** no dia de `editar_em`, quando preenchido (lote escolhido à mão em Editar detalhes); se vazio, 2 dias úteis antes da `data_prevista`, 20 min, Kelly, no máximo 2 por dia; se passar disso, vai para o dia útil anterior. Fica `feito` quando o status é `editada` ou `publicada`.
    - A página da agenda junta esses itens aos de `rotinasDoDia`. Marcar um item `naie_*` chama `mudarStatusNaie`, através do `index.ts` de naies.
    - Teste: a NAIE de 02/11/2026 gera Editar em 29/10 (o dia 02/11 é feriado e, dois dias úteis antes, cai na quinta 29/10).
 

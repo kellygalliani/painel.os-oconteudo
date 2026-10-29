@@ -16,6 +16,7 @@ export function mapearNaie(r: any): Naie {
     semana: r.semana,
     diaNumero: r.dia_numero,
     dataPrevista: r.data_prevista,
+    editarEm: r.editar_em ?? null,
     tipo: r.tipo,
     formato: r.formato,
     tituloCurto: r.titulo_curto,

@@ -37,6 +37,8 @@ export type Naie = {
   semana: string | null;
   diaNumero: number | null;
   dataPrevista: string | null;
+  /** Dia da edição escolhido à mão (null = 2 dias úteis antes do post). */
+  editarEm: string | null;
   tipo: TipoNaie;
   formato: "reels" | "carrossel";
   tituloCurto: string;
@@ -76,6 +78,7 @@ export const naieSchema = z.object({
   id: z.string().uuid().nullable(),
   semana: z.string().trim().max(80).nullable(),
   dataPrevista: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  editarEm: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   tipo: z.enum(["geral", "nicho", "venda"]),
   formato: z.enum(["reels", "carrossel"]),
   tituloCurto: z.string().trim().min(2).max(120),

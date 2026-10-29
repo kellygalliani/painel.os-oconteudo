@@ -23,6 +23,7 @@ export function inicialDe(n?: Naie | null): NaieForm {
     id: n?.id ?? null,
     semana: n?.semana ?? "",
     dataPrevista: n?.dataPrevista ?? null,
+    editarEm: n?.editarEm ?? null,
     tipo: n?.tipo ?? "geral",
     formato: n?.formato ?? "reels",
     tituloCurto: n?.tituloCurto ?? "",
@@ -114,6 +115,9 @@ export function FormNaie({ naie, aoSalvar, soDetalhes = false }: { naie?: Naie |
         </Campo>
         <Campo id="data" rotulo="Data do post">
           <Input id="data" type="date" value={f.dataPrevista ?? ""} onChange={(e) => setF({ ...f, dataPrevista: e.target.value || null })} />
+        </Campo>
+        <Campo id="editar-em" rotulo="Dia de editar (vazio = 2 dias úteis antes)">
+          <Input id="editar-em" type="date" value={f.editarEm ?? ""} onChange={(e) => setF({ ...f, editarEm: e.target.value || null })} />
         </Campo>
         <Campo id="semana-n" rotulo="Semana">
           <Input id="semana-n" value={f.semana ?? ""} onChange={(e) => setF({ ...f, semana: e.target.value })} />

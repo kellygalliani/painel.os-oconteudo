@@ -16,7 +16,8 @@ const anteriorUtil = (d: string, esp: Especiais) => {
 };
 
 /**
- * Publicar no dia da NAIE e Editar 2 dias úteis antes (no máximo 2 edições por dia).
+ * Publicar no dia da NAIE e Editar no dia escolhido (`editarEm`) ou, sem ele,
+ * 2 dias úteis antes (no máximo 2 edições por dia).
  * `responsavelId` é quem cuida das NAIEs (a dona da rotina de roteiros).
  */
 export function naiesNaAgenda(naies: Naie[], responsavelId: string | null, esp: Especiais): Record<string, ItemDoDia[]> {
@@ -40,9 +41,11 @@ export function naiesNaAgenda(naies: Naie[], responsavelId: string | null, esp: 
       feito: n.status === "publicada",
     });
 
-    let dia = data;
-    for (let i = 0; i < DIAS_UTEIS_ANTES_DE_EDITAR; i++) dia = anteriorUtil(dia, esp);
-    while ((edicoesPorDia.get(dia) ?? 0) >= MAX_EDICOES_DIA) dia = anteriorUtil(dia, esp);
+    let dia = n.editarEm ?? data;
+    if (!n.editarEm) {
+      for (let i = 0; i < DIAS_UTEIS_ANTES_DE_EDITAR; i++) dia = anteriorUtil(dia, esp);
+      while ((edicoesPorDia.get(dia) ?? 0) >= MAX_EDICOES_DIA) dia = anteriorUtil(dia, esp);
+    }
     edicoesPorDia.set(dia, (edicoesPorDia.get(dia) ?? 0) + 1);
     (out[dia] ??= []).push({
       chave: `naie_editar:${n.id}@${dia}`,

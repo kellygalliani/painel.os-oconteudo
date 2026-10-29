@@ -75,6 +75,7 @@ const naie = (parcial: Partial<Naie> = {}): Naie => ({
   semana: "Semana 01",
   diaNumero: 1,
   dataPrevista: "2026-11-02",
+  editarEm: null,
   tipo: "geral",
   formato: "reels",
   tituloCurto: "Sixto Rodriguez",
@@ -122,5 +123,9 @@ describe("NAIEs na agenda", () => {
     const itens = naiesNaAgenda(tres, "kelly", {});
     expect(itens["2026-11-10"]).toHaveLength(2);
     expect(itens["2026-11-09"]).toHaveLength(1);
+  });
+  it("com o dia de editar escolhido, a edição cai nele", () => {
+    const itens = naiesNaAgenda([naie({ editarEm: "2026-10-30" })], "kelly", {});
+    expect(itens["2026-10-30"][0].tipo).toBe("naie_editar");
   });
 });

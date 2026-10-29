@@ -47,7 +47,8 @@ describe("documento da NAIE", () => {
   it("documento gerado dos campos é lido de volta igual", () => {
     const lida = lerNaieMd("Dia-04-VENDA-x.md", canva);
     const naie = {
-      id: "x", semana: null, diaNumero: 4, dataPrevista: null, tipo: lida.tipo, formato: "reels" as const, tituloCurto: lida.tituloCurto,
+      id: "x", semana: null, diaNumero: 4, dataPrevista: null,
+      editarEm: null, tipo: lida.tipo, formato: "reels" as const, tituloCurto: lida.tituloCurto,
       quemGrava: "ambas" as const, status: "roteiro" as const, template: "t", ficha: lida.ficha, linkBrutoPt: null, linkBrutoEn: null,
       linkReferencia: null, trilhaId: null, origemMd: null, videos: {},
       versoes: { pt: { idioma: "pt" as const, ...lida.versoes.pt! }, en: { idioma: "en" as const, ...lida.versoes.en! } },
