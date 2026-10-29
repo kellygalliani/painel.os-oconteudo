@@ -37,7 +37,7 @@ Para rotina mensal ou trimestral, a `data` da marcação é a data em que ela ca
 ## 0003_naies
 | Tabela | Colunas |
 |---|---|
-| `naies` | `semana text null`, `dia_numero int null`, `data_prevista date null`, `tipo text check in ('geral','nicho','venda')`, `formato text check in ('reels','carrossel') default 'reels'`, `titulo_curto text`, `quem_grava text check in ('kelly','anne','ambas')`, `status text check in ('roteiro','gravada','editada','publicada') default 'roteiro'`, `template text default 'tela-dividida/classico'`, `ficha jsonb default '{}'`, `link_bruto_pt`, `link_bruto_en`, `link_referencia` (todos `text null`), `origem_md text null`, `atualizado_em`; unique (`semana`, `dia_numero`) |
+| `naies` | `semana text null`, `dia_numero int null`, `data_prevista date null`, `tipo text check in ('geral','nicho','venda')`, `formato text check in ('reels','carrossel') default 'reels'`, `titulo_curto text`, `quem_grava text check in ('kelly','anne','ambas')`, `status text check in ('roteiro','gravada','editada','publicada') default 'roteiro'`, `template text default 'tela-dividida/classico'`, `ficha jsonb default '{}'`, `link_bruto_pt`, `link_bruto_en`, `link_referencia` (todos `text null`), `origem_md text null`, `editar_em date null` (dia da edição escolhido à mão), `atualizado_em`; unique (`semana`, `dia_numero`) |
 | `naie_versoes` | `naie_id references naies on delete cascade`, `idioma text check in ('pt','en')`, `titulos text[] default '{}'`, `titulo_escolhido int null` (índice em `titulos`), `roteiro text default ''`, `contagem jsonb default '{}'`, `atualizado_em`; unique (`naie_id`, `idioma`) |
 
 Formato de `ficha`: `{ "campos": { "<Campo>": "<valor>" }, "apuracao": "<markdown>", "buscas_apoio": ["..."] }`.

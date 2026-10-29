@@ -16,7 +16,6 @@ import { DocumentoNaie } from "./Documento";
 import { FormNaie } from "./FormNaie";
 import { ChipTipo } from "./Lista";
 import { VideosBrutos } from "./VideosBrutos";
-import { apagarVideos } from "../server/videos";
 
 export type TrilhaOpcao = { id: string; nome: string; favorita: boolean; url: string | null };
 
@@ -202,12 +201,11 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
                 start(async () => {
                   const res = await mudarStatusNaie(naie.id, k);
                   if (!res.ok) { toast.error(res.erro); return; }
-                  // Publicou: oferece apagar os brutos para não encher o armazenamento.
-                  if (k === "publicada" && (naie.videos.pt || naie.videos.en))
-                    toast("Publicada. Apagar os vídeos brutos?", {
-                      duration: 10000,
-                      action: { label: "Apagar vídeos", onClick: async () => { const r = await apagarVideos(naie.id); if (r.ok) { toast(`${r.dados.apagados} vídeo(s) apagado(s).`); router.refresh(); } else toast.error(r.erro); } },
-                    });
+                  // Editada ou publicada: o servidor apaga os vídeos brutos sozinho.
+                  if (res.dados.videosApagados) {
+                    toast(`${res.dados.videosApagados} vídeo(s) bruto(s) apagado(s).`);
+                    router.refresh();
+                  }
                 });
               }}
               className={cn("shrink-0 rounded-full border px-3 py-1.5 text-sm", status === k ? "bg-foreground text-background" : "bg-card")}

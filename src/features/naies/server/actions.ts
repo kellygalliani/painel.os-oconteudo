@@ -10,6 +10,7 @@ import { contar } from "../logic/contagem";
 import { lerNaieMd } from "../logic/ler-md";
 import { montarPasta, type Pasta } from "../logic/pasta-edicao";
 import { importacaoSchema, naieSchema, type NaieLida } from "../schema";
+import { apagarBrutosSeEditada } from "./apagar-brutos";
 import { obterNaie } from "./queries";
 
 const FALHOU = "Não foi possível salvar. Tente de novo.";
@@ -24,7 +25,7 @@ function atualizar(id?: string) {
 
 const vazioParaNull = (s: string | null) => (s ? s : null);
 
-export async function salvarNaie(entrada: unknown): Promise<Resultado<{ id: string }>> {
+export async function salvarNaie(entrada: unknown): Promise<Resultado<{ id: string; videosApagados: number }>> {
   const socia = await exigirSocia();
   const d = naieSchema.safeParse(entrada);
   if (!d.success) return erro(d.error.issues[0]?.message ?? "Confira os campos.");
@@ -60,8 +61,9 @@ export async function salvarNaie(entrada: unknown): Promise<Resultado<{ id: stri
     if (rv.error) return erro(FALHOU);
   }
   if (!n.en || !versoes.some((x) => x.idioma === "en")) await socia.db.from("naie_versoes").delete().match({ naie_id: id, idioma: "en" });
+  const videosApagados = await apagarBrutosSeEditada(socia.db, id, n.status);
   atualizar(id);
-  return ok({ id });
+  return ok({ id, videosApagados });
 }
 
 export async function escolherTitulo(naieId: string, idioma: "pt" | "en", indice: number): Promise<Resultado> {
@@ -73,14 +75,15 @@ export async function escolherTitulo(naieId: string, idioma: "pt" | "en", indice
   return ok(null);
 }
 
-export async function mudarStatusNaie(naieId: string, status: string): Promise<Resultado> {
+export async function mudarStatusNaie(naieId: string, status: string): Promise<Resultado<{ videosApagados: number }>> {
   const socia = await exigirSocia();
   const d = z.enum(["roteiro", "gravada", "editada", "publicada"]).safeParse(status);
   if (!uuid.safeParse(naieId).success || !d.success) return erro("Dados inválidos");
   const { error } = await socia.db.from("naies").update({ status: d.data }).eq("id", naieId);
   if (error) return erro(FALHOU);
+  const videosApagados = await apagarBrutosSeEditada(socia.db, naieId, d.data);
   atualizar(naieId);
-  return ok(null);
+  return ok({ videosApagados });
 }
 
 export async function escolherTrilha(naieId: string, trilhaId: string | null): Promise<Resultado> {
