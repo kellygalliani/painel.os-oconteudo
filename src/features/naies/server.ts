@@ -5,8 +5,7 @@ import { naiesEntre, responsavelPelasNaies } from "./server/queries";
 
 export { listarNaies, obterNaie, naiesEntre, responsavelPelasNaies } from "./server/queries";
 
-/** Itens Editar e Publicar das NAIEs para a agenda. */
+/** Itens "Editar e agendar" e "Conferir se foi publicada" das NAIEs para a agenda. */
 export function itensDeNaies(db: ClienteDb) {
-  return async (desde: string, ate: string, especiais: Record<string, { tipo: string }>) =>
-    naiesNaAgenda(await naiesEntre(db, desde, ate), await responsavelPelasNaies(db), especiais);
+  return async (desde: string, ate: string) => naiesNaAgenda(await naiesEntre(db, desde, ate), await responsavelPelasNaies(db));
 }

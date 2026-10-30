@@ -3,56 +3,49 @@ import type { ItemDoDia } from "@/features/agenda";
 import type { Naie } from "../schema";
 
 export const MIN_EDITAR_POST = 20;
-export const MIN_PUBLICAR_POST = 10;
-export const DIAS_UTEIS_ANTES_DE_EDITAR = 2;
-export const MAX_EDICOES_DIA = 2;
-
-type Especiais = Record<string, { tipo: string }>;
-const util = (d: string, esp: Especiais) => diaDaSemana(d) < 5 && esp[d]?.tipo !== "feriado" && esp[d]?.tipo !== "recesso";
-const anteriorUtil = (d: string, esp: Especiais) => {
-  let x = somarDias(d, -1);
-  for (let i = 0; i < 30 && !util(x, esp); i++) x = somarDias(x, -1);
-  return x;
-};
+export const MIN_CONFERIR_POST = 5;
 
 /**
- * Publicar no dia da NAIE e Editar no dia escolhido (`editarEm`) ou, sem ele,
- * 2 dias úteis antes (no máximo 2 edições por dia).
- * `responsavelId` é quem cuida das NAIEs (a dona da rotina de roteiros).
+ * Dia do lote de edição e agendamento, pelo dia da semana do post (0 = segunda):
+ * domingo, segunda e terça na sexta anterior; quarta e quinta na segunda; sexta e sábado na terça.
  */
-export function naiesNaAgenda(naies: Naie[], responsavelId: string | null, esp: Especiais): Record<string, ItemDoDia[]> {
+export function diaDoLote(post: string): string {
+  const ds = diaDaSemana(post);
+  if (ds === 6) return somarDias(post, -2); // domingo → sexta
+  if (ds <= 1) return somarDias(post, -3 - ds); // segunda e terça → sexta anterior
+  if (ds <= 3) return somarDias(post, -ds); // quarta e quinta → segunda
+  return somarDias(post, 1 - ds); // sexta e sábado → terça
+}
+
+/**
+ * "Editar e agendar" no dia escolhido (`editarEm`) ou no dia do lote, e "Conferir se foi
+ * publicada" no dia do post. `responsavelId` é quem cuida das NAIEs (a dona da rotina de roteiros).
+ */
+export function naiesNaAgenda(naies: Naie[], responsavelId: string | null): Record<string, ItemDoDia[]> {
   const out: Record<string, ItemDoDia[]> = {};
   if (!responsavelId) return out;
-  const edicoesPorDia = new Map<string, number>();
   const ordenadas = naies.filter((n) => n.dataPrevista).sort((a, b) => a.dataPrevista!.localeCompare(b.dataPrevista!));
 
   for (const n of ordenadas) {
     const data = n.dataPrevista!;
-    const fds = diaDaSemana(data) > 4;
     (out[data] ??= []).push({
       chave: `naie_publicar:${n.id}@${data}`,
       tipo: "naie_publicar",
       refId: n.id,
       data,
-      titulo: `Publicar: ${n.tituloCurto}`,
+      titulo: `Conferir se ${n.tituloCurto} foi publicada`,
       areaId: "ven",
-      minutosPorSocia: { [responsavelId]: fds ? 0 : MIN_PUBLICAR_POST },
-      nota: fds ? "agendado na sexta" : undefined,
+      minutosPorSocia: { [responsavelId]: MIN_CONFERIR_POST },
       feito: n.status === "publicada",
     });
 
-    let dia = n.editarEm ?? data;
-    if (!n.editarEm) {
-      for (let i = 0; i < DIAS_UTEIS_ANTES_DE_EDITAR; i++) dia = anteriorUtil(dia, esp);
-      while ((edicoesPorDia.get(dia) ?? 0) >= MAX_EDICOES_DIA) dia = anteriorUtil(dia, esp);
-    }
-    edicoesPorDia.set(dia, (edicoesPorDia.get(dia) ?? 0) + 1);
+    const dia = n.editarEm ?? diaDoLote(data);
     (out[dia] ??= []).push({
       chave: `naie_editar:${n.id}@${dia}`,
       tipo: "naie_editar",
       refId: n.id,
       data: dia,
-      titulo: `Editar: ${n.tituloCurto}`,
+      titulo: `Editar e agendar: ${n.tituloCurto}`,
       areaId: "ven",
       minutosPorSocia: { [responsavelId]: MIN_EDITAR_POST },
       nota: `post de ${data.slice(8, 10)}/${data.slice(5, 7)}`,

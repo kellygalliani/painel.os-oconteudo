@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Naie } from "../schema";
 import { contar, paragrafos } from "./contagem";
 import { lerNaieMd } from "./ler-md";
-import { naiesNaAgenda } from "./naies-na-agenda";
+import { diaDoLote, naiesNaAgenda } from "./naies-na-agenda";
 import { montarPasta } from "./pasta-edicao";
 
 const PASTA = join(process.cwd(), "tests/fixtures/naies");
@@ -112,20 +112,17 @@ describe("pasta de edição", () => {
 });
 
 describe("NAIEs na agenda", () => {
-  it("post de 02/11 (feriado na segunda): Editar em 29/10 e Publicar em 02/11", () => {
-    const esp = { "2026-11-02": { tipo: "feriado" } };
-    const itens = naiesNaAgenda([naie()], "kelly", esp);
-    expect(itens["2026-11-02"][0].tipo).toBe("naie_publicar");
-    expect(itens["2026-10-29"][0].tipo).toBe("naie_editar");
+  it("lote: dom, seg e ter na sexta; qua e qui na segunda; sex e sáb na terça", () => {
+    const lote = ["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06", "2026-11-07"].map(diaDoLote);
+    expect(lote).toEqual(["2026-10-30", "2026-10-30", "2026-10-30", "2026-11-02", "2026-11-02", "2026-11-03", "2026-11-03"]);
   });
-  it("no máximo 2 edições por dia", () => {
-    const tres = [1, 2, 3].map((i) => naie({ id: `30000000-0000-4000-8000-00000000000${i}`, dataPrevista: "2026-11-12" }));
-    const itens = naiesNaAgenda(tres, "kelly", {});
-    expect(itens["2026-11-10"]).toHaveLength(2);
-    expect(itens["2026-11-09"]).toHaveLength(1);
+  it("Editar e agendar no dia do lote e Conferir no dia do post", () => {
+    const itens = naiesNaAgenda([naie()], "kelly");
+    expect(itens["2026-11-02"][0].tipo).toBe("naie_publicar");
+    expect(itens["2026-10-30"][0].tipo).toBe("naie_editar");
   });
   it("com o dia de editar escolhido, a edição cai nele", () => {
-    const itens = naiesNaAgenda([naie({ editarEm: "2026-10-30" })], "kelly", {});
-    expect(itens["2026-10-30"][0].tipo).toBe("naie_editar");
+    const itens = naiesNaAgenda([naie({ editarEm: "2026-10-29" })], "kelly");
+    expect(itens["2026-10-29"][0].tipo).toBe("naie_editar");
   });
 });

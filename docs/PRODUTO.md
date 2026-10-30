@@ -99,7 +99,8 @@ Leva para o painel o `../Estratégia/Reestruturação/agenda-oconteudo.html`, co
 - **Copiar tudo PT** e **Copiar tudo EN:** o documento inteiro sem a seção do outro idioma. Ficha, apuração e fontes vão nos dois (mesmo em português no EN).
 - **Título fixo:** a escolha fica fora do texto (um seletor PT e um EN, com a contagem sobre 2.200), mas reescreve o `[x]` dentro do `.md`. O texto copiado já sai com o título certo marcado.
 - **Editar texto:** abre o `.md` inteiro para editar. Ao salvar, tipo, título curto, ficha, títulos, roteiros e contagem são lidos de volta do texto (`server/documento.ts`). NAIE criada pelo formulário ganha um `.md` no formato padrão.
-- **Editar detalhes:** data, semana, quem grava, status, template e links.
+- **Editar detalhes:** data, semana, quem grava, status, template, links e o dia de editar e agendar.
+- **Na agenda:** uma NAIE por dia, de domingo a sábado. "Editar e agendar" cai no lote: os posts de domingo, segunda e terça na sexta anterior; quarta e quinta na segunda; sexta e sábado na terça (`logic/naies-na-agenda.ts`). No dia do post aparece "Conferir se X foi publicada". Marcar "Editar e agendar" deixa a NAIE editada e apaga os vídeos brutos.
 - **Status**, **vídeos brutos PT e EN**, **trilha**, **links**, **Gravar (modo leitura)** e **Baixar pasta** continuam fora do texto.
 
 ### Pasta de edição (o `.zip`)

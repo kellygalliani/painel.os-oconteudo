@@ -116,7 +116,7 @@ export function FormNaie({ naie, aoSalvar, soDetalhes = false }: { naie?: Naie |
         <Campo id="data" rotulo="Data do post">
           <Input id="data" type="date" value={f.dataPrevista ?? ""} onChange={(e) => setF({ ...f, dataPrevista: e.target.value || null })} />
         </Campo>
-        <Campo id="editar-em" rotulo="Dia de editar (vazio = 2 dias úteis antes)">
+        <Campo id="editar-em" rotulo="Dia de editar e agendar (vazio = dia do lote)">
           <Input id="editar-em" type="date" value={f.editarEm ?? ""} onChange={(e) => setF({ ...f, editarEm: e.target.value || null })} />
         </Campo>
         <Campo id="semana-n" rotulo="Semana">
