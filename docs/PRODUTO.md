@@ -31,7 +31,7 @@ Kelly e Anne. O painel responde, todo dia, a seis perguntas:
   - a carga do dia (barra e horas).
 
   O botão **"Ver o dia da Anne"** (ou da Kelly) troca de pessoa.
-- **Ficou para trás:** pendentes com os botões Hoje, Próximo dia leve e Descartar.
+- **Ficou para trás:** pendentes com os botões Amanhã, Próximo dia útil e Escolher dia.
 - **3 números da semana:**
   - vendas × meta;
   - gasto em anúncio × meta;
@@ -49,22 +49,21 @@ Leva para o painel o `../Estratégia/Reestruturação/agenda-oconteudo.html`, co
 - **Rotinas:** diárias, semanais, mensais e trimestrais, com duração e dona.
   - Os feriados levam as rotinas semanais do dia para o próximo dia útil da semana.
   - As mensais caem no dia do mês certo, ajustado para dia útil. O DAS (guia mensal do Simples Nacional) volta para o dia útil anterior.
-- **Sprints:**
-  - cada tarefa tem horas, dona e status;
-  - os blocos se encaixam sozinhos na folga **de cada sócia**, respeitando a capacidade dela;
-  - tarefa sem dona não entra no calendário e aparece em "Sem dona";
-  - tarefa que não cabe até o fim do calendário aparece em "Não coube".
-- **Capacidade (cenário A):** Kelly com 5h por dia útil e Anne com 1h30 por dia útil. Editável na Conta.
+- **Sprints:** um sprint é o pacote de tarefas de um período. Cada tarefa tem dona, status e o **dia** que a sócia escolheu.
+  - A tarefa aparece **só no dia escolhido**. Não há encaixe automático nem limite de horas: quem decide o dia é a sócia.
+  - Não deu para fazer? Mover para outro dia (Amanhã, Próximo dia útil ou Escolher dia). Tarefa de dia passado e não feita aparece em "Ficou para trás".
+  - Tarefa sem dia aparece na lista "Sem dia" do sprint; tarefa sem dona aparece em "Sem dona".
+- **Capacidade:** só informativa (a barra de carga do dia). Não bloqueia nada.
 - **Marcar feito:** um clique no quadradinho.
 - **Reagendar:**
   - no computador, arrastar a tarefa para outro dia;
-  - no celular, tocar e escolher Amanhã, Próximo dia leve ou Escolher dia;
-  - rotina pergunta **"Só esta vez"** ou **"Todas as vezes"**; bloco de sprint é sempre só esta vez e fica fixado no dia escolhido;
+  - no celular, tocar e escolher Amanhã, Próximo dia útil ou Escolher dia;
+  - rotina pergunta **"Só esta vez"** ou **"Todas as vezes"**; tarefa de sprint muda o dia dela;
   - aviso com **Desfazer** depois de mover.
 - **Pendentes:**
   - rotina diária: não vira pendente;
   - rotina semanal ou mensal: fica pendente até a próxima ocorrência;
-  - bloco de sprint: não vira pendente, porque as horas que faltam se reencaixam sozinhas a partir de hoje.
+  - tarefa de sprint: vira pendente quando o dia dela passou e ela não foi feita.
 - **Editar:** título, duração, dona e dia de uma rotina; criar e editar tarefas de sprint.
 
 ## 3. Conteúdo › Orgânico (`/conteudo/organico`)

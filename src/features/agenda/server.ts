@@ -11,6 +11,6 @@ type Extras = (desde: string, ate: string, especiais: Record<string, DiaEspecial
 /** Carrega e calcula a agenda inteira. `extras` traz itens de outros módulos (as NAIEs). */
 export async function carregarDadosAgenda(db: ClienteDb, hoje: string, extras?: Extras): Promise<DadosAgenda> {
   const { desde, ate } = periodo(hoje);
-  const ctx = await carregarContextoAgenda(db, desde, ate);
+  const ctx = await carregarContextoAgenda(db, desde);
   return prepararDados(ctx, hoje, extras ? await extras(desde, ate, ctx.especiais) : {});
 }

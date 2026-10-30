@@ -24,7 +24,7 @@ function Campo({ id, rotulo, children }: { id: string; rotulo: string; children:
 
 export function DialogTarefa({ tarefa, sprints, socias, aberto, aoFechar }: { tarefa: Tarefa | "nova" | null; sprints: Sprint[]; socias: Socia[]; aberto: boolean; aoFechar: () => void }) {
   const base = tarefa && tarefa !== "nova" ? tarefa : null;
-  const [f, setF] = useState({ titulo: "", horas: 1, areaId: "pro" as AreaId, sprintId: sprints[0]?.id ?? "", donaId: "" as string, status: "a_fazer" as StatusTarefa });
+  const [f, setF] = useState({ titulo: "", horas: 1, areaId: "pro" as AreaId, sprintId: sprints[0]?.id ?? "", donaId: "" as string, status: "a_fazer" as StatusTarefa, dia: "" as string });
   const [confirmar, setConfirmar] = useState(false);
   const [pend, start] = useTransition();
 
@@ -32,14 +32,14 @@ export function DialogTarefa({ tarefa, sprints, socias, aberto, aoFechar }: { ta
     setConfirmar(false);
     setF(
       base
-        ? { titulo: base.titulo, horas: base.horas, areaId: base.areaId, sprintId: base.sprintId, donaId: base.donaId ?? "", status: base.status }
-        : { titulo: "", horas: 1, areaId: "pro", sprintId: sprints[0]?.id ?? "", donaId: socias[0]?.id ?? "", status: "a_fazer" },
+        ? { titulo: base.titulo, horas: base.horas, areaId: base.areaId, sprintId: base.sprintId, donaId: base.donaId ?? "", status: base.status, dia: base.dia ?? "" }
+        : { titulo: "", horas: 1, areaId: "pro", sprintId: sprints[0]?.id ?? "", donaId: socias[0]?.id ?? "", status: "a_fazer", dia: "" },
     );
   }, [tarefa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const salvar = () =>
     start(async () => {
-      const r = await salvarTarefa({ id: base?.id ?? null, ...f, donaId: f.donaId || null });
+      const r = await salvarTarefa({ id: base?.id ?? null, ...f, donaId: f.donaId || null, dia: f.dia || null });
       if (!r.ok) { toast.error(r.erro); return; }
       toast.success("Tarefa salva.");
       aoFechar();
@@ -88,6 +88,9 @@ export function DialogTarefa({ tarefa, sprints, socias, aberto, aoFechar }: { ta
                   <option key={s.id} value={s.id}>{s.nome}</option>
                 ))}
               </select>
+            </Campo>
+            <Campo id="t-dia" rotulo="Dia">
+              <Input id="t-dia" type="date" value={f.dia} onChange={(e) => setF({ ...f, dia: e.target.value })} />
             </Campo>
             <Campo id="t-status" rotulo="Status">
               <select id="t-status" className={selectCls} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as StatusTarefa })}>

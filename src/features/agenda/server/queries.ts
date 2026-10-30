@@ -4,8 +4,8 @@ import { somarDias } from "@/lib/datas";
 import type { ContextoAgenda, Rotina } from "../schema";
 
 /** Busca tudo o que a lógica da agenda precisa, em paralelo. */
-export async function carregarContextoAgenda(db: ClienteDb, desde: string, ate: string): Promise<ContextoAgenda> {
-  const [socias, rotinas, donas, sprints, tarefas, excecoes, marcacoes, especiais, capacidades, fixos] = await Promise.all([
+export async function carregarContextoAgenda(db: ClienteDb, desde: string): Promise<ContextoAgenda> {
+  const [socias, rotinas, donas, sprints, tarefas, excecoes, marcacoes, especiais, capacidades] = await Promise.all([
     db.from("socias").select("id, nome").order("nome"),
     db.from("rotinas").select("*").eq("ativa", true).order("ordem"),
     db.from("rotina_donas").select("rotina_id, socia_id, minutos"),
@@ -15,7 +15,6 @@ export async function carregarContextoAgenda(db: ClienteDb, desde: string, ate: 
     db.from("marcacoes").select("tipo, ref_id, data, minutos").gte("data", somarDias(desde, -120)),
     db.from("dias_especiais").select("*"),
     db.from("capacidades").select("socia_id, dia_semana, minutos"),
-    db.from("blocos_fixos").select("id, tarefa_id, data, minutos").lte("data", ate),
   ]);
 
   const caps: ContextoAgenda["capacidades"] = {};
@@ -48,11 +47,11 @@ export async function carregarContextoAgenda(db: ClienteDb, desde: string, ate: 
       donaId: t.dona_id,
       status: t.status,
       ordem: t.ordem,
+      dia: t.dia ?? null,
     })),
     excecoes: (excecoes.data ?? []).map((e) => ({ rotinaId: e.rotina_id, dataOriginal: e.data_original, novaData: e.nova_data, pular: e.pular })),
     marcacoes: (marcacoes.data ?? []).map((m) => ({ tipo: m.tipo, refId: m.ref_id, data: m.data, minutos: m.minutos })),
     especiais: Object.fromEntries((especiais.data ?? []).map((e) => [e.data, { data: e.data, tipo: e.tipo, nome: e.nome }])),
     capacidades: caps,
-    blocosFixos: (fixos.data ?? []).map((b) => ({ id: b.id, tarefaId: b.tarefa_id, data: b.data, minutos: b.minutos })),
   };
 }

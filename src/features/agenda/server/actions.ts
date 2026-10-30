@@ -71,18 +71,12 @@ export async function moverBloco(entrada: unknown): Promise<Resultado<Desfazer>>
   const socia = await exigirSocia();
   const d = moverBlocoSchema.safeParse(entrada);
   if (!d.success) return erro("Dados inválidos");
-  const { tarefaId, blocoFixoId, novaData, minutos } = d.data;
-  if (blocoFixoId) {
-    const { data: antes } = await socia.db.from("blocos_fixos").select("data").eq("id", blocoFixoId).single();
-    const { error } = await socia.db.from("blocos_fixos").update({ data: novaData }).eq("id", blocoFixoId);
-    if (error || !antes) return erro(FALHOU);
-    atualizar();
-    return ok({ tipo: "bloco_movido", blocoFixoId, dataAnterior: antes.data });
-  }
-  const { data, error } = await socia.db.from("blocos_fixos").insert({ tarefa_id: tarefaId, data: novaData, minutos }).select("id").single();
-  if (error || !data) return erro(FALHOU);
+  const { tarefaId, novaData } = d.data;
+  const { data: antes } = await socia.db.from("tarefas").select("dia").eq("id", tarefaId).single();
+  const { error } = await socia.db.from("tarefas").update({ dia: novaData }).eq("id", tarefaId);
+  if (error || !antes) return erro(FALHOU);
   atualizar();
-  return ok({ tipo: "bloco_novo", blocoFixoId: data.id });
+  return ok({ tipo: "tarefa", tarefaId, diaAnterior: antes.dia });
 }
 
 export async function desfazerMovimento(desfazer: Desfazer): Promise<Resultado> {
@@ -99,10 +93,8 @@ export async function desfazerMovimento(desfazer: Desfazer): Promise<Resultado> 
     falhou = !!(await q).error;
   } else if (desfazer.tipo === "rotina") {
     falhou = !!(await db.from("rotinas").update({ dia_semana: desfazer.diaSemana, dia_mes: desfazer.diaMes, regra: desfazer.regra }).eq("id", desfazer.rotinaId)).error;
-  } else if (desfazer.tipo === "bloco_novo") {
-    falhou = !!(await db.from("blocos_fixos").delete().eq("id", desfazer.blocoFixoId)).error;
   } else {
-    falhou = !!(await db.from("blocos_fixos").update({ data: desfazer.dataAnterior }).eq("id", desfazer.blocoFixoId)).error;
+    falhou = !!(await db.from("tarefas").update({ dia: desfazer.diaAnterior }).eq("id", desfazer.tarefaId)).error;
   }
   if (falhou) return erro(FALHOU);
   atualizar();
@@ -123,8 +115,8 @@ export async function salvarTarefa(entrada: unknown): Promise<Resultado> {
   const socia = await exigirSocia();
   const d = tarefaSchema.safeParse(entrada);
   if (!d.success) return erro("Confira os campos: título com 2 letras ou mais e horas entre 0 e 200.");
-  const { id, sprintId, areaId, titulo, horas, donaId, status } = d.data;
-  const linha = { sprint_id: sprintId, area_id: areaId, titulo, horas, dona_id: donaId, status };
+  const { id, sprintId, areaId, titulo, horas, donaId, status, dia } = d.data;
+  const linha = { sprint_id: sprintId, area_id: areaId, titulo, horas, dona_id: donaId, status, dia };
   const { error } = id ? await socia.db.from("tarefas").update(linha).eq("id", id) : await socia.db.from("tarefas").insert({ ...linha, ordem: 99 });
   if (error) return erro(FALHOU);
   atualizar();

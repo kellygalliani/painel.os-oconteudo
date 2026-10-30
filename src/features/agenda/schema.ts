@@ -36,12 +36,13 @@ export type Tarefa = {
   donaId: string | null;
   status: StatusTarefa;
   ordem: number;
+  /** Dia escolhido pela sócia (null = ainda sem dia, não aparece no calendário). */
+  dia: string | null;
 };
 
 export type Excecao = { rotinaId: string; dataOriginal: string; novaData: string | null; pular: boolean };
 export type Marcacao = { tipo: "rotina" | "bloco"; refId: string; data: string; minutos: number | null };
 export type DiaEspecial = { data: string; tipo: "feriado" | "recesso"; nome: string };
-export type BlocoFixo = { id: string; tarefaId: string; data: string; minutos: number };
 
 /** Minutos por dia da semana (0 = segunda) de cada sócia. */
 export type Capacidades = Record<string, number[]>;
@@ -55,7 +56,6 @@ export type ContextoAgenda = {
   marcacoes: Marcacao[];
   especiais: Record<string, DiaEspecial>;
   capacidades: Capacidades;
-  blocosFixos: BlocoFixo[];
 };
 
 export type TipoItem = "rotina" | "bloco" | "naie_editar" | "naie_publicar";
@@ -73,7 +73,6 @@ export type ItemDoDia = {
   frequencia?: Frequencia;
   nota?: string;
   sprintNumero?: number;
-  blocoFixoId?: string;
   feito: boolean;
 };
 
@@ -83,7 +82,7 @@ export type AgendaMontada = {
   porDia: Record<string, ItemDoDia[]>;
   faixas: Record<number, Faixa>;
   semDona: Tarefa[];
-  naoCoube: Tarefa[];
+  semDia: Tarefa[];
 };
 
 /** Tudo o que as telas da agenda recebem do servidor, já calculado. */
@@ -95,9 +94,9 @@ export type DadosAgenda = {
   porDia: AgendaMontada["porDia"];
   faixas: AgendaMontada["faixas"];
   semDona: Tarefa[];
-  naoCoube: Tarefa[];
+  semDia: Tarefa[];
   pendentes: ItemDoDia[];
-  /** Para cada chave de item: o próximo dia com folga para a dona principal. */
+  /** Para cada chave de item: o próximo dia útil. */
   proximoLeve: Record<string, string | null>;
   rotinas: Rotina[];
   sprints: Sprint[];
@@ -125,9 +124,7 @@ export const moverRotinaSchema = z.object({
 
 export const moverBlocoSchema = z.object({
   tarefaId: z.string().uuid(),
-  blocoFixoId: z.string().uuid().nullable(),
   novaData: data,
-  minutos: z.number().int().positive(),
 });
 
 export const tarefaSchema = z.object({
@@ -138,6 +135,7 @@ export const tarefaSchema = z.object({
   horas: z.number().min(0).max(200),
   donaId: z.string().uuid().nullable(),
   status: z.enum(["a_fazer", "fazendo", "feito"]),
+  dia: data.nullable(),
 });
 
 export const rotinaSchema = z.object({
@@ -153,5 +151,4 @@ export const rotinaSchema = z.object({
 export type Desfazer =
   | { tipo: "excecao"; rotinaId: string; dataOriginal: string; anterior: Excecao | null }
   | { tipo: "rotina"; rotinaId: string; diaSemana: number | null; diaMes: number | null; regra: Rotina["regra"] }
-  | { tipo: "bloco_novo"; blocoFixoId: string }
-  | { tipo: "bloco_movido"; blocoFixoId: string; dataAnterior: string };
+  | { tipo: "tarefa"; tarefaId: string; diaAnterior: string | null };

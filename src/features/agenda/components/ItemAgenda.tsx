@@ -14,7 +14,7 @@ import { COR_AREA } from "@/components/shared/ui-base";
 import { ddmm, DIAS_CURTOS, diaDaSemana, hojeIso, minutosLegivel, somarDias } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import { mudarStatusNaie } from "@/features/naies";
-import { alternarMarcacao, desfazerMovimento, moverBloco, moverRotina } from "../server/actions";
+import { alternarMarcacao, desfazerMovimento, moverBloco, moverRotina, mudarStatusTarefa } from "../server/actions";
 import type { Desfazer, ItemDoDia } from "../schema";
 
 export type Mover = { item: ItemDoDia; novaData: string | null; pular?: boolean };
@@ -27,8 +27,7 @@ export async function executarMovimento({ item, novaData, pular }: Mover, escopo
   if (item.tipo === "rotina") {
     r = await moverRotina({ rotinaId: item.refId, dataOriginal: item.dataOriginal ?? item.data, novaData, escopo, pular: !!pular });
   } else if (item.tipo === "bloco" && novaData) {
-    const minutos = Object.values(item.minutosPorSocia)[0] ?? 60;
-    r = await moverBloco({ tarefaId: item.refId, blocoFixoId: item.blocoFixoId ?? null, novaData, minutos });
+    r = await moverBloco({ tarefaId: item.refId, novaData });
   } else return;
   if (!r.ok) { toast.error(r.erro); return; }
   const desfazer: Desfazer = r.dados;
@@ -112,13 +111,9 @@ export function ItemAgenda({ item, socias, proximoLeve, aoMover, aoEditar, mostr
     start(async () => {
       const r = ehNaie
         ? await mudarStatusNaie(item.refId, novo ? (item.tipo === "naie_editar" ? "editada" : "publicada") : item.tipo === "naie_editar" ? "gravada" : "editada")
-        : await alternarMarcacao({
-            tipo: item.tipo,
-            refId: item.refId,
-            data: item.data,
-            minutos: item.tipo === "bloco" ? (Object.values(item.minutosPorSocia)[0] ?? null) : null,
-            feito: novo,
-          });
+        : item.tipo === "bloco"
+          ? await mudarStatusTarefa({ tarefaId: item.refId, status: novo ? "feito" : "a_fazer" })
+          : await alternarMarcacao({ tipo: "rotina", refId: item.refId, data: item.data, minutos: null, feito: novo });
       if (!r.ok) {
         setFeito(!novo);
         toast.error(r.erro);
@@ -164,7 +159,7 @@ export function ItemAgenda({ item, socias, proximoLeve, aoMover, aoEditar, mostr
             <>
               <DropdownMenuItem onSelect={() => aoMover({ item, novaData: somarDias(item.data < hojeIso() ? hojeIso() : item.data, 1) })}>Amanhã</DropdownMenuItem>
               <DropdownMenuItem disabled={!proximoLeve} onSelect={() => proximoLeve && aoMover({ item, novaData: proximoLeve })}>
-                Próximo dia leve{proximoLeve ? ` (${ddmm(proximoLeve)})` : ""}
+                Próximo dia útil{proximoLeve ? ` (${ddmm(proximoLeve)})` : ""}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => aoMover({ item, novaData: null })}>Escolher dia…</DropdownMenuItem>
               {item.tipo === "rotina" && <DropdownMenuItem onSelect={() => aoMover({ item, novaData: null, pular: true })}>Pular esta vez</DropdownMenuItem>}

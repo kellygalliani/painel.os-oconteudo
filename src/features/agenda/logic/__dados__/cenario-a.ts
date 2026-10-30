@@ -75,6 +75,7 @@ export function contextoCenarioA(): ContextoAgenda {
       donaId: KELLY,
       status: "a_fazer" as const,
       ordem: k,
+      dia: null,
     })),
   );
   return {
@@ -89,7 +90,6 @@ export function contextoCenarioA(): ContextoAgenda {
     marcacoes: [],
     especiais: Object.fromEntries(FERIADOS.map(([data, tipo, nome]) => [data, { data, tipo, nome }])),
     capacidades: { [KELLY]: [300, 300, 300, 300, 300, 0, 0], [ANNE]: [90, 90, 90, 90, 90, 0, 0] },
-    blocosFixos: [],
   };
 }
 

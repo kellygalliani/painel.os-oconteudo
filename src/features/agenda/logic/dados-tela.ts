@@ -1,6 +1,6 @@
 import { somarDias } from "@/lib/datas";
 import type { ContextoAgenda, DadosAgenda, ItemDoDia } from "../schema";
-import { montarAgenda, proximoDiaLeve } from "./montar";
+import { montarAgenda, proximoDiaUtil } from "./montar";
 import { pendentes } from "./pendentes";
 import { HORIZONTE_DIAS } from "./regras";
 
@@ -19,8 +19,7 @@ export function prepararDados(ctx: ContextoAgenda, hoje: string, extras: Record<
 
   const proximoLeve: Record<string, string | null> = {};
   const calcular = (i: ItemDoDia) => {
-    const [socia, minutos] = Object.entries(i.minutosPorSocia)[0] ?? [];
-    proximoLeve[i.chave] = socia ? proximoDiaLeve(ag, ctx, socia, minutos ?? 0, i.data < hoje ? hoje : i.data) : null;
+    proximoLeve[i.chave] = proximoDiaUtil(ctx, i.data < hoje ? hoje : i.data);
   };
   for (const [d, itens] of Object.entries(ag.porDia)) if (d >= somarDias(hoje, -7)) itens.forEach(calcular);
   pend.forEach(calcular);
@@ -33,7 +32,7 @@ export function prepararDados(ctx: ContextoAgenda, hoje: string, extras: Record<
     porDia: ag.porDia,
     faixas: ag.faixas,
     semDona: ag.semDona,
-    naoCoube: ag.naoCoube,
+    semDia: ag.semDia,
     pendentes: pend,
     proximoLeve,
     rotinas: ctx.rotinas,

@@ -195,7 +195,7 @@ export function Pendentes({ itens, dados, aoMover }: { itens: ItemDoDia[]; dados
           <ItemAgenda key={i.chave} item={i} socias={dados.socias} proximoLeve={dados.proximoLeve[i.chave]} aoMover={aoMover} mostrarData />
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground">Use o menu de cada uma: Amanhã, Próximo dia leve ou Pular esta vez para descartar. Marcar como feita também tira da lista.</p>
+      <p className="text-xs text-muted-foreground">Use o menu de cada uma: Amanhã, Próximo dia útil ou Escolher dia. Rotina também pode ser pulada. Marcar como feita também tira da lista.</p>
     </Secao>
   );
 }
@@ -329,21 +329,21 @@ function ListaSprints({ dados }: { dados: DadosAgenda }) {
         {dados.sprints.map((s) => {
           const fx = dados.faixas[s.numero];
           const h = dados.tarefas.filter((t) => t.sprintId === s.id).reduce((a, t) => a + t.horas, 0);
-          const pend = dados.naoCoube.some((t) => t.sprintId === s.id);
+          const pend = dados.semDia.some((t) => t.sprintId === s.id);
           return (
             <li key={s.id} className="flex flex-wrap items-baseline justify-between gap-x-3 border-t py-2 first:border-t-0">
               <span className="text-sm">
                 <strong>Sprint {s.numero}</strong> · {s.tema}
                 {s.sugestao && <span className="ml-1 rounded bg-muted px-1 text-xs">sugestão</span>}
               </span>
-              <span className="font-mono text-xs text-muted-foreground">{fx ? `${ddmm(fx.inicio)} a ${ddmm(fx.fim)}` : pend ? "não coube" : "tudo feito"} · {h}h</span>
+              <span className="font-mono text-xs text-muted-foreground">{fx ? `${ddmm(fx.inicio)} a ${ddmm(fx.fim)}` : pend ? "sem dia" : "tudo feito"} · {h}h</span>
             </li>
           );
         })}
       </ul>
       {dados.semDona.length > 0 && <p className="text-sm">Sem dona (não entram no calendário): {dados.semDona.map((t) => t.titulo).join(", ")}.</p>}
-      {dados.naoCoube.length > 0 && <p className="text-sm" style={{ color: "var(--carga-alta)" }}>Não coube no horizonte: {dados.naoCoube.map((t) => t.titulo).join(", ")}.</p>}
-      <p className="text-xs text-muted-foreground">O sprint entra só em dia útil fora do recesso, quando a rotina da dona ocupa menos de 70% da capacidade dela, em no máximo 2 blocos de até 2h.</p>
+      {dados.semDia.length > 0 && <p className="text-sm">Sem dia (não aparecem no calendário até você escolher o dia em Editar): {dados.semDia.map((t) => t.titulo).join(", ")}.</p>}
+      <p className="text-xs text-muted-foreground">Cada tarefa aparece no dia que vocês escolheram. Não deu para fazer? Mova para outro dia.</p>
     </Secao>
   );
 }
