@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { COR_AREA } from "@/components/shared/ui-base";
 import { ddmm, DIAS_CURTOS, diaDaSemana, hojeIso, minutosLegivel, somarDias } from "@/lib/datas";
 import { cn } from "@/lib/utils";
-import { marcarFacebook, mudarStatusNaie } from "@/features/naies";
+import { mudarStatusNaie } from "@/features/naies";
+import { IconeInstagram } from "@/components/shared/IconeInstagram";
 import { alternarMarcacao, desfazerMovimento, moverBloco, moverRotina, mudarStatusTarefa } from "../server/actions";
 import type { Desfazer, ItemDoDia } from "../schema";
 
@@ -103,15 +104,13 @@ export function ItemAgenda({ item, socias, proximoLeve, aoMover, aoEditar, mostr
   const [pend, start] = useTransition();
   const quem = Object.entries(item.minutosPorSocia);
   const nome = (id: string) => socias.find((s) => s.id === id)?.nome ?? "?";
-  const ehNaie = item.tipo === "naie_editar" || item.tipo === "naie_publicar" || item.tipo === "naie_facebook";
+  const ehNaie = item.tipo === "naie_editar" || item.tipo === "naie_publicar";
 
   function marcar() {
     const novo = !feito;
     setFeito(novo);
     start(async () => {
-      const r = item.tipo === "naie_facebook"
-        ? await marcarFacebook(item.refId, novo)
-        : ehNaie
+      const r = ehNaie
         ? await mudarStatusNaie(item.refId, novo ? (item.tipo === "naie_editar" ? "editada" : "publicada") : item.tipo === "naie_editar" ? "gravada" : "editada")
         : item.tipo === "bloco"
           ? await mudarStatusTarefa({ tarefaId: item.refId, status: novo ? "feito" : "a_fazer" })
@@ -138,6 +137,7 @@ export function ItemAgenda({ item, socias, proximoLeve, aoMover, aoEditar, mostr
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className={cn("text-sm leading-snug", feito && "line-through")}>
           {item.sprintNumero && <span className="mr-1 rounded bg-muted px-1 text-[11px] font-semibold">S{item.sprintNumero}</span>}
+          {item.tipo === "naie_publicar" && <IconeInstagram className="mr-1 inline size-3.5 align-[-2px]" />}
           {item.titulo}
         </span>
         <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">

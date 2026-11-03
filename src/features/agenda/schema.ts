@@ -58,7 +58,7 @@ export type ContextoAgenda = {
   capacidades: Capacidades;
 };
 
-export type TipoItem = "rotina" | "bloco" | "naie_editar" | "naie_publicar" | "naie_facebook";
+export type TipoItem = "rotina" | "bloco" | "naie_editar" | "naie_publicar";
 
 export type ItemDoDia = {
   chave: string;

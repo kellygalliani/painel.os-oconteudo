@@ -20,8 +20,12 @@ export async function apagarVideosDoTipo(db: ClienteDb, naieId: string, tipo: Ti
   return apagados;
 }
 
-/** Regra: NAIE editada (ou publicada) não guarda mais os vídeos brutos. */
-export async function apagarBrutosSeEditada(db: ClienteDb, naieId: string, status: StatusNaie): Promise<number> {
-  if (status !== "editada" && status !== "publicada") return 0;
-  return apagarVideosDoTipo(db, naieId, "bruto");
+/**
+ * Regra: editada apaga os brutos; postada no Instagram (publicada) apaga brutos e finais.
+ * Devolve quantos apagou.
+ */
+export async function limparVideosPeloStatus(db: ClienteDb, naieId: string, status: StatusNaie): Promise<number> {
+  if (status === "editada") return apagarVideosDoTipo(db, naieId, "bruto");
+  if (status === "publicada") return (await apagarVideosDoTipo(db, naieId, "bruto")) + (await apagarVideosDoTipo(db, naieId, "final"));
+  return 0;
 }

@@ -10,7 +10,7 @@ import { contar } from "../logic/contagem";
 import { lerNaieMd } from "../logic/ler-md";
 import { montarPasta, type Pasta } from "../logic/pasta-edicao";
 import { importacaoSchema, naieSchema, type NaieLida } from "../schema";
-import { apagarBrutosSeEditada, apagarVideosDoTipo } from "./apagar-brutos";
+import { limparVideosPeloStatus } from "./apagar-brutos";
 import { obterNaie } from "./queries";
 
 const FALHOU = "Não foi possível salvar. Tente de novo.";
@@ -61,7 +61,7 @@ export async function salvarNaie(entrada: unknown): Promise<Resultado<{ id: stri
     if (rv.error) return erro(FALHOU);
   }
   if (!n.en || !versoes.some((x) => x.idioma === "en")) await socia.db.from("naie_versoes").delete().match({ naie_id: id, idioma: "en" });
-  const videosApagados = await apagarBrutosSeEditada(socia.db, id, n.status);
+  const videosApagados = await limparVideosPeloStatus(socia.db, id, n.status);
   atualizar(id);
   return ok({ id, videosApagados });
 }
@@ -81,18 +81,7 @@ export async function mudarStatusNaie(naieId: string, status: string): Promise<R
   if (!uuid.safeParse(naieId).success || !d.success) return erro("Dados inválidos");
   const { error } = await socia.db.from("naies").update({ status: d.data }).eq("id", naieId);
   if (error) return erro(FALHOU);
-  const videosApagados = await apagarBrutosSeEditada(socia.db, naieId, d.data);
-  atualizar(naieId);
-  return ok({ videosApagados });
-}
-
-/** Postou no Facebook: marca e apaga os vídeos finais (o Facebook já tem o vídeo). */
-export async function marcarFacebook(naieId: string, postado: boolean): Promise<Resultado<{ videosApagados: number }>> {
-  const socia = await exigirSocia();
-  if (!uuid.safeParse(naieId).success || typeof postado !== "boolean") return erro("Dados inválidos");
-  const { error } = await socia.db.from("naies").update({ facebook_postado: postado }).eq("id", naieId);
-  if (error) return erro(FALHOU);
-  const videosApagados = postado ? await apagarVideosDoTipo(socia.db, naieId, "final") : 0;
+  const videosApagados = await limparVideosPeloStatus(socia.db, naieId, d.data);
   atualizar(naieId);
   return ok({ videosApagados });
 }

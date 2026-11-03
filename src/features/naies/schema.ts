@@ -14,7 +14,7 @@ export const STATUS: [StatusNaie, string][] = [
   ["roteiro", "Roteiro"],
   ["gravada", "Gravada"],
   ["editada", "Editada"],
-  ["publicada", "Publicada"],
+  ["publicada", "Postada"],
 ];
 export const QUEM_GRAVA = { kelly: "Kelly", anne: "Anne", ambas: "Ambas" } as const;
 
@@ -54,7 +54,7 @@ export type Naie = {
   versoes: Partial<Record<Idioma, Versao>>;
   /** Vídeos brutos (apagados quando a NAIE fica editada). */
   videos: Partial<Record<Idioma, VideoBruto>>;
-  /** Vídeo final editado, para baixar no celular e postar (apagado ao marcar o Facebook). */
+  /** Vídeo final editado, para baixar no celular e postar (apagado quando a NAIE é postada). */
   finais: Partial<Record<Idioma, VideoBruto>>;
   legendas: Partial<Record<Idioma, string>>;
   facebookPostado: boolean;

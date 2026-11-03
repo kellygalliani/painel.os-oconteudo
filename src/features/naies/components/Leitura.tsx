@@ -12,7 +12,8 @@ import { ddmm, DIAS_LONGOS, diaDaSemana } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import { paragrafos as paragrafosDe } from "../logic/contagem";
 import { diaDoLote } from "../logic/naies-na-agenda";
-import { apagarNaie, dadosDaPasta, escolherTrilha, marcarFacebook, mudarStatusNaie, salvarLegenda } from "../server/actions";
+import { IconeInstagram } from "@/components/shared/IconeInstagram";
+import { apagarNaie, dadosDaPasta, escolherTrilha, mudarStatusNaie, salvarLegenda } from "../server/actions";
 import { QUEM_GRAVA, type Idioma, type Naie, type StatusNaie, type Versao } from "../schema";
 import { DocumentoNaie } from "./Documento";
 import { FormNaie } from "./FormNaie";
@@ -172,7 +173,7 @@ function BaixarPasta({ naieId }: { naieId: string }) {
   );
 }
 
-/** Legenda do post (a mesma do Instagram e do Facebook): salva ao sair do campo. */
+/** Legenda do post no Instagram: salva ao sair do campo. */
 function Legenda({ naieId, idioma, inicial }: { naieId: string; idioma: Idioma; inicial: string }) {
   const [texto, setTexto] = useState(inicial);
   const [salvo, setSalvo] = useState(inicial);
@@ -254,9 +255,8 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
   const [gravando, setGravando] = useState(false);
   const [confirmar, setConfirmar] = useState(false);
   const [status, setStatus] = useState(naie.status);
-  const [facebook, setFacebook] = useState(naie.facebookPostado);
   const atual = PASSO_DO_STATUS[status];
-  const concluida = status === "publicada" && facebook;
+  const concluida = status === "publicada";
   const [aberto, setAberto] = useState<number | null>(concluida ? null : atual);
   const [pend, start] = useTransition();
 
@@ -271,19 +271,8 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
     start(async () => {
       const r = await mudarStatusNaie(naie.id, novo);
       if (!r.ok) { setStatus(antes); toast.error(r.erro); return; }
-      toast.success(r.dados.videosApagados ? `${aviso} ${r.dados.videosApagados} vídeo(s) bruto(s) apagado(s).` : aviso);
+      toast.success(r.dados.videosApagados ? `${aviso} ${r.dados.videosApagados} vídeo(s) apagado(s) do painel.` : aviso);
       setAberto(PASSO_DO_STATUS[novo]);
-      router.refresh();
-    });
-  }
-
-  function alternarFacebook() {
-    const novo = !facebook;
-    setFacebook(novo);
-    start(async () => {
-      const r = await marcarFacebook(naie.id, novo);
-      if (!r.ok) { setFacebook(!novo); toast.error(r.erro); return; }
-      toast.success(novo ? `Facebook marcado.${r.dados.videosApagados ? ` ${r.dados.videosApagados} vídeo(s) final(is) apagado(s).` : ""}` : "Facebook desmarcado.");
       router.refresh();
     });
   }
@@ -302,18 +291,20 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
           <span>· grava: {QUEM_GRAVA[naie.quemGrava]}</span>
         </div>
         <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">{naie.tituloCurto}</h1>
+        <span
+          className={cn(
+            "inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 text-sm font-medium",
+            concluida ? "border-transparent bg-foreground text-background" : "text-muted-foreground",
+          )}
+        >
+          <IconeInstagram className="size-4" /> {concluida ? "Postada no Instagram ✓" : "Ainda não postada no Instagram"}
+        </span>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => setGravando(true)}><Maximize2 className="size-4" /> Modo gravação</Button>
           <Button variant="outline" size="sm" onClick={() => document.getElementById("roteiro")?.scrollIntoView({ behavior: "smooth" })}>Ver o roteiro</Button>
           <Button variant="ghost" size="sm" onClick={() => setEditando(true)}><Pencil className="size-4" /> Editar detalhes</Button>
         </div>
       </header>
-
-      {concluida && (
-        <p className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm">
-          <Check className="size-4" /> Tudo feito: postada no Instagram e no Facebook.
-        </p>
-      )}
 
       <ol className="flex min-w-0 flex-col gap-3">
         <Passo n={1} titulo="Gravar" resumo="Escolha o título, grave pelo modo gravação e suba os brutos." estado={estadoDo(1)} aberto={aberto === 1} aoAlternar={() => alternar(1)}>
@@ -342,7 +333,7 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
         <Passo
           n={2}
           titulo="Editar e agendar"
-          resumo={`Baixe a pasta, edite com a Máquina, suba o vídeo final e agende no Instagram.${editarEm ? ` Dia de editar: ${dataCurta(editarEm)}.` : ""}`}
+          resumo={`Baixe a pasta, edite com a Máquina e suba o vídeo final.${editarEm ? ` Dia de editar: ${dataCurta(editarEm)}.` : ""}`}
           estado={estadoDo(2)}
           aberto={aberto === 2}
           aoAlternar={() => alternar(2)}
@@ -369,10 +360,10 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
               <EspacoVideo naieId={naie.id} idioma="en" tipo="final" video={naie.finais.en} dica="para postar do celular" />
               <EspacoVideo naieId={naie.id} idioma="pt" tipo="final" video={naie.finais.pt} dica="opcional" />
             </div>
-            <p className="text-xs text-muted-foreground">Por enquanto só o EN precisa subir. Ele fica aqui para você salvar no celular e postar no Facebook, e é apagado quando o Facebook é marcado.</p>
+            <p className="text-xs text-muted-foreground">Por enquanto só o EN precisa subir. Ele fica aqui para você salvar no celular e postar no Instagram, e é apagado quando você marca como postada.</p>
           </Etapa>
-          <Etapa titulo="4. Agende no Instagram">
-            <p className="text-sm text-muted-foreground">Agende o post para {naie.dataPrevista ? dataCurta(naie.dataPrevista) : "o dia do post"}, com a legenda do passo 3.</p>
+          <Etapa titulo="4. Deixe pronto para o dia do post">
+            <p className="text-sm text-muted-foreground">Agende no Instagram para {naie.dataPrevista ? dataCurta(naie.dataPrevista) : "o dia do post"} ou deixe o vídeo final aqui para postar do celular no passo 3.</p>
           </Etapa>
           {status === "gravada" || status === "roteiro" ? (
             <Button className="self-start" disabled={pend} onClick={() => irPara("editada", "Marcada como editada e agendada.")}>Pronto, editada e agendada <ArrowRight className="size-4" /></Button>
@@ -384,7 +375,7 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
         <Passo
           n={3}
           titulo="Postar"
-          resumo={`Legenda, vídeo no celular, Instagram conferido e Facebook postado.${naie.dataPrevista ? ` Dia do post: ${dataCurta(naie.dataPrevista)}.` : ""}`}
+          resumo={`Copie a legenda, salve o vídeo no celular, poste no Instagram e marque como postada.${naie.dataPrevista ? ` Dia do post: ${dataCurta(naie.dataPrevista)}.` : ""}`}
           estado={estadoDo(3)}
           aberto={aberto === 3}
           aoAlternar={() => alternar(3)}
@@ -402,16 +393,32 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
               <p className="text-sm text-muted-foreground">Nenhum vídeo final aqui. Suba no passo 2 ou poste com o vídeo que já está no seu celular.</p>
             )}
           </Etapa>
-          <Etapa titulo="3. Marque o que já foi">
-            <div className="flex flex-wrap gap-2">
-              <Button variant={status === "publicada" ? "default" : "outline"} disabled={pend} onClick={() => irPara(status === "publicada" ? "editada" : "publicada", status === "publicada" ? "Instagram desmarcado." : "Instagram conferido.")}>
-                {status === "publicada" && <Check className="size-4" />} Conferi no Instagram
-              </Button>
-              <Button variant={facebook ? "default" : "outline"} disabled={pend} onClick={alternarFacebook}>
-                {facebook && <Check className="size-4" />} Postei no Facebook
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Dá para marcar o Facebook mesmo sem vídeo final no painel.</p>
+          <Etapa titulo="3. Postou no Instagram?">
+            {status === "publicada" ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-emerald-600 bg-emerald-600/10 p-4 dark:border-emerald-500">
+                <span className="flex items-center gap-3">
+                  <IconeInstagram className="size-7" />
+                  <span className="flex flex-col">
+                    <span className="font-semibold">Postada no Instagram ✓</span>
+                    <span className="text-xs text-muted-foreground">Os vídeos finais foram apagados do painel.</span>
+                  </span>
+                </span>
+                <Button variant="ghost" size="sm" disabled={pend} onClick={() => irPara("editada", "Marcada como não postada.")}><Undo2 className="size-4" /> Ainda não postei</Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 rounded-xl border-2 border-dashed p-4">
+                <span className="flex items-center gap-3">
+                  <IconeInstagram className="size-7 text-muted-foreground" />
+                  <span className="flex flex-col">
+                    <span className="font-semibold">Ainda não postada no Instagram</span>
+                    <span className="text-xs text-muted-foreground">Postou? Marque aqui. Dá para marcar mesmo sem vídeo final no painel.</span>
+                  </span>
+                </span>
+                <Button size="lg" className="self-start" disabled={pend} onClick={() => irPara("publicada", "Postada no Instagram.")}>
+                  <IconeInstagram className="size-5" /> Postei no Instagram
+                </Button>
+              </div>
+            )}
           </Etapa>
         </Passo>
       </ol>

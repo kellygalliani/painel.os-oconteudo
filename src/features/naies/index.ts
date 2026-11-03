@@ -1,6 +1,6 @@
 // API pública do módulo naies (cliente e lógica pura). Servidor: ./server.ts.
 export * from "./schema";
-export { escolherTitulo, escolherTrilha, marcarFacebook, mudarStatusNaie, salvarLegenda, salvarNaie, apagarNaie, dadosDaPasta, previaImportacao, salvarImportacao } from "./server/actions";
+export { escolherTitulo, escolherTrilha, mudarStatusNaie, salvarLegenda, salvarNaie, apagarNaie, dadosDaPasta, previaImportacao, salvarImportacao } from "./server/actions";
 export { lerNaieMd } from "./logic/ler-md";
 export { contar, TETO_CARACTERES } from "./logic/contagem";
 export { ListaNaies, ChipTipo } from "./components/Lista";
