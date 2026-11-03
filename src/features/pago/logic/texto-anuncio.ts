@@ -27,11 +27,11 @@ export function arquivosDoIdioma(arquivos: ArquivoAnuncio[], idioma: Idioma): Ar
   return arquivos.filter((f) => f.idioma === null || f.idioma === idioma).sort((a, b) => a.ordem - b.ordem);
 }
 
-/** Nome do arquivo no .zip: "01-pt-take.mp4" (a ordem vem primeiro, para os takes ficarem em sequência). */
-export function nomeNoZip(f: Pick<ArquivoAnuncio, "ordem" | "idioma" | "nome">, posicao: number): string {
+/** Nome do arquivo no .zip: "01-feed-pt-capa.png" ou "02-pt-take.mp4" (a ordem vem primeiro, para os takes ficarem em sequência). */
+export function nomeNoZip(f: Pick<ArquivoAnuncio, "ordem" | "idioma" | "nome"> & { posicionamento?: ArquivoAnuncio["posicionamento"] }, posicao: number): string {
   const ext = f.nome.match(/\.(\w{2,5})$/)?.[1]?.toLowerCase() ?? "bin";
   const base = slug(f.nome.replace(/\.\w{2,5}$/, "")) || "arquivo";
-  return `${String(posicao + 1).padStart(2, "0")}-${f.idioma ?? "pt-en"}-${base}.${ext}`;
+  return `${String(posicao + 1).padStart(2, "0")}-${f.posicionamento ? `${f.posicionamento}-` : ""}${f.idioma ?? "pt-en"}-${base}.${ext}`;
 }
 
 export const pastaDoAnuncio = (a: Pick<Criativo, "titulo" | "criadoEm">) => `${a.criadoEm.slice(0, 10)}-${slug(a.titulo) || "anuncio"}`;

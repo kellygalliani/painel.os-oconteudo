@@ -66,7 +66,7 @@ export async function apiCriar(chave: string, corpo: unknown): Promise<RespostaC
     const { data: arqId, error: e2 } = await db.rpc("api_registrar_arquivo", {
       p_chave: chave,
       p_criativo: id,
-      p_arquivo: { chave: caminho, nome: f.nome, tipo: f.tipo, tamanho, idioma: f.idioma ?? null, ordem, enviado },
+      p_arquivo: { chave: caminho, nome: f.nome, tipo: f.tipo, tamanho, idioma: f.idioma ?? null, posicionamento: f.posicionamento ?? null, ordem, enviado },
     });
     if (e2 || !arqId) falhaDoBanco(e2);
     arquivos.push({

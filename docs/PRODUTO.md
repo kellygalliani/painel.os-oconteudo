@@ -150,7 +150,7 @@ Duas abas: **Anúncios** (abre primeiro) e **Métricas da semana**.
 
 ### A página do anúncio (`/conteudo/pago/anuncios/[id]`)
 - Nome (edita no próprio título) e formato: Imagem, Vídeo ou Vídeo falado.
-- **1. Arquivos:** escolher vários de uma vez (imagens, ou os takes do vídeo), cada um com barra de progresso. Cada arquivo tem posição, ▲ ▼ para trocar a ordem, idioma ("PT e EN", "Só PT", "Só EN") e apagar. Os takes juntos formam um anúncio só.
+- **1. Arquivos:** escolher vários de uma vez (imagens, ou os takes do vídeo), cada um com barra de progresso. Cada arquivo tem posição, ▲ ▼ para trocar a ordem, idioma ("PT e EN", "Só PT", "Só EN"), **Feed ou Stories** (marcado sozinho pela proporção: 9:16 é Stories, 1:1 e 4:5 são Feed; dá para trocar) e apagar. Anúncio de imagem leva a versão Feed e a versão Stories juntas. Os takes juntos formam um anúncio só.
 - **2. Texto:** abas PT e EN ("+ Versão EN" cria a outra), com texto principal, título, descrição, botão e link. O contador avisa quando passa do que a Meta mostra antes de cortar (125, 40 e 30). Salva ao sair do campo. "Copiar texto PT/EN".
 - **3. Status:** Pronto para subir, Em produção, Ideia, No ar (a data entra sozinha) e Pausado, mais "no ar desde", link extra e resultado.
 - **Prévia** (ao lado no computador, embaixo no celular): o texto cortado como no feed, a imagem ou os takes (bolinhas para trocar), o título e o botão. "Baixar os arquivos" e "Apagar anúncio".

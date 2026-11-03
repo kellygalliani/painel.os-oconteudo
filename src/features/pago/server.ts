@@ -18,7 +18,7 @@ export async function listarSemanas(db: ClienteDb): Promise<SemanaTrafego[]> {
   }));
 }
 
-const COLUNAS = "*, criativo_versoes(idioma, texto, titulo, descricao, botao, link_destino), criativo_arquivos(id, idioma, ordem, chave, nome_original, tipo_mime, tamanho_bytes, enviado)";
+const COLUNAS = "*, criativo_versoes(idioma, texto, titulo, descricao, botao, link_destino), criativo_arquivos(id, idioma, posicionamento, ordem, chave, nome_original, tipo_mime, tamanho_bytes, enviado)";
 
 /** `comUrl`: quantos arquivos de cada anúncio ganham link para aparecer na tela (o resto fica sem). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +32,7 @@ async function mapear(c: any, comUrl: number): Promise<Criativo> {
     brutos.map(async (a: any, i: number) => ({
       id: a.id,
       idioma: a.idioma,
+      posicionamento: a.posicionamento ?? null,
       ordem: a.ordem,
       nome: a.nome_original,
       tipo: a.tipo_mime,

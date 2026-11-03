@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ArquivoAnuncio, Criativo } from "../schema";
 import { arquivosDoIdioma, nomeNoZip, pastaDoAnuncio, textoDoAnuncio, textosDosAnuncios } from "./texto-anuncio";
 
-const arq = (p: Partial<ArquivoAnuncio>): ArquivoAnuncio => ({ id: "a", idioma: null, ordem: 0, nome: "take.mp4", tipo: "video/mp4", tamanho: 1, enviado: true, url: null, ...p });
+const arq = (p: Partial<ArquivoAnuncio>): ArquivoAnuncio => ({ id: "a", idioma: null, posicionamento: null, ordem: 0, nome: "take.mp4", tipo: "video/mp4", tamanho: 1, enviado: true, url: null, ...p });
 const anuncio: Pick<Criativo, "titulo" | "versoes" | "criadoEm"> = {
   titulo: "Tênis em Berlim",
   criadoEm: "2026-11-03T12:00:00Z",
@@ -33,6 +33,7 @@ describe("arquivos", () => {
   it("nome no zip começa pela posição e diz o idioma", () => {
     expect(nomeNoZip(arq({ nome: "Take Final.MP4", idioma: "en" }), 0)).toBe("01-en-take-final.mp4");
     expect(nomeNoZip(arq({ nome: "capa.png" }), 9)).toBe("10-pt-en-capa.png");
+    expect(nomeNoZip(arq({ nome: "capa.png", posicionamento: "stories" }), 1)).toBe("02-stories-pt-en-capa.png");
     expect(pastaDoAnuncio(anuncio)).toBe("2026-11-03-tenis-em-berlim");
   });
 });

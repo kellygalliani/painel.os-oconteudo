@@ -20,11 +20,12 @@ import {
   idiomaDoArquivo,
   moverArquivo,
   paraBaixar,
+  posicionamentoDoArquivo,
   prepararEnvioArquivo,
   salvarDadosAnuncio,
   salvarVersaoAnuncio,
 } from "../server/actions";
-import { BOTOES, COLUNAS, FORMATOS, LIMITE_VISIVEL, VERSAO_VAZIA, type ArquivoAnuncio, type Criativo, type Idioma, type VersaoAnuncio } from "../schema";
+import { BOTOES, COLUNAS, FORMATOS, LIMITE_VISIVEL, VERSAO_VAZIA, type ArquivoAnuncio, type Criativo, type Idioma, type Posicionamento, type VersaoAnuncio } from "../schema";
 
 const mb = (b: number) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : b >= 1024 ** 2 ? `${Math.round(b / 1024 ** 2)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
@@ -37,6 +38,26 @@ function enviar(url: string, arquivo: File, aoProgredir: (p: number) => void) {
     x.onload = () => (x.status < 300 ? res() : rej(new Error(`status ${x.status}`)));
     x.onerror = () => rej(new Error("rede"));
     x.send(arquivo);
+  });
+}
+
+/** Feed ou Stories pela proporção: 9:16 (alto) é Stories; 1:1 e 4:5 são Feed. */
+function posicionamentoDe(arq: File): Promise<Posicionamento | null> {
+  return new Promise((res) => {
+    const url = URL.createObjectURL(arq);
+    const fim = (w: number, h: number) => { URL.revokeObjectURL(url); res(w && h ? (h / w >= 1.5 ? "stories" : "feed") : null); };
+    if (arq.type.startsWith("image/")) {
+      const img = new Image();
+      img.onload = () => fim(img.naturalWidth, img.naturalHeight);
+      img.onerror = () => fim(0, 0);
+      img.src = url;
+    } else {
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.onloadedmetadata = () => fim(v.videoWidth, v.videoHeight);
+      v.onerror = () => fim(0, 0);
+      v.src = url;
+    }
   });
 }
 
@@ -79,7 +100,7 @@ function Arquivos({ a }: { a: Criativo }) {
     setEnviando(arquivos.map((f) => ({ nome: f.name, p: 0 })));
     let ok = 0;
     for (const [i, arq] of arquivos.entries()) {
-      const dados = { criativoId: a.id, nome: arq.name, tipo: arq.type || (ehVideo ? "video/mp4" : "image/jpeg"), tamanho: arq.size, idioma: null };
+      const dados = { criativoId: a.id, nome: arq.name, tipo: arq.type || (ehVideo ? "video/mp4" : "image/jpeg"), tamanho: arq.size, idioma: null, posicionamento: await posicionamentoDe(arq) };
       const prep = await prepararEnvioArquivo(dados);
       if (!avisar(prep)) continue;
       try {
@@ -120,6 +141,17 @@ function Arquivos({ a }: { a: Criativo }) {
                     <option value="pt">Só PT</option>
                     <option value="en">Só EN</option>
                   </select>
+                  <select
+                    aria-label={`Posicionamento de ${f.nome}`}
+                    className={cn("h-7 rounded-md border bg-background px-1 text-xs", f.posicionamento && "font-semibold text-foreground")}
+                    value={f.posicionamento ?? ""}
+                    disabled={pend}
+                    onChange={(e) => agir(() => posicionamentoDoArquivo(a.id, f.id, e.target.value || null))}
+                  >
+                    <option value="">Feed ou Stories?</option>
+                    <option value="feed">Feed (1:1, 4:5)</option>
+                    <option value="stories">Stories (9:16)</option>
+                  </select>
                 </span>
               </span>
               <span className="flex shrink-0 items-center">
@@ -146,7 +178,7 @@ function Arquivos({ a }: { a: Criativo }) {
         {a.arquivos.length ? <Plus className="size-4" /> : <Upload className="size-4" />} {a.arquivos.length ? "Adicionar mais" : ehVideo ? "Escolher os takes (vídeos)" : "Escolher as imagens"}
       </Button>
       <p className="text-xs text-muted-foreground">
-        {ehVideo ? "Pode escolher vários takes de uma vez: eles formam um anúncio só, nesta ordem. " : "Uma imagem por formato (1:1, 4:5, 9:16) ou variações para testar. "}
+        {ehVideo ? "Pode escolher vários takes de uma vez: eles formam um anúncio só, nesta ordem. " : "Suba a versão Feed (1:1 ou 4:5) e a versão Stories (9:16) juntas: o painel marca cada uma pela proporção, e dá para trocar. "}
         Use &quot;Só PT&quot; ou &quot;Só EN&quot; quando o arquivo tiver texto ou fala de um idioma.
       </p>
       <input ref={input} type="file" multiple accept={ehVideo ? "video/*,image/*" : "image/*"} className="hidden" onChange={(e) => escolher(e.target.files)} />
@@ -249,14 +281,23 @@ function Textos({ a }: { a: Criativo }) {
 /** Prévia aproximada de como o anúncio aparece no feed. */
 function Previa({ a, idioma }: { a: Criativo; idioma: Idioma }) {
   const v = a.versoes[idioma];
-  const arqs = arquivosDoIdioma(a.arquivos, idioma);
+  const todos = arquivosDoIdioma(a.arquivos, idioma);
+  const temStories = todos.some((f) => f.posicionamento === "stories");
+  const [onde, setOnde] = useState<Posicionamento>("feed");
+  const arqs = temStories ? todos.filter((f) => (onde === "stories" ? f.posicionamento === "stories" : f.posicionamento !== "stories")) : todos;
   const [i, setI] = useState(0);
   const f = arqs[Math.min(i, arqs.length - 1)];
-  if (!v && !arqs.length) return null;
+  if (!v && !todos.length) return null;
   return (
+    <div className="flex flex-col gap-2">
+    {temStories && (
+      <span className="inline-flex self-center rounded-full border p-0.5">
+        {(["feed", "stories"] as const).map((k) => <button key={k} onClick={() => { setOnde(k); setI(0); }} className={cn("rounded-full px-3 py-0.5 text-xs font-semibold", onde === k ? "bg-foreground text-background" : "text-muted-foreground")}>{k === "feed" ? "Feed" : "Stories"}</button>)}
+      </span>
+    )}
     <div className="mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border bg-background">
       <p className="px-3 pt-3 text-sm">{v?.texto ? (v.texto.length > LIMITE_VISIVEL.texto ? <>{v.texto.slice(0, LIMITE_VISIVEL.texto)}… <span className="text-muted-foreground">ver mais</span></> : v.texto) : <span className="text-muted-foreground">Sem texto {idioma.toUpperCase()}.</span>}</p>
-      <div className="relative mt-2 aspect-[4/5] bg-muted">
+      <div className={cn("relative mt-2 bg-muted", onde === "stories" && temStories ? "aspect-[9/16]" : "aspect-[4/5]")}>
         {f && (f.tipo.startsWith("video/") && f.url ? <video key={f.id} src={f.url} controls playsInline className="size-full object-cover" /> : <Midia f={f} className="size-full" />)}
         {arqs.length > 1 && (
           <span className="absolute inset-x-0 bottom-2 flex justify-center gap-1">
@@ -271,6 +312,7 @@ function Previa({ a, idioma }: { a: Criativo; idioma: Idioma }) {
         </span>
         <span className="shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-semibold text-background">{v?.botao || "Saiba mais"}</span>
       </div>
+    </div>
     </div>
   );
 }

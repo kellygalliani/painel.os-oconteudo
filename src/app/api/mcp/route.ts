@@ -11,7 +11,7 @@ const FERRAMENTAS = [
   {
     name: "criar_anuncio",
     description:
-      "Cria um anúncio no painel OS oconteudo (Conteúdo › Pago). Imagem: formato 'estatico'. Vídeo: 'video_curto' ou 'falado', com um ou vários takes na ordem. Cada arquivo vai por 'url' (link público, até 100 MB), 'base64' (até 3 MB) ou só 'tamanho' (aí a resposta traz um endereço para enviar com PUT e depois chame confirmar_anuncio). Mande as versões pt, en ou as duas.",
+      "Cria um anúncio no painel OS oconteudo (Conteúdo › Pago). Imagem: formato 'estatico'; para ter versão Feed e versão Stories do mesmo anúncio, mande os dois arquivos com posicionamento 'feed' e 'stories'. Vídeo: 'video_curto' ou 'falado', com um ou vários takes na ordem. Cada arquivo vai por 'url' (link público, até 100 MB), 'base64' (até 3 MB) ou só 'tamanho' (aí a resposta traz um endereço para enviar com PUT e depois chame confirmar_anuncio). Mande as versões pt, en ou as duas.",
     inputSchema: {
       type: "object",
       required: ["titulo", "versoes", "arquivos"],
@@ -30,6 +30,7 @@ const FERRAMENTAS = [
               nome: { type: "string" },
               tipo: { type: "string", description: "image/png, image/jpeg, video/mp4..." },
               idioma: { type: ["string", "null"], enum: ["pt", "en", null], description: "null = vale para os dois idiomas" },
+              posicionamento: { type: ["string", "null"], enum: ["feed", "stories", null], description: "feed = 1:1 ou 4:5; stories = 9:16 (Stories e Reels)" },
               url: { type: "string" },
               base64: { type: "string" },
               tamanho: { type: "number", description: "Em bytes, para o envio direto com PUT" },

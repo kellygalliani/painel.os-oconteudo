@@ -3,12 +3,14 @@ import { z } from "zod";
 export type Idioma = "pt" | "en";
 export type StatusCriativo = "ideia" | "producao" | "pronto" | "no_ar" | "pausado";
 export type FormatoCriativo = "estatico" | "video_curto" | "falado";
+/** Onde o arquivo roda na Meta: Feed (1:1 ou 4:5) ou Stories/Reels (9:16). null = não marcado. */
+export type Posicionamento = "feed" | "stories";
 
 /** Texto do anúncio num idioma (o que vai na Meta). */
 export type VersaoAnuncio = { texto: string; titulo: string; descricao: string; botao: string; link: string };
 
 /** Imagem ou take de vídeo. `idioma` null = vale para os dois. `url` é para ver na tela (1 hora). */
-export type ArquivoAnuncio = { id: string; idioma: Idioma | null; ordem: number; nome: string; tipo: string; tamanho: number; enviado: boolean; url: string | null };
+export type ArquivoAnuncio = { id: string; idioma: Idioma | null; posicionamento: Posicionamento | null; ordem: number; nome: string; tipo: string; tamanho: number; enviado: boolean; url: string | null };
 
 export type Criativo = {
   id: string;
@@ -87,6 +89,8 @@ export const arquivoApiSchema = z
     tipo: z.string().regex(/^(image|video)\//, "Só imagem ou vídeo."),
     tamanho: z.number().int().positive().max(5 * 1024 ** 3).optional(),
     idioma: z.enum(["pt", "en"]).nullable().optional(),
+    /** "feed" (1:1 ou 4:5) ou "stories" (9:16): duas versões do mesmo anúncio. */
+    posicionamento: z.enum(["feed", "stories"]).nullable().optional(),
     /** Um link público: o painel baixa sozinho (até 100 MB). */
     url: z.string().url().optional(),
     /** O arquivo em base64 (até 3 MB, para imagem pequena). */

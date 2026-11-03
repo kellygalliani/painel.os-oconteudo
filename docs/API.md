@@ -35,6 +35,13 @@ Endereço do painel: `https://painel-os-oconteudo.vercel.app`.
 - **formato:** `estatico` (imagem), `video_curto` ou `falado`.
 - **versoes:** `pt`, `en` ou as duas.
 - **arquivos:** na ordem. Num vídeo, os takes em sequência formam **um** anúncio. `idioma`: `"pt"`, `"en"` ou ausente/`null` (vale para os dois).
+- **posicionamento:** `"feed"` (1:1 ou 4:5) ou `"stories"` (9:16, também serve para Reels). Para ter a versão Feed e a versão Stories do mesmo anúncio de imagem, mande as duas imagens no mesmo anúncio, cada uma com o seu posicionamento:
+  ```json
+  "arquivos": [
+    { "nome": "capa-feed.png", "tipo": "image/png", "posicionamento": "feed", "url": "https://…" },
+    { "nome": "capa-stories.png", "tipo": "image/png", "posicionamento": "stories", "url": "https://…" }
+  ]
+  ```
 - Cada arquivo vai de um destes jeitos:
   - `"tamanho"` (em bytes): a resposta traz um endereço para enviar com PUT. Serve para qualquer tamanho, até 5 GB.
   - `"url"`: um link público. O painel baixa sozinho, até 100 MB.
@@ -63,7 +70,7 @@ Com uma pasta contendo um `anuncio.json` (sem `arquivos`, ou com a lista de nome
 OSC_CHAVE=osc_... npm run anuncio:subir -- caminho/da/pasta
 ```
 
-Um nome terminando em `-pt` ou `-en` (ex.: `take2-en.mp4`) fica só naquele idioma.
+Um nome terminando em `-pt` ou `-en` (ex.: `take2-en.mp4`) fica só naquele idioma, e um nome com `-feed` ou `-stories` (ex.: `capa-stories-en.png`) fica marcado como Feed ou Stories.
 
 ## 4. MCP
 
@@ -86,6 +93,7 @@ Quando eu disser "sobe no painel", suba o anúncio que eu indicar para o painel 
 - formato: estatico para imagem; video_curto para vídeo (falado se for a pessoa falando para a câmera).
 - versoes: pt e, se houver, en, cada uma com texto (o texto principal completo), titulo (até 40 caracteres), descricao (até 30), botao e link.
 - arquivos: na ordem certa. Vídeo em vários takes vai como vários arquivos, em sequência. Arquivo só de um idioma leva "idioma": "pt" ou "en".
+- Anúncio de imagem tem duas versões: a de Feed (1:1 ou 4:5) com "posicionamento": "feed" e a de Stories (9:16) com "posicionamento": "stories", no mesmo anúncio.
 - Se a resposta trouxer "enviar", faça o PUT de cada arquivo e chame confirmar_anuncio com o id.
 - No fim, me diga o título e o link do anúncio no painel.
 ```

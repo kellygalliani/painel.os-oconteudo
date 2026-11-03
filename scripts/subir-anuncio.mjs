@@ -4,7 +4,8 @@
 //
 // A pasta tem um anuncio.json (titulo, formato, nota, versoes) e os arquivos. A ordem dos arquivos
 // é a de "arquivos" no anuncio.json; sem essa lista, vai a ordem alfabética das imagens e vídeos.
-// Nomes que terminam em -pt ou -en (ex.: take1-en.mp4) ficam só naquele idioma.
+// Nomes que terminam em -pt ou -en (ex.: take1-en.mp4) ficam só naquele idioma, e os que têm -feed
+// ou -stories (ex.: capa-stories.png, capa-stories-en.png) ficam marcados como Feed ou Stories.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 
@@ -24,7 +25,8 @@ const arquivos = nomes.map((nome) => {
   const tipo = TIPOS[extname(nome).toLowerCase()];
   if (!tipo) throw new Error(`Tipo não suportado: ${nome}`);
   const idioma = nome.match(/-(pt|en)\.\w+$/i)?.[1]?.toLowerCase() ?? null;
-  return { nome, tipo, tamanho: statSync(join(pasta, nome)).size, idioma };
+  const posicionamento = nome.match(/(?:^|[-_])(feed|stories)(?=[-_.])/i)?.[1]?.toLowerCase() ?? null;
+  return { nome, tipo, tamanho: statSync(join(pasta, nome)).size, idioma, posicionamento };
 });
 
 const cab = { Authorization: `Bearer ${chave}`, "Content-Type": "application/json" };

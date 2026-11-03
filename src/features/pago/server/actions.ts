@@ -94,6 +94,7 @@ const envio = z.object({
   tipo: z.string().regex(/^(image|video)\//, "Escolha uma imagem ou um vídeo."),
   tamanho: z.number().int().positive().max(5 * 1024 ** 3, "O arquivo passa de 5 GB."),
   idioma: idioma.nullable(),
+  posicionamento: z.enum(["feed", "stories"]).nullable().default(null),
 });
 
 const chaveDe = (criativoId: string, nome: string) => {
@@ -119,6 +120,7 @@ export async function confirmarArquivo(dados: unknown): Promise<Resultado> {
   const { error } = await socia.db.from("criativo_arquivos").insert({
     criativo_id: d.data.criativoId,
     idioma: d.data.idioma,
+    posicionamento: d.data.posicionamento,
     ordem: (ultimo?.ordem ?? -1) + 1,
     chave: d.data.chave,
     nome_original: d.data.nome,
@@ -153,6 +155,16 @@ export async function idiomaDoArquivo(criativoId: string, arquivoId: string, qua
   const i = idioma.nullable().safeParse(qual);
   if (!uuid.safeParse(arquivoId).success || !i.success) return erro("Dados inválidos");
   const { error } = await socia.db.from("criativo_arquivos").update({ idioma: i.data }).eq("id", arquivoId);
+  if (error) return erro(FALHOU);
+  atualizar(criativoId);
+  return ok(null);
+}
+
+export async function posicionamentoDoArquivo(criativoId: string, arquivoId: string, qual: unknown): Promise<Resultado> {
+  const socia = await exigirSocia();
+  const p = z.enum(["feed", "stories"]).nullable().safeParse(qual);
+  if (!uuid.safeParse(arquivoId).success || !p.success) return erro("Dados inválidos");
+  const { error } = await socia.db.from("criativo_arquivos").update({ posicionamento: p.data }).eq("id", arquivoId);
   if (error) return erro(FALHOU);
   atualizar(criativoId);
   return ok(null);
