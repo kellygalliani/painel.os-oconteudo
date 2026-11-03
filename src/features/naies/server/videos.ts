@@ -71,10 +71,10 @@ export async function apagarVideos(naieId: string, qualIdioma?: "pt" | "en", qua
 }
 
 /** Link de 1 hora para ver ou baixar o vídeo (baixa com o nome original). */
-export async function linkDoVideo(naieId: string, qualIdioma: "pt" | "en", qualTipo: TipoVideo = "bruto"): Promise<Resultado<{ url: string; nome: string }>> {
+export async function linkDoVideo(naieId: string, qualIdioma: "pt" | "en", qualTipo: TipoVideo = "bruto"): Promise<Resultado<{ url: string; nome: string; tamanho: number }>> {
   const socia = await exigirSocia();
   if (!r2Configurado()) return erro(SEM_R2);
-  const { data } = await socia.db.from("naie_videos").select("chave, nome_original").match({ naie_id: naieId, idioma: qualIdioma, tipo: qualTipo }).maybeSingle();
+  const { data } = await socia.db.from("naie_videos").select("chave, nome_original, tamanho_bytes").match({ naie_id: naieId, idioma: qualIdioma, tipo: qualTipo }).maybeSingle();
   if (!data) return erro("Sem vídeo.");
-  return ok({ url: await urlDeDownload(data.chave, data.nome_original, 3600), nome: data.nome_original });
+  return ok({ url: await urlDeDownload(data.chave, data.nome_original, 3600), nome: data.nome_original, tamanho: Number(data.tamanho_bytes) });
 }

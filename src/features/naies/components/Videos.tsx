@@ -33,7 +33,7 @@ export function SalvarNoCelular({ naieId, idioma }: { naieId: string; idioma: Id
       rotulo={`Salvar vídeo ${idioma.toUpperCase()} no celular`}
       arquivos={async () => {
         const r = await linkDoVideo(naieId, idioma, "final");
-        return avisar(r) ? [{ url: r.dados.url, nome: r.dados.nome }] : null;
+        return avisar(r) ? [{ url: r.dados.url, nome: r.dados.nome, tamanho: r.dados.tamanho }] : null;
       }}
     />
   );

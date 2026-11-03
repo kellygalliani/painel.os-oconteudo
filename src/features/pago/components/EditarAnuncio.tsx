@@ -376,7 +376,7 @@ export function EditarAnuncio({ anuncio: a }: { anuncio: Criativo }) {
               const r = await paraBaixar([a.id]);
               if (!avisar(r)) return null;
               const { anuncio, links } = r.dados[0];
-              return [...anuncio.arquivos].sort((x, y) => x.ordem - y.ordem).filter((f) => links[f.id]).map((f, i) => ({ url: links[f.id], nome: `${pastaDoAnuncio(anuncio)}-${nomeNoZip(f, i)}` }));
+              return [...anuncio.arquivos].sort((x, y) => x.ordem - y.ordem).filter((f) => links[f.id]).map((f, i) => ({ url: links[f.id], nome: `${pastaDoAnuncio(anuncio)}-${nomeNoZip(f, i)}`, tamanho: f.tamanho }));
             }}
           />
           <Button

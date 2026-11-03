@@ -161,7 +161,7 @@ export function Anuncios({ criativos, hoje }: { criativos: Criativo[]; hoje: str
                 return r.dados.flatMap(({ anuncio, links }) =>
                   [...arquivosDoIdioma(anuncio.arquivos, "pt"), ...anuncio.arquivos.filter((f) => f.idioma === "en")]
                     .filter((f, i, l) => l.findIndex((x) => x.id === f.id) === i && links[f.id])
-                    .map((f, i) => ({ url: links[f.id], nome: `${pastaDoAnuncio(anuncio)}-${nomeNoZip(f, i)}` })),
+                    .map((f, i) => ({ url: links[f.id], nome: `${pastaDoAnuncio(anuncio)}-${nomeNoZip(f, i)}`, tamanho: f.tamanho })),
                 );
               }}
               noComputador={() => baixarZip([...selecao])}
