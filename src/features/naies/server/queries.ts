@@ -2,7 +2,7 @@ import "server-only";
 import type { ClienteDb } from "@/lib/supabase/server";
 import type { Idioma, Naie, Versao, VideoBruto } from "../schema";
 
-const COLUNAS = "*, naie_versoes(idioma, titulos, titulo_escolhido, roteiro, contagem), naie_videos(idioma, chave, nome_original, tamanho_bytes)";
+const COLUNAS = "*, naie_versoes(idioma, titulos, titulo_escolhido, roteiro, contagem), naie_videos(idioma, tipo, chave, nome_original, tamanho_bytes)";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapearNaie(r: any): Naie {
@@ -10,7 +10,8 @@ export function mapearNaie(r: any): Naie {
   for (const v of r.naie_versoes ?? [])
     versoes[v.idioma as Idioma] = { idioma: v.idioma, titulos: v.titulos ?? [], tituloEscolhido: v.titulo_escolhido, roteiro: v.roteiro, contagem: v.contagem ?? { total: 0 } };
   const videos: Partial<Record<Idioma, VideoBruto>> = {};
-  for (const v of r.naie_videos ?? []) videos[v.idioma as Idioma] = { chave: v.chave, nome: v.nome_original, tamanho: Number(v.tamanho_bytes) };
+  const finais: Partial<Record<Idioma, VideoBruto>> = {};
+  for (const v of r.naie_videos ?? []) (v.tipo === "final" ? finais : videos)[v.idioma as Idioma] = { chave: v.chave, nome: v.nome_original, tamanho: Number(v.tamanho_bytes) };
   return {
     id: r.id,
     semana: r.semana,
@@ -30,6 +31,9 @@ export function mapearNaie(r: any): Naie {
     trilhaId: r.trilha_id,
     versoes,
     videos,
+    finais,
+    legendas: { ...(r.legenda_pt ? { pt: r.legenda_pt } : {}), ...(r.legenda_en ? { en: r.legenda_en } : {}) },
+    facebookPostado: !!r.facebook_postado,
     origemMd: r.origem_md ?? null,
   };
 }

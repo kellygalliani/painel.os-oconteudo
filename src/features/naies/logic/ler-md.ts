@@ -31,10 +31,11 @@ function lerFicha(corpo: string): Record<string, string> {
   return campos;
 }
 
-type Rotulo = "pilula" | "alavanca" | "desenvolvimento" | "conexao" | "cta" | "continuo";
+type Rotulo = "pilula" | "alavanca" | "desenvolvimento" | "conexao" | "cta" | "continuo" | "legenda";
 
 function rotuloDe(label: string): Rotulo | null {
   const l = label.toLowerCase();
+  if (/legenda|caption/.test(l)) return "legenda";
   if (/p[íi]lula|pill/.test(l)) return "pilula";
   if (/alavanca|hook/.test(l)) return "alavanca";
   if (/desenvolvimento|story|narrativa/.test(l)) return "desenvolvimento";
@@ -44,7 +45,7 @@ function rotuloDe(label: string): Rotulo | null {
   return null;
 }
 
-function lerVersao(corpo: string): { versao: Omit<Versao, "idioma">; pilula?: string } {
+function lerVersao(corpo: string): { versao: Omit<Versao, "idioma">; pilula?: string; legenda?: string } {
   const titulos: string[] = [];
   let escolhido: number | null = null;
   const blocos: Partial<Record<Rotulo, string[]>> = {};
@@ -80,6 +81,7 @@ function lerVersao(corpo: string): { versao: Omit<Versao, "idioma">; pilula?: st
   return {
     versao: { titulos, tituloEscolhido: escolhido ?? (titulos.length ? 0 : null), roteiro, contagem: contar(roteiro) },
     pilula: blocos.pilula ? juntar("pilula") : undefined,
+    legenda: blocos.legenda ? juntar("legenda") : undefined,
   };
 }
 
@@ -99,6 +101,7 @@ export function lerNaieMd(nomeArquivo: string, bruto: string): NaieLida {
 
   const ficha: Ficha = {};
   const versoes: NaieLida["versoes"] = {};
+  const legendas: NaieLida["legendas"] = {};
   for (const s of secoes(texto)) {
     if (/^ficha/i.test(s.titulo)) ficha.campos = lerFicha(s.corpo);
     else if (/^apura/i.test(s.titulo)) {
@@ -111,8 +114,9 @@ export function lerNaieMd(nomeArquivo: string, bruto: string): NaieLida {
           ? "pt"
           : null;
       if (!idioma) continue;
-      const { versao, pilula } = lerVersao(s.corpo);
+      const { versao, pilula, legenda } = lerVersao(s.corpo);
       versoes[idioma] = versao;
+      if (legenda) legendas[idioma] = legenda;
       if (pilula) ficha[idioma === "pt" ? "pilula_pt" : "pilula_en"] = pilula;
     }
   }
@@ -125,5 +129,5 @@ export function lerNaieMd(nomeArquivo: string, bruto: string): NaieLida {
   if (!versoes.en) avisos.push("Sem versão EN");
   if (versoes.pt && !versoes.pt.titulos.length) avisos.push("Sem títulos fixos em PT");
 
-  return { tipo: tipo ?? "geral", diaNumero, tituloCurto, ficha, versoes, avisos };
+  return { tipo: tipo ?? "geral", diaNumero, tituloCurto, ficha, versoes, legendas, avisos };
 }

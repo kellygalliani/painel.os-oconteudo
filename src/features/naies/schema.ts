@@ -3,6 +3,7 @@ import { z } from "zod";
 export type TipoNaie = "geral" | "nicho" | "venda";
 export type StatusNaie = "roteiro" | "gravada" | "editada" | "publicada";
 export type Idioma = "pt" | "en";
+export type TipoVideo = "bruto" | "final";
 
 export const TIPOS: Record<TipoNaie, { rotulo: string; cor: string }> = {
   geral: { rotulo: "Geral", cor: "var(--area-soc)" },
@@ -51,7 +52,12 @@ export type Naie = {
   linkReferencia: string | null;
   trilhaId: string | null;
   versoes: Partial<Record<Idioma, Versao>>;
+  /** Vídeos brutos (apagados quando a NAIE fica editada). */
   videos: Partial<Record<Idioma, VideoBruto>>;
+  /** Vídeo final editado, para baixar no celular e postar (apagado ao marcar o Facebook). */
+  finais: Partial<Record<Idioma, VideoBruto>>;
+  legendas: Partial<Record<Idioma, string>>;
+  facebookPostado: boolean;
   /** O documento .md da NAIE (null = gerado dos campos). */
   origemMd: string | null;
 };
@@ -63,6 +69,8 @@ export type NaieLida = {
   tituloCurto: string;
   ficha: Ficha;
   versoes: Partial<Record<Idioma, Omit<Versao, "idioma">>>;
+  /** Legenda do post, quando o .md traz um bloco **Legenda:** na versão. */
+  legendas: Partial<Record<Idioma, string>>;
   avisos: string[];
 };
 

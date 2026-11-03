@@ -10,7 +10,7 @@ import { contar } from "../logic/contagem";
 import { lerNaieMd } from "../logic/ler-md";
 import { montarPasta, type Pasta } from "../logic/pasta-edicao";
 import { importacaoSchema, naieSchema, type NaieLida } from "../schema";
-import { apagarBrutosSeEditada } from "./apagar-brutos";
+import { apagarBrutosSeEditada, apagarVideosDoTipo } from "./apagar-brutos";
 import { obterNaie } from "./queries";
 
 const FALHOU = "Não foi possível salvar. Tente de novo.";
@@ -86,6 +86,28 @@ export async function mudarStatusNaie(naieId: string, status: string): Promise<R
   return ok({ videosApagados });
 }
 
+/** Postou no Facebook: marca e apaga os vídeos finais (o Facebook já tem o vídeo). */
+export async function marcarFacebook(naieId: string, postado: boolean): Promise<Resultado<{ videosApagados: number }>> {
+  const socia = await exigirSocia();
+  if (!uuid.safeParse(naieId).success || typeof postado !== "boolean") return erro("Dados inválidos");
+  const { error } = await socia.db.from("naies").update({ facebook_postado: postado }).eq("id", naieId);
+  if (error) return erro(FALHOU);
+  const videosApagados = postado ? await apagarVideosDoTipo(socia.db, naieId, "final") : 0;
+  atualizar(naieId);
+  return ok({ videosApagados });
+}
+
+export async function salvarLegenda(naieId: string, idioma: string, texto: string): Promise<Resultado> {
+  const socia = await exigirSocia();
+  const d = z.object({ naieId: uuid, idioma: z.enum(["pt", "en"]), texto: z.string().max(5000) }).safeParse({ naieId, idioma, texto });
+  if (!d.success) return erro("A legenda passa de 5.000 caracteres.");
+  const coluna = d.data.idioma === "pt" ? "legenda_pt" : "legenda_en";
+  const { error } = await socia.db.from("naies").update({ [coluna]: d.data.texto.trim() || null }).eq("id", naieId);
+  if (error) return erro(FALHOU);
+  atualizar(naieId);
+  return ok(null);
+}
+
 export async function escolherTrilha(naieId: string, trilhaId: string | null): Promise<Resultado> {
   const socia = await exigirSocia();
   if (!uuid.safeParse(naieId).success || (trilhaId && !uuid.safeParse(trilhaId).success)) return erro("Dados inválidos");
@@ -136,6 +158,9 @@ export async function salvarImportacao(entrada: unknown): Promise<Resultado<{ qu
       titulo_curto: l.tituloCurto,
       ficha: l.ficha,
       origem_md: a.texto,
+      // Só preenche a legenda quando o .md traz uma; senão mantém a que já está no painel.
+      ...(l.legendas.pt ? { legenda_pt: l.legendas.pt } : {}),
+      ...(l.legendas.en ? { legenda_en: l.legendas.en } : {}),
     };
     const r = l.diaNumero
       ? await socia.db.from("naies").upsert(linha, { onConflict: "semana,dia_numero" }).select("id").single()

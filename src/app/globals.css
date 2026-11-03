@@ -139,6 +139,14 @@
   html {
     @apply font-sans;
   }
+  /* Tudo o que é clicável mostra a mãozinha no computador (o Tailwind 4 tirou o padrão). */
+  button:not(:disabled), [role="button"], [role="radio"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="switch"],
+  a[href], summary, select, label:has(input:not(:disabled)), label[for], input[type="checkbox"], input[type="radio"], input[type="file"], input[type="date"] {
+    cursor: pointer;
+  }
+  button:disabled, [aria-disabled="true"], [data-disabled] {
+    cursor: not-allowed;
+  }
 }
 
 /* ---- marca oconteudo ---- */

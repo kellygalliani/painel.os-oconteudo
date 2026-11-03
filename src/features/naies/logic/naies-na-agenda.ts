@@ -18,8 +18,8 @@ export function diaDoLote(post: string): string {
 }
 
 /**
- * "Editar e agendar" no dia escolhido (`editarEm`) ou no dia do lote, e "Conferir se foi
- * publicada" no dia do post. `responsavelId` é quem cuida das NAIEs (a dona da rotina de roteiros).
+ * "Editar e agendar" no dia escolhido (`editarEm`) ou no dia do lote e, no dia do post,
+ * "Conferir no Instagram" e "Postar no Facebook". `responsavelId` é quem cuida das NAIEs (a dona da rotina de roteiros).
  */
 export function naiesNaAgenda(naies: Naie[], responsavelId: string | null): Record<string, ItemDoDia[]> {
   const out: Record<string, ItemDoDia[]> = {};
@@ -33,10 +33,20 @@ export function naiesNaAgenda(naies: Naie[], responsavelId: string | null): Reco
       tipo: "naie_publicar",
       refId: n.id,
       data,
-      titulo: `Conferir se ${n.tituloCurto} foi publicada`,
+      titulo: `Conferir no Instagram: ${n.tituloCurto}`,
       areaId: "ven",
       minutosPorSocia: { [responsavelId]: MIN_CONFERIR_POST },
       feito: n.status === "publicada",
+    });
+    out[data].push({
+      chave: `naie_facebook:${n.id}@${data}`,
+      tipo: "naie_facebook",
+      refId: n.id,
+      data,
+      titulo: `Postar no Facebook: ${n.tituloCurto}`,
+      areaId: "ven",
+      minutosPorSocia: { [responsavelId]: MIN_CONFERIR_POST },
+      feito: n.facebookPostado,
     });
 
     const dia = n.editarEm ?? diaDoLote(data);

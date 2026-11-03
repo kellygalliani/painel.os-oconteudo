@@ -88,6 +88,9 @@ const naie = (parcial: Partial<Naie> = {}): Naie => ({
   linkReferencia: null,
   trilhaId: null,
   videos: {},
+  finais: {},
+  legendas: {},
+  facebookPostado: false,
   origemMd: null,
   versoes: {
     pt: { idioma: "pt", titulos: ["Título A", "Título B"], tituloEscolhido: 1, roteiro: "Texto PT", contagem: { total: 8 } },
@@ -108,6 +111,45 @@ describe("pasta de edição", () => {
   it("NAIE de Venda tem o passo dos 25 s", () => {
     const pedido = montarPasta(naie({ tipo: "venda" })).arquivos.find((a) => a.caminho.endsWith("PEDIDO.txt"))!.texto;
     expect(pedido).toContain("últimos 25 s");
+  });
+});
+
+describe("legenda no .md", () => {
+  it("o bloco **Legenda:** vira a legenda e não entra no roteiro", () => {
+    const md = `# 2026-11-08 · Geral · X
+
+## 🇧🇷 Versão PT
+
+- [x] **Opção 1:** Título
+
+**Alavanca Fatal:**
+A
+
+**Desenvolvimento da Narrativa:**
+B
+
+**Conexão:**
+C
+
+**CTA:**
+D
+
+**Legenda:**
+Texto do post
+
+#tag
+`;
+    const n = lerNaieMd("Dia-01-GERAL-X.md", md);
+    expect(n.legendas.pt).toBe(`Texto do post
+
+#tag`);
+    expect(n.versoes.pt!.roteiro).toBe(`A
+
+B
+
+C
+
+D`);
   });
 });
 

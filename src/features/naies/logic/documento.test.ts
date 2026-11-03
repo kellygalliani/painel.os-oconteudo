@@ -50,7 +50,7 @@ describe("documento da NAIE", () => {
       id: "x", semana: null, diaNumero: 4, dataPrevista: null,
       editarEm: null, tipo: lida.tipo, formato: "reels" as const, tituloCurto: lida.tituloCurto,
       quemGrava: "ambas" as const, status: "roteiro" as const, template: "t", ficha: lida.ficha, linkBrutoPt: null, linkBrutoEn: null,
-      linkReferencia: null, trilhaId: null, origemMd: null, videos: {},
+      linkReferencia: null, trilhaId: null, origemMd: null, videos: {}, finais: {}, legendas: {}, facebookPostado: false,
       versoes: { pt: { idioma: "pt" as const, ...lida.versoes.pt! }, en: { idioma: "en" as const, ...lida.versoes.en! } },
     };
     const volta = lerNaieMd("Dia-04-VENDA-x.md", gerarMd(naie));

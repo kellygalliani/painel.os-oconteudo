@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { COR_AREA } from "@/components/shared/ui-base";
 import { ddmm, DIAS_CURTOS, diaDaSemana, hojeIso, minutosLegivel, somarDias } from "@/lib/datas";
 import { cn } from "@/lib/utils";
-import { mudarStatusNaie } from "@/features/naies";
+import { marcarFacebook, mudarStatusNaie } from "@/features/naies";
 import { alternarMarcacao, desfazerMovimento, moverBloco, moverRotina, mudarStatusTarefa } from "../server/actions";
 import type { Desfazer, ItemDoDia } from "../schema";
 
@@ -103,13 +103,15 @@ export function ItemAgenda({ item, socias, proximoLeve, aoMover, aoEditar, mostr
   const [pend, start] = useTransition();
   const quem = Object.entries(item.minutosPorSocia);
   const nome = (id: string) => socias.find((s) => s.id === id)?.nome ?? "?";
-  const ehNaie = item.tipo === "naie_editar" || item.tipo === "naie_publicar";
+  const ehNaie = item.tipo === "naie_editar" || item.tipo === "naie_publicar" || item.tipo === "naie_facebook";
 
   function marcar() {
     const novo = !feito;
     setFeito(novo);
     start(async () => {
-      const r = ehNaie
+      const r = item.tipo === "naie_facebook"
+        ? await marcarFacebook(item.refId, novo)
+        : ehNaie
         ? await mudarStatusNaie(item.refId, novo ? (item.tipo === "naie_editar" ? "editada" : "publicada") : item.tipo === "naie_editar" ? "gravada" : "editada")
         : item.tipo === "bloco"
           ? await mudarStatusTarefa({ tarefaId: item.refId, status: novo ? "feito" : "a_fazer" })

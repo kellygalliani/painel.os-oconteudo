@@ -100,8 +100,13 @@ Leva para o painel o `../Estratégia/Reestruturação/agenda-oconteudo.html`, co
 - **Título fixo:** a escolha fica fora do texto (um seletor PT e um EN, com a contagem sobre 2.200), mas reescreve o `[x]` dentro do `.md`. O texto copiado já sai com o título certo marcado.
 - **Editar texto:** abre o `.md` inteiro para editar. Ao salvar, tipo, título curto, ficha, títulos, roteiros e contagem são lidos de volta do texto (`server/documento.ts`). NAIE criada pelo formulário ganha um `.md` no formato padrão.
 - **Editar detalhes:** data, semana, quem grava, status, template, links e o dia de editar e agendar.
-- **Na agenda:** uma NAIE por dia, de domingo a sábado. "Editar e agendar" cai no lote: os posts de domingo, segunda e terça na sexta anterior; quarta e quinta na segunda; sexta e sábado na terça (`logic/naies-na-agenda.ts`). No dia do post aparece "Conferir se X foi publicada". Marcar "Editar e agendar" deixa a NAIE editada e apaga os vídeos brutos.
-- **Status**, **vídeos brutos PT e EN**, **trilha**, **links**, **Gravar (modo leitura)** e **Baixar pasta** continuam fora do texto.
+- **Na agenda:** uma NAIE por dia, de domingo a sábado. "Editar e agendar" cai no lote: os posts de domingo, segunda e terça na sexta anterior; quarta e quinta na segunda; sexta e sábado na terça (`logic/naies-na-agenda.ts`). No dia do post aparecem "Conferir no Instagram" e "Postar no Facebook". Marcar "Editar e agendar" deixa a NAIE editada e apaga os vídeos brutos.
+- **Passo a passo** no topo da página, com o passo da vez aberto e marcado como "agora":
+  1. **Gravar:** escolher o título fixo, abrir o modo gravação, subir os brutos PT e EN, "Pronto, está gravada".
+  2. **Editar e agendar:** trilha, baixar a pasta de edição, subir o **vídeo final** (opcional; por enquanto só o EN), agendar no Instagram, "Pronto, editada e agendada" (apaga os brutos).
+  3. **Postar:** legenda PT e EN (salva ao sair do campo, com "Copiar legenda"), "Salvar vídeo no celular" (no celular abre o compartilhar, que salva na galeria; no computador baixa), "Conferi no Instagram" e "Postei no Facebook". O Facebook pode ser marcado sem vídeo final; ao marcar, os vídeos finais são apagados.
+  Cada passo feito pode voltar um passo. O roteiro completo fica abaixo dos passos.
+- **Legenda no .md:** um bloco `**Legenda:**` dentro da versão PT ou EN entra como legenda na importação (e ao salvar o texto). Sem o bloco, a legenda do painel fica como está.
 
 ### Pasta de edição (o `.zip`)
 Nome da pasta: `AAAA-MM-DD-tipo-titulo-curto`, sem acento e sem espaço. Por exemplo, `2026-11-02-geral-sixto-rodriguez/`.
