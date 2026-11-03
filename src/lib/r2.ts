@@ -38,3 +38,22 @@ export async function apagarObjeto(chave: string) {
   const r = await c.cliente.fetch(`${c.base}/${caminho(chave)}`, { method: "DELETE" });
   if (!r.ok && r.status !== 404) throw new Error(`R2 respondeu ${r.status}`);
 }
+
+/** URL para mostrar na tela (imagem ou vídeo no navegador, sem forçar download). */
+export const urlDeVer = (chave: string, segundos = 3600) => assinar("GET", chave, segundos);
+
+/** O arquivo já está no R2? (para confirmar um envio feito direto pelo navegador ou pela API) */
+export async function existeObjeto(chave: string): Promise<boolean> {
+  const c = config();
+  if (!c) throw new Error("R2 não configurado");
+  const r = await c.cliente.fetch(`${c.base}/${caminho(chave)}`, { method: "HEAD" });
+  return r.ok;
+}
+
+/** Envia do servidor para o R2 (arquivo pequeno vindo da API por link ou em base64). */
+export async function enviarObjeto(chave: string, corpo: ArrayBuffer, tipo: string) {
+  const c = config();
+  if (!c) throw new Error("R2 não configurado");
+  const r = await c.cliente.fetch(`${c.base}/${caminho(chave)}`, { method: "PUT", body: corpo, headers: { "Content-Type": tipo } });
+  if (!r.ok) throw new Error(`R2 respondeu ${r.status}`);
+}

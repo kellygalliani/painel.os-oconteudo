@@ -60,6 +60,13 @@ O mesmo script com `--redefinir` gera uma nova senha provisória, para quando al
   - `X-Robots-Tag: noindex, nofollow`
 - **Fora dos buscadores:** `robots: { index: false, follow: false }` no metadata do layout raiz.
 
+## Chaves de API (anúncios pela IA)
+
+- Formato `osc_` + 32 caracteres aleatórios. Aparece uma vez, ao gerar; o banco guarda só o SHA-256 (`api_chaves.hash`).
+- A chave não abre sessão: as rotas `/api/anuncios` e `/api/mcp` usam o cliente anon, e só as funções `api_*` (security definer) aceitam a chave. Elas criam e listam anúncios; não leem nem mudam nada além disso.
+- Apagar a chave em Conta corta o acesso na hora. `ultimo_uso` mostra quando foi usada.
+- A chave no endereço do MCP (`?chave=`) fica em registros de acesso: usar uma chave só para isso e apagar se vazar.
+
 ## Checklist antes de publicar
 - [ ] `npm run test:rls` passou.
 - [ ] `harness:check` passou (sem chave secreta em `src/`, toda tabela com RLS).

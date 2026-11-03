@@ -62,6 +62,10 @@ Mais: `alter table naies add column trilha_id uuid null references trilhas on de
 | Tabela | Colunas |
 |---|---|
 | `naie_videos` | `naie_id references naies on delete cascade`, `idioma text check in ('pt','en')`, `tipo text check in ('bruto','final') default 'bruto'` (unique `naie_id, idioma, tipo`; o final fica em `naies/<naie>/final-<idioma>-<tempo>.<ext>`), `chave text unique` (caminho no R2: `naies/<naie>/<idioma>-<tempo>.<ext>`), `nome_original`, `tamanho_bytes bigint`; unique (`naie_id`, `idioma`) |
+| `criativos` (0012) | ganha `status` `pronto`, `origem text check in ('painel','api')` e `nota` |
+| `criativo_versoes` | `criativo_id`, `idioma check in ('pt','en')`, `texto`, `titulo`, `descricao`, `botao`, `link_destino`; unique (`criativo_id`, `idioma`) |
+| `criativo_arquivos` | `criativo_id`, `idioma` (null = os dois), `ordem`, `chave` (R2: `criativos/<id>/…`), `nome_original`, `tipo_mime`, `tamanho_bytes`, `enviado` |
+| `api_chaves` | `socia_id`, `nome`, `prefixo`, `hash` (SHA-256, unique), `ultimo_uso` |
 
 ## 0006_pago
 | Tabela | Colunas |

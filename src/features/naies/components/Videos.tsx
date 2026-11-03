@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import { Download, Eye, Trash2, Upload } from "lucide-react";
+import { Eye, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { avisar } from "@/components/shared/avisar";
+import { SalvarNoCelular as SalvarArquivos } from "@/components/shared/SalvarNoCelular";
 import { apagarVideos, confirmarVideo, linkDoVideo, prepararEnvioVideo } from "../server/videos";
 import type { Idioma, TipoVideo, VideoBruto } from "../schema";
 
@@ -25,40 +26,16 @@ function enviar(url: string, arquivo: File, aoProgredir: (p: number) => void) {
   });
 }
 
-/**
- * No celular abre o menu de compartilhar ("Salvar vídeo" vai para a galeria);
- * no computador baixa o arquivo.
- */
+/** Salva o vídeo final no celular (dois toques no iPhone: preparar e salvar) ou baixa no computador. */
 export function SalvarNoCelular({ naieId, idioma }: { naieId: string; idioma: Idioma }) {
-  const [estado, setEstado] = useState<string | null>(null);
-
-  async function salvar() {
-    setEstado("Preparando…");
-    const r = await linkDoVideo(naieId, idioma, "final");
-    if (!avisar(r)) { setEstado(null); return; }
-    const toque = window.matchMedia("(pointer: coarse)").matches;
-    try {
-      if (toque && "canShare" in navigator) {
-        setEstado("Baixando…");
-        const blob = await (await fetch(r.dados.url)).blob();
-        const arquivo = new File([blob], r.dados.nome, { type: blob.type || "video/mp4" });
-        if (navigator.canShare({ files: [arquivo] })) {
-          await navigator.share({ files: [arquivo] });
-          return;
-        }
-      }
-      window.location.href = r.dados.url; // o link já vem para baixar, com o nome original
-    } catch (e) {
-      if ((e as Error).name !== "AbortError") window.location.href = r.dados.url;
-    } finally {
-      setEstado(null);
-    }
-  }
-
   return (
-    <Button onClick={salvar} disabled={!!estado}>
-      <Download className="size-4" /> {estado ?? `Salvar vídeo ${idioma.toUpperCase()} no celular`}
-    </Button>
+    <SalvarArquivos
+      rotulo={`Salvar vídeo ${idioma.toUpperCase()} no celular`}
+      arquivos={async () => {
+        const r = await linkDoVideo(naieId, idioma, "final");
+        return avisar(r) ? [{ url: r.dados.url, nome: r.dados.nome }] : null;
+      }}
+    />
   );
 }
 

@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Secao, TituloPagina } from "@/components/shared/ui-base";
 import { FormTrocarSenha, sair, sairDeTodos } from "@/features/acesso";
 import { FormCapacidade, FormNome, SeletorTema } from "@/features/conta";
+import { ChavesApi } from "@/features/pago";
+import { listarChaves } from "@/features/pago/server";
+import { headers } from "next/headers";
 import { exigirSocia } from "@/lib/auth/exigir-socia";
 
 export const metadata = { title: "Conta" };
@@ -11,6 +14,9 @@ export default async function Conta() {
   const { data } = await socia.db.from("capacidades").select("dia_semana, minutos").eq("socia_id", socia.id);
   const cap = [0, 0, 0, 0, 0, 0, 0];
   for (const c of data ?? []) cap[c.dia_semana] = c.minutos;
+  const chaves = await listarChaves(socia.db);
+  const h = await headers();
+  const endereco = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
 
   return (
     <>
@@ -23,6 +29,7 @@ export default async function Conta() {
         </div>
         <div className="flex flex-col gap-8">
           <Secao titulo="Trocar senha"><FormTrocarSenha /></Secao>
+          <Secao titulo="Chaves de API (anúncios pela IA)"><ChavesApi chaves={chaves} endereco={endereco} /></Secao>
           <Secao titulo="Sessão">
             <div className="flex flex-wrap gap-2">
               <form action={sair}><Button variant="outline" type="submit">Sair</Button></form>

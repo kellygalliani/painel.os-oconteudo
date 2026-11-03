@@ -137,13 +137,29 @@ Edita esse Reel com a Máquina de Reels no template <template, padrão tela-divi
 - As trilhas sobem uma vez, pelo script `scripts/subir-trilhas.mjs`. Não há envio pela tela na v1.
 
 ## 5. Conteúdo › Pago (`/conteudo/pago`)
-Só a estrutura básica.
+Duas abas: **Anúncios** (abre primeiro) e **Métricas da semana**.
 
-- **Métricas da semana:** formulário da análise semanal com gasto, impressões, cliques, CPC (custo por clique), CTR (taxa de clique), visitas à página, checkouts, vendas e CPA (custo por venda), mais uma nota. O CTR, o CPC e o CPA podem ser calculados a partir dos outros números. A tabela mostra as semanas, a variação contra a semana anterior e a meta.
-- **Fila de criativos:**
-  - colunas Ideia, Em produção, No ar e Pausado;
-  - cada cartão tem título, formato (estático, vídeo curto, falado), link, "no ar desde" e resultado;
-  - **"Próximo a subir"** em destaque: o primeiro da coluna Em produção. Lembra que entra um criativo novo a cada 7 dias.
+### Anúncios
+- **Botões no topo:** "Anúncio de imagem" e "Anúncio de vídeo". Criam o rascunho e abrem a página dele.
+- **Filtros:** Pronto para subir (abre aqui quando há algum), Em produção, Ideia, No ar, Pausado e Todos, com a contagem.
+- **Cartões:** miniatura (primeira imagem ou primeiro take), PT e EN, quantos arquivos, status, "desde" e a marca **IA** quando veio pela API.
+- **Seleção em lote:** o círculo no canto de cada cartão escolhe o anúncio ("Selecionar todos daqui"). A barra de baixo tem:
+  - **Copiar textos:** todos os textos PT e EN dos escolhidos, um bloco por anúncio.
+  - **Baixar com textos:** no computador baixa um `.zip` com uma pasta por anúncio, com os arquivos em ordem (`01-pt-en-…`, `02-pt-…`) e `texto-PT.txt` e `texto-EN.txt`. No celular, em dois toques ("Preparar" e "Salvar"), abre o compartilhar para salvar os arquivos na galeria; os textos vão pelo "Copiar textos".
+- Aviso "Hora de subir um anúncio novo" quando o último no ar tem 7 dias ou mais.
+
+### A página do anúncio (`/conteudo/pago/anuncios/[id]`)
+- Nome (edita no próprio título) e formato: Imagem, Vídeo ou Vídeo falado.
+- **1. Arquivos:** escolher vários de uma vez (imagens, ou os takes do vídeo), cada um com barra de progresso. Cada arquivo tem posição, ▲ ▼ para trocar a ordem, idioma ("PT e EN", "Só PT", "Só EN") e apagar. Os takes juntos formam um anúncio só.
+- **2. Texto:** abas PT e EN ("+ Versão EN" cria a outra), com texto principal, título, descrição, botão e link. O contador avisa quando passa do que a Meta mostra antes de cortar (125, 40 e 30). Salva ao sair do campo. "Copiar texto PT/EN".
+- **3. Status:** Pronto para subir, Em produção, Ideia, No ar (a data entra sozinha) e Pausado, mais "no ar desde", link extra e resultado.
+- **Prévia** (ao lado no computador, embaixo no celular): o texto cortado como no feed, a imagem ou os takes (bolinhas para trocar), o título e o botão. "Baixar os arquivos" e "Apagar anúncio".
+
+### Pela IA
+A IA (GPT, Claude) sobe anúncios pela API ou pelo MCP com uma chave criada em Conta › Chaves de API. O anúncio chega como "Pronto para subir", com a marca IA e a nota de quem pediu. Detalhes e o texto para colar no agente: [API.md](API.md).
+
+### Métricas da semana
+Formulário da análise semanal com gasto, impressões, cliques, CPC (custo por clique), CTR (taxa de clique), visitas à página, checkouts, vendas e CPA (custo por venda), mais uma nota. O CTR, o CPC e o CPA podem ser calculados a partir dos outros números. A tabela mostra as semanas, a variação contra a semana anterior e a meta.
 
 ## 6. Metas (`/metas`)
 - **Projeção:** leva para o painel a planilha `../Estratégia/Financeiro/projecao.html`, com produtos, order bumps, custos e imposto da Meta. A conta fica idêntica à do HTML.
@@ -156,6 +172,7 @@ Só a estrutura básica.
 - **Trocar senha:** pede a senha atual e a nova duas vezes.
 - **Tema:** claro, escuro ou do sistema.
 - **Capacidade por dia** (minutos por dia da semana) da sócia logada.
+- **Chaves de API:** gerar (a chave aparece uma vez, com "Copiar chave" e "Copiar endereço do MCP"), ver quando foi usada e apagar.
 - **Sair** e **Sair de todos os aparelhos**.
 
 ## Fora da v1
