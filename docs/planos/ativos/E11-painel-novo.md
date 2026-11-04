@@ -35,7 +35,9 @@ Reorganizar o painel no molde do mockup sem tirar nenhuma função de hoje: core
 |---|---|
 | `npm run verificar` | ok: lint, typecheck, 79 testes, harness, build (04/11) |
 | Zernio: automação criar/listar/apagar (rascunho de teste) | ok, apagado em seguida |
-| `db push` 0015 | pendente: precisa da autorização da Kelly |
+| `db push` 0015 + `db:tipos` + `test:rls` | ok (autorizado pela Kelly em 04/11) |
+| Deploy Vercel + rotas novas sem login | ok: todas redirecionam para /entrar; MCP com 5 ferramentas |
+| Aviso do Zernio | ok: assinatura errada → 401; teste do Zernio entregue, 0 falhas |
 | Navegador (360 px e computador, claro e escuro) | pendente: sem login da sócia nesta sessão |
 
 ## Pronto quando
