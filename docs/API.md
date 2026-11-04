@@ -77,7 +77,7 @@ Um nome terminando em `-pt` ou `-en` (ex.: `take2-en.mp4`) fica só naquele idio
 Endereço: `https://painel-os-oconteudo.vercel.app/api/mcp`. É MCP por HTTP, sem streaming, e tem cinco ferramentas: `criar_anuncio`, `confirmar_anuncio`, `listar_anuncios`, e para as NAIEs:
 
 - `listar_naies_para_postar`: as NAIEs não postadas (7 dias atrás até 14 à frente), com data, se têm vídeo final e legenda por idioma, os posts já feitos e as contas conectadas.
-- `publicar_naie`: `id`, `idioma` (`pt` padrão), `redes` (opcional, `instagram` e/ou `tiktok`), `agendar_para` (opcional, `AAAA-MM-DDTHH:MM` em Brasília, de 5 minutos a 6 dias à frente). Publica o vídeo final e a legenda pelo Zernio nas contas do idioma que ainda não têm post ativo; no TikTok sai público. Faz as mesmas checagens da tela.
+- `publicar_naie`: `id`, `idioma` (`pt` padrão), `redes` (opcional, `instagram` e/ou `tiktok`), `agendar_para` (opcional, `AAAA-MM-DDTHH:MM` em Brasília, de 5 minutos a 6 dias à frente). Publica o vídeo final e a legenda pelo Zernio nas contas do idioma que ainda não têm post ativo; no TikTok sai público. Faz as mesmas checagens da tela. Se a legenda pedir uma palavra ("Comenta TÊNIS") que está numa campanha ativa do idioma, cria também a automação de comentário (a resposta diz qual campanha).
 
 - **Claude Code:**
   ```

@@ -83,6 +83,16 @@ Mais: `alter table naies add column trilha_id uuid null references trilhas on de
 
 Funções da API (security definer, conferem a chave `osc_`): `api_naie_para_postar`, `api_listar_naies_para_postar`, `api_registrar_posts`.
 
+## 0015_campanhas
+| Tabela | Colunas |
+|---|---|
+| `campanhas` | `nome`, `idioma check in ('pt','en')`, `status check in ('rascunho','ativa','pausada')`, `palavras text[]`, `dm`, `botao` (texto antes do link), `link`, `respostas text[]`, `resposta_tiktok`, `origem_id` (de qual foi duplicada), `criado_em`, `atualizado_em`. RLS `e_socia()`. |
+| `naie_posts` (+) | `campanha_id`, `palavra`, `automacao_id` (no Zernio), `disparos`, `dms`, `falhas_dm`, `contatos`, `cliques`, `numeros_em` (última leitura). |
+| `campanha_contatos` | `campanha_id`, `naie_post_id`, `rede`, `autor_id`, `usuario`, `comentario`, `palavra`, `comentario_id unique`, `criado_em`. RLS `e_socia()`. |
+| `config_segura` | `chave pk`, `valor` (hoje só `zernio_webhook_hash`). RLS `e_socia()`. |
+
+Funções: `webhook_registrar_contato` (aviso do Zernio), `api_campanha_da_palavra` e `api_registrar_posts` (refeita com campanha, palavra e automação), para o MCP.
+
 ## Seed (`supabase/seed.sql`), cenário A
 
 O `seed.sql` só tem dados que não dependem de usuário (áreas, rotinas, sprints, tarefas e dias especiais). As donas e as capacidades dependem do `id` das sócias, então o `scripts/criar-socia.mjs` as preenche a partir da tabela abaixo, gravada em `scripts/dados/cenario-a.json`.

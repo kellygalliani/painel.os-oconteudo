@@ -53,6 +53,7 @@ O mesmo script com `--redefinir` gera uma nova senha provisória, para quando al
   - `.env.local` fica no `.gitignore`. O `.env.example` lista os nomes sem valores.
 - **R2 (vídeos):** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` são só de servidor (`lib/r2.ts`, com `server-only`). O token do R2 tem permissão de leitura e escrita só neste bucket. O navegador recebe apenas URLs assinadas de curta duração, geradas depois de `exigirSocia()`.
 - **Zernio (postar no Instagram e no TikTok):** `ZERNIO_API_KEY` é só de servidor (`lib/zernio.ts`, com `server-only`), na Vercel e no `.env.local`. O Zernio recebe um link assinado de 7 dias do vídeo final (só leitura daquele arquivo). Os logins do Instagram e do TikTok ficam no Zernio, nunca no painel.
+- **Aviso de comentários do Zernio:** `/api/zernio/aviso` só aceita corpo com assinatura HMAC SHA-256 válida (`ZERNIO_WEBHOOK_SECRET`, só servidor). A gravação passa por `webhook_registrar_contato`, que confere o hash do segredo em `config_segura`; o servidor continua sem a chave secreta do Supabase.
 - **Cabeçalhos** em `next.config.ts`:
   - `X-Frame-Options: SAMEORIGIN` (a planilha de projeção roda num iframe do próprio painel)
   - `X-Content-Type-Options: nosniff`

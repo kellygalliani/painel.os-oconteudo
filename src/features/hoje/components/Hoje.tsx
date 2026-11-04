@@ -7,6 +7,8 @@ import { DialogMover, ItemAgenda, Pendentes, type DadosAgenda, type ItemDoDia, t
 import { ChipTipo, PublicarRapido, SelosRedes, type Naie } from "@/features/naies";
 import { diaDaSemana, minutosLegivel } from "@/lib/datas";
 import type { Numeros } from "../server";
+import type { Campanha, PalavraSolta } from "@/features/campanhas";
+import { FaixaSemana, PrecisaDeVoce } from "./Extras";
 
 const brl = (n: number | null) => (n == null ? null : n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }));
 
@@ -39,7 +41,9 @@ function DiaDe({ dados, sociaId, aoMover }: { dados: DadosAgenda; sociaId: strin
   );
 }
 
-export function Hoje({ dados, eu, numeros, postDeHoje }: { dados: DadosAgenda; eu: string; numeros: Numeros; postDeHoje: Naie[] }) {
+export type ExtrasHoje = { semana: Naie[]; segunda: string; proximas: Naie[]; soltas: PalavraSolta[]; campanhas: Campanha[]; dms: number; cliques: number };
+
+export function Hoje({ dados, eu, numeros, postDeHoje, extras }: { dados: DadosAgenda; eu: string; numeros: Numeros; postDeHoje: Naie[]; extras: ExtrasHoje }) {
   const [quem, setQuem] = useState(eu);
   const [mover, setMover] = useState<Mover | null>(null);
   const outra = dados.socias.find((s) => s.id !== quem);
@@ -48,11 +52,16 @@ export function Hoje({ dados, eu, numeros, postDeHoje }: { dados: DadosAgenda; e
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
         <Kpi rotulo="Vendas na semana" valor={numeros.vendas.real == null ? null : String(numeros.vendas.real)} comparacao={numeros.vendas.meta != null ? `meta da semana: ${Math.round(numeros.vendas.meta)}` : "sem meta marcada"} />
         <Kpi rotulo="Gasto em anúncio" valor={brl(numeros.gasto.real)} comparacao={numeros.gasto.meta != null ? `meta da semana: ${brl(numeros.gasto.meta)}` : "sem meta marcada"} />
         <Kpi rotulo="Posts publicados" valor={numeros.posts.planejados ? `${numeros.posts.publicados} de ${numeros.posts.planejados}` : null} comparacao="NAIEs desta semana" />
+        <Kpi rotulo="DMs das campanhas" valor={String(extras.dms)} comparacao="enviadas pela automação" />
+        <Kpi rotulo="Cliques no link" valor={String(extras.cliques)} comparacao={extras.dms ? `${Math.round((extras.cliques / extras.dms) * 100)}% de quem recebeu` : "sem DM ainda"} />
       </div>
+
+      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="flex min-w-0 flex-col gap-6">
 
       {postDeHoje.length > 0 && (
         <Secao titulo="Post de hoje">
@@ -83,7 +92,17 @@ export function Hoje({ dados, eu, numeros, postDeHoje }: { dados: DadosAgenda; e
         <DiaDe dados={dados} sociaId={quem} aoMover={setMover} />
       </Secao>
 
+      <Secao titulo="Esta semana" acao={<Link href="/agenda" className="text-sm underline-offset-2 hover:underline">Ver calendário</Link>}>
+        <FaixaSemana naies={extras.semana} segunda={extras.segunda} hoje={dados.hoje} />
+      </Secao>
+
       <Pendentes itens={meus} dados={dados} aoMover={setMover} />
+      </div>
+      <aside className="flex flex-col gap-3 lg:sticky lg:top-6">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precisa de você</h2>
+        <PrecisaDeVoce soltas={extras.soltas} campanhas={extras.campanhas} naies={extras.proximas} hoje={dados.hoje} />
+      </aside>
+      </div>
       <DialogMover mover={mover} aoFechar={() => setMover(null)} />
     </div>
   );

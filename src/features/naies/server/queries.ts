@@ -1,6 +1,7 @@
 import "server-only";
 import type { ClienteDb } from "@/lib/supabase/server";
 import type { Idioma, Naie, Versao, VideoBruto } from "../schema";
+import { detectarPalavras } from "../logic/palavras";
 import { mapearPost } from "./postagens";
 
 const COLUNAS = "*, naie_versoes(idioma, titulos, titulo_escolhido, roteiro, contagem), naie_videos(idioma, tipo, chave, nome_original, tamanho_bytes), naie_posts(*)";
@@ -35,6 +36,8 @@ export function mapearNaie(r: any): Naie {
     finais,
     legendas: { ...(r.legenda_pt ? { pt: r.legenda_pt } : {}), ...(r.legenda_en ? { en: r.legenda_en } : {}) },
     legendasTiktok: { ...(r.legenda_tiktok_pt ? { pt: r.legenda_tiktok_pt } : {}), ...(r.legenda_tiktok_en ? { en: r.legenda_tiktok_en } : {}) },
+    palavras: Object.fromEntries((["pt", "en"] as const).map((i) => [i, detectarPalavras(`${versoes[i]?.roteiro ?? ""}
+${r[`legenda_${i}`] ?? ""}`)]).filter(([, p]) => (p as string[]).length)),
     posts: [...(r.naie_posts ?? [])].sort((a, b) => String(a.criado_em).localeCompare(String(b.criado_em))).map(mapearPost),
     facebookPostado: !!r.facebook_postado,
     origemMd: r.origem_md ?? null,

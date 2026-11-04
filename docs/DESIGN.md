@@ -46,3 +46,20 @@ Criar só quando a primeira tela precisar.
 - **Estados obrigatórios** em toda lista: carregando, vazio, erro com "Tentar de novo". Número ausente aparece como "sem dado".
 - **Acessibilidade:** todo botão tem nome, foco visível e funciona pelo teclado. Diálogos fecham com Esc. As animações respeitam `prefers-reduced-motion`.
 - **Sem enfeite:** nada de emoji como ícone de seção (usar lucide), nada de gradiente em toda parte. O gradiente da marca aparece só no logo e no topo da página Hoje.
+
+## Cores quentes (E11, 04/11/2026)
+
+A base é quente e a marca fica no laranja, âmbar e rosa; **violeta e ciano saíram** da interface (continuam só na logo). O escuro é marrom-café, não azul.
+
+| Papel | Claro | Escuro |
+|---|---|---|
+| Fundo | `#fffaf4` | `#16100c` |
+| Cartão | `#ffffff` | `#211913` |
+| Faixa suave (muted) | `#f7ece0` | `#2d221a` |
+| Texto apagado | `#7d6a5b` | `#b5a394` |
+| Borda | `#eee1d3` | `#3a2d23` |
+| Destaque (primary) | `#f2602b` | `#ff7139` |
+| Palavra-chave (`kw`) | `#d6245f` | `#ff6b93` |
+| Certo (`ok`) / Aviso (`aviso`) | `#2f7d32` / `#b8640a` | `#7ad99a` / `#ffc55c` |
+
+Áreas: Social `#9a6b4f`, Vendas `#e8551c`, Produto `#d6245f`, Finanças `#5f7d2a`. Sombras `shadow-sombra` e `shadow-sombra-alta`. Palavra-chave aparece como `ChipPalavra` (rosa suave, letra de máquina). Quadros de arrastar usam `components/shared/Quadro.tsx` (dnd-kit: mouse, toque com 200 ms de espera, teclado).

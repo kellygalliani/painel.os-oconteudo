@@ -3,7 +3,9 @@ import { z } from "zod";
 import { clienteAnonimo } from "@/lib/supabase/anonimo";
 import { r2Configurado } from "@/lib/r2";
 import { zernioConfigurado } from "@/lib/zernio";
-import { checarPost, erroDoAgendamento, REDES, todasPublicadas, type ContaRede } from "../logic/redes";
+import { textoDaDm } from "@/lib/mensagem";
+import { detectarPalavras } from "../logic/palavras";
+import { checarPost, erroDoAgendamento, REDES, todasPublicadas, type CampanhaDoPost, type ContaRede } from "../logic/redes";
 import { contasConectadas, publicarNasContas } from "./postagens";
 
 // Postar pelo chat (MCP em /api/mcp). A chave osc_ é conferida pelas funções api_* do banco (migração 0014).
@@ -73,11 +75,20 @@ export async function apiPublicarNaie(chave: string, args: unknown) {
   const { bloqueios } = checarPost({ redes: contas.map((c) => c.rede), legenda, legendaTiktok, tamanho: final ? Number(final.tamanho) : null });
   if (bloqueios.length) throw new ErroNaieApi(`Não dá para postar "${n.titulo}": ${bloqueios.join(" ")}`);
 
-  const posts = await publicarNasContas({ chaveVideo: final!.chave, legenda, legendaTiktok, contas, idioma, agendarPara });
+  // Campanha: a ativa do idioma que tem a palavra pedida na legenda ("Comenta TÊNIS").
+  const palavras = detectarPalavras(`${legenda}
+${legendaTiktok ?? ""}`);
+  let campanha: CampanhaDoPost | null = null;
+  if (palavras.length) {
+    const { data: c } = await db.rpc("api_campanha_da_palavra", { p_chave: chave, p_idioma: idioma, p_palavras: palavras });
+    const k = c as unknown as { id: string; nome: string; palavras: string[]; dm: string; botao: string; link: string; respostas: string[]; resposta_tiktok: string; palavra: string } | null;
+    if (k) campanha = { id: k.id, nome: k.nome, palavra: k.palavra, palavras: k.palavras, textoDm: textoDaDm(k), respostas: k.respostas ?? [], respostaTiktok: k.resposta_tiktok };
+  }
+  const posts = await publicarNasContas({ chaveVideo: final!.chave, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo: n.titulo });
   const todosPosts = [...n.posts.map((p) => ({ contaId: p.conta_id, status: p.status as "publicado" })), ...posts.map((p) => ({ contaId: p.contaId, status: p.status }))];
   const postada = todasPublicadas(todas, todosPosts);
-  const linhas = posts.map((p) => ({ idioma: p.idioma, rede: p.rede, conta_id: p.contaId, usuario: p.usuario, zernio_post_id: p.zernioPostId, status: p.status, agendado_para: p.agendadoPara, link: p.link, erro: p.erro }));
+  const linhas = posts.map((p) => ({ idioma: p.idioma, rede: p.rede, conta_id: p.contaId, usuario: p.usuario, zernio_post_id: p.zernioPostId, status: p.status, agendado_para: p.agendadoPara, link: p.link, erro: p.erro, campanha_id: p.campanhaId ?? "", palavra: p.palavra, automacao_id: p.automacaoId }));
   const r = await db.rpc("api_registrar_posts", { p_chave: chave, p_naie: id, p_posts: linhas, p_postada: postada });
   if (r.error) falhaDoBanco(r.error);
-  return { naie: n.titulo, postada, posts: posts.map((p) => ({ rede: REDES[p.rede], conta: `@${p.usuario}`, status: p.status, agendado_para: p.agendadoPara, link: p.link, erro: p.erro })) };
+  return { naie: n.titulo, postada, campanha: campanha ? `${campanha.nome} (palavra ${campanha.palavra})` : null, posts: posts.map((p) => ({ rede: REDES[p.rede], conta: `@${p.usuario}`, status: p.status, agendado_para: p.agendadoPara, link: p.link, erro: p.erro, automacao: p.automacaoId ? "ligada" : p.erroAutomacao ?? null })) };
 }

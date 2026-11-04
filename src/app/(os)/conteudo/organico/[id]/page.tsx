@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { LeituraNaie } from "@/features/naies";
 import { obterNaie, sincronizarPostagens, urlsDosFinais } from "@/features/naies/server";
 import { listarTrilhas } from "@/features/trilhas/server";
+import { listarCampanhas } from "@/features/campanhas/server";
 import { exigirSocia } from "@/lib/auth/exigir-socia";
 
 export const metadata = { title: "NAIE" };
@@ -15,7 +16,7 @@ export default async function PaginaNaie({ params }: { params: Promise<{ id: str
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const socia = await exigirSocia();
   await sincronizarPostagens(socia.db, id);
-  const [naie, trilhas] = await Promise.all([obterNaie(socia.db, id), listarTrilhas(socia.db)]);
+  const [naie, trilhas, campanhas] = await Promise.all([obterNaie(socia.db, id), listarTrilhas(socia.db), listarCampanhas(socia.db)]);
   if (!naie) notFound();
   const urlsFinais = await urlsDosFinais(naie);
   return (
@@ -23,7 +24,7 @@ export default async function PaginaNaie({ params }: { params: Promise<{ id: str
       <Link href="/conteudo/organico" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" /> Orgânico
       </Link>
-      <LeituraNaie naie={naie} urlsFinais={urlsFinais} trilhas={trilhas.map((t) => ({ id: t.id, nome: t.nome, favorita: t.favorita, url: t.url }))} />
+      <LeituraNaie naie={naie} urlsFinais={urlsFinais} campanhas={campanhas} trilhas={trilhas.map((t) => ({ id: t.id, nome: t.nome, favorita: t.favorita, url: t.url }))} />
     </>
   );
 }

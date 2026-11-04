@@ -17,7 +17,8 @@
     "cenario:aplicar": "node --env-file=.env.local scripts/aplicar-cenario.mjs",
     "trilhas:subir": "node --env-file=.env.local scripts/subir-trilhas.mjs",
     "projecao:importar": "node --env-file=.env.local scripts/importar-projecao.mjs",
-    "anuncio:subir": "node scripts/subir-anuncio.mjs"
+    "anuncio:subir": "node scripts/subir-anuncio.mjs",
+    "zernio:aviso": "node --env-file=.env.local scripts/zernio-aviso.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

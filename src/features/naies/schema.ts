@@ -60,6 +60,8 @@ export type Naie = {
   legendas: Partial<Record<Idioma, string>>;
   /** Legenda própria do TikTok (sem ela, vai a mesma do Instagram). */
   legendasTiktok: Partial<Record<Idioma, string>>;
+  /** Palavras-chave que o roteiro (ou a legenda) pede no CTA, por idioma ("Comente TÊNIS"). */
+  palavras: Partial<Record<Idioma, string[]>>;
   /** Posts no Instagram e no TikTok pelo Zernio, do mais antigo ao mais novo. */
   posts: PostRede[];
   facebookPostado: boolean;

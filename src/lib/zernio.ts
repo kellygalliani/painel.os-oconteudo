@@ -41,3 +41,17 @@ export const consultarPostZernio = (id: string) => chamar(`/posts/${encodeURICom
 
 /** Apaga um post que ainda não foi publicado (é assim que se cancela um agendamento). */
 export const apagarPostZernio = (id: string) => chamar(`/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+// ---------- automação de comentários (palavra-chave → DM ou resposta) ----------
+
+/** Cria a automação; ligada a um post do Zernio (`postId`), ela só começa quando o post sai. */
+export const criarAutomacaoZernio = (corpo: unknown) => chamar("/comment-automations", { method: "POST", body: JSON.stringify(corpo) });
+
+/** As automações de um perfil, com os números de cada uma (`stats`). */
+export async function automacoesZernio(perfilId: string): Promise<unknown[]> {
+  const r = await chamar(`/comment-automations?profileId=${encodeURIComponent(perfilId)}`);
+  if (r.status !== 200) throw new Error(`Zernio respondeu ${r.status}`);
+  return ((r.dados as { automations?: unknown[] } | null)?.automations ?? []) as unknown[];
+}
+
+export const apagarAutomacaoZernio = (id: string) => chamar(`/comment-automations/${encodeURIComponent(id)}`, { method: "DELETE" });

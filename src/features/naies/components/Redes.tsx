@@ -28,6 +28,7 @@ import {
 import { salvarLegenda } from "../server/actions";
 import { cancelarPost, contasParaPostar, postarNasRedes, salvarLegendaTiktok } from "../server/redes";
 import type { Idioma, Naie } from "../schema";
+import { campanhaDasPalavras, ChipPalavra, type Campanha } from "@/features/campanhas";
 import { EspacoVideo } from "./Videos";
 
 const ESPERA_DESFAZER = 5000;
@@ -38,7 +39,7 @@ export function IconeRede({ rede, className }: { rede: Rede; className?: string 
 
 // As contas do Zernio, uma busca por página (várias peças da tela usam a mesma).
 let buscaContas: Promise<{ contas: ContaRede[] | null; falha: string | null }> | null = null;
-function useContas() {
+export function useContas() {
   const [estado, setEstado] = useState<{ contas: ContaRede[] | null; falha: string | null }>({ contas: null, falha: null });
   useEffect(() => {
     buscaContas ??= contasParaPostar().then((r) => (r.ok ? { contas: r.dados, falha: null } : { contas: null, falha: r.erro }));
@@ -183,7 +184,7 @@ function CampoLegenda({ rotulo, valor, aoMudar, aoSalvar, placeholder }: { rotul
 }
 
 /** O cartão de publicar de um idioma: vídeo, legenda, contas, agora ou agendado, e os posts. */
-function CartaoPublicar({ naie, idioma, contas, urlVideo }: { naie: Naie; idioma: Idioma; contas: ContaRede[]; urlVideo?: string }) {
+function CartaoPublicar({ naie, idioma, contas, urlVideo, campanhas }: { naie: Naie; idioma: Idioma; contas: ContaRede[]; urlVideo?: string; campanhas: Campanha[] }) {
   const router = useRouter();
   const I = idioma.toUpperCase();
   const final = naie.finais[idioma];
@@ -200,6 +201,12 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo }: { naie: Naie; idioma
   const [meta, setMeta] = useState<MetaVideo | null>(null);
   const [pend, start] = useTransition();
   const { contando, agendar } = useComDesfazer();
+  // Automação: a campanha da palavra do roteiro (pode trocar ou desligar).
+  const achada = campanhaDasPalavras(campanhas, naie.palavras[idioma], idioma);
+  const doIdioma = campanhas.filter((c) => c.idioma === idioma);
+  const [campanhaId, setCampanhaId] = useState<string | null>(achada?.campanha.id ?? null);
+  const [automacao, setAutomacao] = useState(!!achada);
+  const campanha = doIdioma.find((c) => c.id === campanhaId) ?? null;
 
   // Depois de publicar, as contas livres mudam: a seleção acompanha.
   const chaveLivres = livres.map((c) => c.id).join(",");
@@ -214,7 +221,7 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo }: { naie: Naie; idioma
 
   function enviar(contaIds: string[], agendarPara: string | null) {
     start(async () => {
-      const r = await postarNasRedes({ naieId: naie.id, idioma, contaIds, agendarPara });
+      const r = await postarNasRedes({ naieId: naie.id, idioma, contaIds, agendarPara, campanhaId: automacao ? campanhaId : null, semAutomacao: !automacao || !campanhaId });
       if (avisar(r)) avisoDoResultado(r.dados, !!agendarPara);
       router.refresh();
     });
@@ -306,6 +313,33 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo }: { naie: Naie; idioma
       </div>
 
       <div className="flex flex-col gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Automação de comentários</span>
+        <div className="flex items-start gap-3 rounded-xl border bg-card p-3">
+          <button type="button" role="switch" aria-checked={automacao && !!campanha} aria-label="Automação" disabled={ocupado || !doIdioma.length} onClick={() => setAutomacao(!automacao)} className={cn("relative h-6 w-10 shrink-0 rounded-full transition-colors", automacao && campanha ? "bg-ok" : "bg-input")}>
+            <span className={cn("absolute left-[3px] top-[3px] size-[18px] rounded-full bg-white shadow transition-transform", automacao && campanha && "translate-x-4")} />
+          </button>
+          <div className="flex min-w-0 flex-col gap-1.5 text-sm">
+            {!doIdioma.length ? (
+              <span className="text-muted-foreground">Nenhuma campanha {I} ainda. <a href={`/campanhas/nova?idioma=${idioma}${naie.palavras[idioma]?.[0] ? `&palavra=${encodeURIComponent(naie.palavras[idioma]![0])}` : ""}`} className="underline underline-offset-2">Criar campanha</a></span>
+            ) : (
+              <>
+                <span className="flex flex-wrap items-center gap-1.5">
+                  {naie.palavras[idioma]?.length ? <>Comentou {naie.palavras[idioma]!.map((p) => <ChipPalavra key={p} palavra={p} />)} →</> : <span className="text-muted-foreground">O roteiro não pede palavra. Use uma campanha mesmo assim:</span>}
+                  <select aria-label="Campanha" value={campanhaId ?? ""} onChange={(e) => { setCampanhaId(e.target.value || null); setAutomacao(!!e.target.value); }} className="h-7 max-w-full rounded-md border bg-background px-2 text-sm font-semibold">
+                    <option value="">sem campanha</option>
+                    {doIdioma.map((c) => <option key={c.id} value={c.id}>{c.nome}{c.status !== "ativa" ? ` (${c.status})` : ""}</option>)}
+                  </select>
+                </span>
+                {!!naie.palavras[idioma]?.length && !achada && <span className="font-semibold text-aviso">{naie.palavras[idioma]!.join(", ")} não está em nenhuma campanha {I}.</span>}
+                {campanha && campanha.status !== "ativa" && automacao && <span className="text-aviso">A campanha está {campanha.status}: a automação é criada mesmo assim, com as palavras dela.</span>}
+                {campanha && automacao && <span className="text-xs text-muted-foreground">Instagram: DM com o link e resposta no comentário. TikTok: só a resposta (“{campanha.respostaTiktok || "sem resposta"}”), porque o TikTok não deixa mandar DM.</span>}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quando</span>
         <div className="inline-flex self-start rounded-full border p-0.5">
           {(["agora", "agendar"] as const).map((m) => (
@@ -345,7 +379,7 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo }: { naie: Naie; idioma
 }
 
 /** Passo "Publicar" da NAIE: um cartão por idioma. */
-export function Publicar({ naie, urls }: { naie: Naie; urls: Partial<Record<Idioma, string>> }) {
+export function Publicar({ naie, urls, campanhas = [] }: { naie: Naie; urls: Partial<Record<Idioma, string>>; campanhas?: Campanha[] }) {
   const { contas, falha } = useContas();
   if (falha) return <p className="text-sm text-muted-foreground">{falha}</p>;
   if (!contas) return <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Buscando as contas conectadas…</p>;
@@ -353,7 +387,7 @@ export function Publicar({ naie, urls }: { naie: Naie; urls: Partial<Record<Idio
   const idiomas = (["pt", "en"] as const).filter((i) => i === "pt" || contas.some((c) => c.idioma === i) || naie.finais[i]);
   return (
     <div className="grid min-w-0 gap-3 lg:grid-cols-2">
-      {idiomas.map((i) => <CartaoPublicar key={i} naie={naie} idioma={i} contas={contas.filter((c) => c.idioma === i)} urlVideo={urls[i]} />)}
+      {idiomas.map((i) => <CartaoPublicar key={i} naie={naie} idioma={i} contas={contas.filter((c) => c.idioma === i)} urlVideo={urls[i]} campanhas={campanhas} />)}
     </div>
   );
 }
@@ -391,6 +425,52 @@ export function PublicarRapido({ naie }: { naie: Naie }) {
           </Button>
         );
       })}
+    </div>
+  );
+}
+
+/** Agendar sem abrir a NAIE (quadro e Início): idioma, dia e hora, contas. */
+export function DialogAgendar({ naie, aoFechar }: { naie: Naie; aoFechar: () => void }) {
+  const router = useRouter();
+  const { contas, falha } = useContas();
+  const [pend, start] = useTransition();
+  const prontos = contas ? idiomasProntos(naie).filter((i) => contasLivres(contas, naie.posts, i).length) : [];
+  const [idioma, setIdioma] = useState<Idioma>("pt");
+  const atual = prontos.includes(idioma) ? idioma : prontos[0];
+  const livres = contas && atual ? contasLivres(contas, naie.posts, atual) : [];
+  const [fora, setFora] = useState<string[]>([]);
+  const [quando, setQuando] = useState(() => sugestaoAgendamento(naie.dataPrevista, new Date()));
+  const erroQuando = erroDoAgendamento(quando, new Date());
+  const escolhidas = livres.filter((c) => !fora.includes(c.id));
+  const agendar = () =>
+    start(async () => {
+      const r = await postarNasRedes({ naieId: naie.id, idioma: atual, contaIds: escolhidas.map((c) => c.id), agendarPara: quando });
+      if (avisar(r)) avisoDoResultado(r.dados, true);
+      aoFechar();
+      router.refresh();
+    });
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={aoFechar}>
+      <div role="dialog" aria-label="Agendar" className="flex w-full max-w-md flex-col gap-4 rounded-2xl bg-card p-6 shadow-sombra-alta" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-xl font-semibold">Agendar {naie.tituloCurto}</h3>
+        {falha ? <p className="text-sm text-muted-foreground">{falha}</p> : !contas ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Buscando as contas…</p> : !atual ? (
+          <p className="text-sm text-muted-foreground">Ainda não dá: falta o vídeo final ou a legenda, ou as contas já têm post desta NAIE. Abra a aba Publicar da NAIE.</p>
+        ) : (
+          <>
+            {prontos.length > 1 && <div className="inline-flex self-start rounded-full border p-0.5">{prontos.map((i) => <button key={i} onClick={() => setIdioma(i)} className={cn("rounded-full px-4 py-1 text-sm font-medium", atual === i ? "bg-foreground text-background" : "text-muted-foreground")}>{i.toUpperCase()}</button>)}</div>}
+            <label className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dia e hora (Brasília)</span><input type="datetime-local" value={quando} onChange={(e) => setQuando(e.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm" /></label>
+            {erroQuando && <p className="text-sm text-destructive">{erroQuando}</p>}
+            <div className="flex flex-wrap gap-2">
+              {livres.map((c) => { const on = !fora.includes(c.id); return <button key={c.id} type="button" aria-pressed={on} onClick={() => setFora(on ? [...fora, c.id] : fora.filter((x) => x !== c.id))} className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm", on ? "border-foreground bg-foreground text-background" : "text-muted-foreground")}><IconeRede rede={c.rede} className="size-4" />@{c.usuario}{on && <Check className="size-3.5" strokeWidth={3} />}</button>; })}
+            </div>
+            <p className="text-xs text-muted-foreground">Vai com a legenda {atual.toUpperCase()} e, se o roteiro pedir uma palavra, com a automação da campanha.</p>
+          </>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {atual && <Button disabled={pend || !escolhidas.length || !!erroQuando} onClick={agendar}>{pend ? <Loader2 className="size-4 animate-spin" /> : <CalendarClock className="size-4" />} Agendar para {quandoLegivel(`${quando}:00-03:00`)}</Button>}
+          <Button variant="ghost" onClick={aoFechar}>Cancelar</Button>
+        </div>
+      </div>
     </div>
   );
 }

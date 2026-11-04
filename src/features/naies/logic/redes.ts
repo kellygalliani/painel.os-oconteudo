@@ -16,7 +16,7 @@ export const MAX_DIAS_AGENDAR = 6;
 /** Brasília não tem horário de verão desde 2019. */
 const FUSO = "-03:00";
 
-export type ContaRede = { id: string; rede: Rede; usuario: string; idioma: Idioma };
+export type ContaRede = { id: string; rede: Rede; usuario: string; idioma: Idioma; perfilId?: string };
 export type StatusPost = "agendado" | "publicando" | "publicado" | "falhou" | "cancelado";
 export type PostRede = {
   id: string;
@@ -29,6 +29,13 @@ export type PostRede = {
   agendadoPara: string | null;
   link: string | null;
   erro: string | null;
+  /** Campanha ligada (automação de comentário), quando houver. */
+  campanhaId?: string | null;
+  palavra?: string | null;
+  automacaoId?: string | null;
+  /** Números da automação (última leitura). */
+  dms?: number;
+  cliques?: number;
 };
 /** O que sai de uma chamada ao Zernio, antes de virar linha no banco. */
 export type NovoPost = Omit<PostRede, "id">;
@@ -36,10 +43,11 @@ export type NovoPost = Omit<PostRede, "id">;
 /** Lê a lista de contas do Zernio e fica só com Instagram e TikTok que têm idioma definido. */
 export function lerContas(contas: unknown[]): ContaRede[] {
   return contas.flatMap((c) => {
-    const a = c as { _id?: string; platform?: string; username?: string; isActive?: boolean };
+    const a = c as { _id?: string; platform?: string; username?: string; isActive?: boolean; profileId?: string | { _id?: string } };
     const idioma = a.username ? IDIOMA_DA_CONTA[a.username] : undefined;
     if (!a._id || !idioma || a.isActive === false || (a.platform !== "instagram" && a.platform !== "tiktok")) return [];
-    return [{ id: a._id, rede: a.platform, usuario: a.username!, idioma }];
+    const perfilId = typeof a.profileId === "object" ? a.profileId?._id : a.profileId;
+    return [{ id: a._id, rede: a.platform, usuario: a.username!, idioma, ...(perfilId ? { perfilId } : {}) }];
   });
 }
 
@@ -170,3 +178,34 @@ export function postsAtuais(posts: PostRede[]): PostRede[] {
 /** Idiomas que já dá para publicar: tem vídeo final e legenda, e nenhum post ativo naquele idioma. */
 export const idiomasProntos = (n: Pick<Naie, "status" | "finais" | "legendas" | "posts">): Idioma[] =>
   n.status === "publicada" ? [] : (["pt", "en"] as const).filter((i) => n.finais[i] && n.legendas[i]?.trim() && !n.posts.some((p) => p.idioma === i && ativo(p)));
+
+// ---------- automação de comentários da campanha ----------
+
+/** O que a publicação precisa saber da campanha (montado no servidor a partir da tabela campanhas). */
+export type CampanhaDoPost = { id: string; nome: string; palavra: string; palavras: string[]; textoDm: string; respostas: string[]; respostaTiktok: string };
+
+/**
+ * Corpo do POST /comment-automations para uma conta, ligado ao post do Zernio (liga quando o post sai).
+ * Instagram: DM com o link e resposta no comentário. TikTok: só a resposta no comentário (o TikTok não deixa mandar DM).
+ */
+export function corpoDaAutomacao({ conta, campanha, zernioPostId, titulo }: { conta: ContaRede; campanha: CampanhaDoPost; zernioPostId: string; titulo: string }) {
+  const base = {
+    profileId: conta.perfilId,
+    accountId: conta.id,
+    name: `${campanha.nome} · ${titulo} · ${REDES[conta.rede]}`.slice(0, 120),
+    postId: zernioPostId,
+    keywords: campanha.palavras,
+    matchMode: "word",
+    repeatPolicy: { mode: "once" },
+    isActive: true,
+  };
+  if (conta.rede === "tiktok") return { ...base, commentReply: campanha.respostaTiktok };
+  const respostas = campanha.respostas.map((r) => r.trim()).filter(Boolean);
+  return { ...base, dmMessage: campanha.textoDm, ...(respostas.length ? { commentReplyVariations: respostas } : {}) };
+}
+
+/** Os números da automação no Zernio (stats) → os do painel. */
+export function lerNumerosAutomacao(a: unknown) {
+  const s = ((a as { stats?: Record<string, number> } | null)?.stats ?? {}) as Record<string, number>;
+  return { disparos: s.triggered ?? 0, dms: s.dmsSent ?? 0, falhas: s.dmsFailed ?? 0, contatos: s.uniqueContacts ?? 0, cliques: s.uniqueClicks ?? s.linkClicks ?? 0 };
+}

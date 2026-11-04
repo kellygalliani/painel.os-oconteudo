@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checarPost, contasLivres, corpoDoPost, erroDoAgendamento, idiomasProntos, lerContas, lerPost, postsAtuais, quandoLegivel, statusDoZernio, sugestaoAgendamento, todasPublicadas, type PostRede } from "./redes";
+import { checarPost, contasLivres, corpoDaAutomacao, corpoDoPost, lerNumerosAutomacao, erroDoAgendamento, idiomasProntos, lerContas, lerPost, postsAtuais, quandoLegivel, statusDoZernio, sugestaoAgendamento, todasPublicadas, type PostRede } from "./redes";
 
 const contasApi = [
   { _id: "ig1", platform: "instagram", username: "oconteudo.ia", isActive: true },
@@ -127,5 +127,23 @@ describe("tela", () => {
     expect(idiomasProntos({ ...base, posts: [post({ status: "falhou" })] })).toEqual(["pt"]);
     expect(idiomasProntos({ ...base, legendas: {} })).toEqual([]);
     expect(idiomasProntos({ ...base, status: "publicada" })).toEqual([]);
+  });
+});
+
+describe("automação da campanha", () => {
+  const campanha = { id: "c1", nome: "Máquina de Reels", palavra: "TÊNIS", palavras: ["TÊNIS", "QUERO"], textoDm: "Oi!\n\nQuero: https://x.com", respostas: [" Te mandei no direct! ", ""], respostaTiktok: "Link na bio" };
+  it("Instagram: DM com link e respostas; ligada ao post do Zernio", () => {
+    const c = corpoDaAutomacao({ conta: { ...ig, perfilId: "p1" }, campanha, zernioPostId: "z1", titulo: "Tênis" });
+    expect(c).toMatchObject({ profileId: "p1", accountId: "ig1", postId: "z1", keywords: ["TÊNIS", "QUERO"], matchMode: "word", dmMessage: "Oi!\n\nQuero: https://x.com", commentReplyVariations: ["Te mandei no direct!"], repeatPolicy: { mode: "once" } });
+    expect(c.name).toBe("Máquina de Reels · Tênis · Instagram");
+  });
+  it("TikTok: só resposta no comentário, sem DM", () => {
+    const c = corpoDaAutomacao({ conta: tt, campanha, zernioPostId: "z2", titulo: "Tênis" });
+    expect(c).toMatchObject({ commentReply: "Link na bio", accountId: "tt1" });
+    expect("dmMessage" in c).toBe(false);
+  });
+  it("lê os números do Zernio", () => {
+    expect(lerNumerosAutomacao({ stats: { triggered: 10, dmsSent: 9, dmsFailed: 1, uniqueContacts: 8, uniqueClicks: 3, linkClicks: 5 } })).toEqual({ disparos: 10, dms: 9, falhas: 1, contatos: 8, cliques: 3 });
+    expect(lerNumerosAutomacao(null).dms).toBe(0);
   });
 });

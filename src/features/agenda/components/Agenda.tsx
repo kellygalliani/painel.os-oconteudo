@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BarraCarga, COR_AREA, PontoArea, Secao, Vazio } from "@/components/shared/ui-base";
+import { CartaoQuadro, Quadro } from "@/components/shared/Quadro";
 import { ddmm, deIso, DIAS_CURTOS, DIAS_LONGOS, diaDaSemana, iso, MESES, minutosLegivel, segundaDaSemana, somarDias } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import { mudarStatusTarefa } from "../server/actions";
@@ -14,12 +15,13 @@ import { DialogRotina, DialogTarefa } from "./Dialogos";
 import { DialogMover, ItemAgenda, type Mover } from "./ItemAgenda";
 import type { DadosAgenda } from "./tipos";
 
-type Visao = "calendario" | "semana" | "mes" | "sprint";
+type Visao = "calendario" | "semana" | "mes" | "sprint" | "conferir";
 const VISOES: [Visao, string][] = [
   ["calendario", "Calendário"],
   ["semana", "Semana"],
   ["mes", "Mês"],
   ["sprint", "Sprint"],
+  ["conferir", "Conferir"],
 ];
 
 // ---------- filtros ----------
@@ -258,16 +260,20 @@ function QuadroSprint({ dados, aoEditar }: { dados: DadosAgenda; aoEditar: (t: T
   const atual = dados.sprints.find((s) => dados.faixas[s.numero] && dados.faixas[s.numero].fim >= dados.hoje) ?? dados.sprints[0];
   const [sel, setSel] = useState(atual?.id);
   const [, start] = useTransition();
+  // Status escolhidos no arrastar, antes de o servidor confirmar.
+  const [movidos, setMovidos] = useState<Record<string, Tarefa["status"]>>({});
   const sprint = dados.sprints.find((s) => s.id === sel);
-  const tarefas = dados.tarefas.filter((t) => t.sprintId === sel);
+  const tarefas = dados.tarefas.filter((t) => t.sprintId === sel).map((t) => ({ ...t, status: movidos[t.id] ?? t.status }));
   const feitas = tarefas.filter((t) => t.status === "feito").length;
   const nome = (id: string | null) => dados.socias.find((s) => s.id === id)?.nome ?? "sem dona";
-  const avancar = (t: Tarefa) => {
-    const ordem = STATUS_TAREFA.map((s) => s[0]);
-    const status = ordem[(ordem.indexOf(t.status) + 1) % ordem.length];
+  const mover = (t: Tarefa, status: Tarefa["status"]) => {
+    setMovidos((m) => ({ ...m, [t.id]: status }));
     start(async () => {
       const r = await mudarStatusTarefa({ tarefaId: t.id, status });
-      if (!r.ok) toast.error(r.erro);
+      if (!r.ok) {
+        toast.error(r.erro);
+        setMovidos((m) => ({ ...m, [t.id]: t.status }));
+      }
     });
   };
   return (
@@ -290,34 +296,22 @@ function QuadroSprint({ dados, aoEditar }: { dados: DadosAgenda; aoEditar: (t: T
           <span className="text-sm text-muted-foreground">{feitas} de {tarefas.length} feitas · {tarefas.reduce((a, t) => a + t.horas, 0)}h</span>
         </div>
       )}
-      <div className="grid gap-3 md:grid-cols-3">
-        {STATUS_TAREFA.map(([k, rotulo]) => {
-          const lista = tarefas.filter((t) => t.status === k);
-          return (
-            <div key={k} className="flex min-w-0 flex-col gap-2">
-              <p className="flex justify-between px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {rotulo} <span>{lista.length}</span>
-              </p>
-              {lista.length ? (
-                lista.map((t) => (
-                  <div key={t.id} className={cn("flex flex-col gap-2 rounded-lg border bg-card p-3", k === "feito" && "opacity-60")}>
-                    <button onClick={() => avancar(t)} className={cn("text-left text-sm leading-snug", k === "feito" && "line-through")} title="Avançar status">
-                      {t.titulo}
-                    </button>
-                    <span className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5"><PontoArea area={t.areaId} />{AREAS[t.areaId]} · {t.horas}h</span>
-                      <button onClick={() => aoEditar(t)} className="underline-offset-2 hover:underline">{nome(t.donaId)}</button>
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">Vazio.</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <p className="text-xs text-muted-foreground">Clique no título para avançar a coluna. Clique na dona para editar a tarefa.</p>
+      <Quadro
+        colunas={STATUS_TAREFA.map(([k, rotulo]) => ({ id: k, titulo: rotulo }))}
+        itens={tarefas.map((t) => ({ ...t, coluna: t.status }))}
+        aoMover={(t, para) => mover(t, para as Tarefa["status"])}
+        larguraColuna={240}
+        card={(t) => (
+          <CartaoQuadro className={cn(t.status === "feito" && "opacity-60")}>
+            <span className={cn("text-sm font-medium leading-snug", t.status === "feito" && "line-through")}>{t.titulo}</span>
+            <span className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5"><PontoArea area={t.areaId} />{AREAS[t.areaId]} · {t.horas}h</span>
+              <button onPointerDown={(e) => e.stopPropagation()} onClick={() => aoEditar(t)} className="underline-offset-2 hover:underline">{nome(t.donaId)}</button>
+            </span>
+          </CartaoQuadro>
+        )}
+      />
+      <p className="text-xs text-muted-foreground">Arraste a tarefa para outra coluna (no celular, segure um instante). Clique na dona para editar.</p>
     </div>
   );
 }
@@ -349,7 +343,7 @@ function ListaSprints({ dados }: { dados: DadosAgenda }) {
 }
 
 // ---------- página ----------
-export function Agenda({ dados }: { dados: DadosAgenda }) {
+export function Agenda({ dados, conferir }: { dados: DadosAgenda; conferir?: React.ReactNode }) {
   const [visao, setVisao] = useState<Visao>("calendario");
   const [f, setF] = useState<Filtro>({ areas: ["soc", "ven", "pro", "fin"], dona: "" });
   const [mes, setMes] = useState(() => {
@@ -393,7 +387,7 @@ export function Agenda({ dados }: { dados: DadosAgenda }) {
           </Button>
         )}
       </div>
-      {visao !== "sprint" && <Filtros f={f} setF={setF} socias={dados.socias} />}
+      {visao !== "sprint" && visao !== "conferir" && <Filtros f={f} setF={setF} socias={dados.socias} />}
 
       {visao === "calendario" && (
         <DndContext sensors={sensores} onDragEnd={aoSoltar}>
@@ -439,7 +433,8 @@ export function Agenda({ dados }: { dados: DadosAgenda }) {
       {visao === "semana" && <VisaoSemana dados={dados} f={f} inicio={segundaDaSemana(sel)} aoMover={setMover} />}
       {visao === "mes" && <VisaoMes dados={dados} f={f} mes={mes} aoMover={setMover} />}
       {visao === "sprint" && <QuadroSprint dados={dados} aoEditar={setTarefa} />}
-      {visao !== "calendario" && visao !== "sprint" && dados.porDia && Object.keys(dados.porDia).length === 0 && <Vazio titulo="Nada na agenda ainda." />}
+      {visao === "conferir" && conferir}
+      {visao !== "calendario" && visao !== "sprint" && visao !== "conferir" && dados.porDia && Object.keys(dados.porDia).length === 0 && <Vazio titulo="Nada na agenda ainda." />}
 
       <DialogMover mover={mover} aoFechar={() => setMover(null)} />
       <DialogTarefa tarefa={tarefa} aberto={tarefa !== null} sprints={dados.sprints} socias={dados.socias} aoFechar={() => setTarefa(null)} />

@@ -34,5 +34,5 @@ export async function carregarHoje(db: ClienteDb, hoje: string) {
     posts: { publicados: naiesSemana.filter((n) => n.status === "publicada").length, planejados: naiesSemana.length },
   };
   const postDeHoje = naiesSemana.filter((n) => n.dataPrevista === hoje);
-  return { agenda, numeros, postDeHoje };
+  return { agenda, numeros, postDeHoje, naiesSemana, segunda: seg };
 }

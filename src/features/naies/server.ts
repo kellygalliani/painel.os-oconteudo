@@ -6,7 +6,7 @@ import { naiesNaAgenda } from "./logic/naies-na-agenda";
 import { naiesEntre, responsavelPelasNaies } from "./server/queries";
 
 export { listarNaies, obterNaie, naiesEntre, responsavelPelasNaies } from "./server/queries";
-export { sincronizarPostagens } from "./server/postagens";
+export { sincronizarNumeros, sincronizarPostagens } from "./server/postagens";
 export { apiListarParaPostar, apiPublicarNaie, ErroNaieApi } from "./server/api";
 
 /** Itens "Editar e agendar" e "Conferir se foi publicada" das NAIEs para a agenda. */

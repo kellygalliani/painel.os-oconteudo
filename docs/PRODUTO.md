@@ -194,3 +194,30 @@ Formulário da análise semanal com gasto, impressões, cliques, CPC (custo por 
 - **Orgânico:** cada NAIE mostra os selos das redes e "pronta para publicar"; o filtro de status tem **"Prontas para publicar"** (vídeo final e legenda, sem post ativo no idioma).
 - **Pelo chat:** as ferramentas `listar_naies_para_postar` e `publicar_naie` no MCP do painel ([API.md](API.md)).
 - **Contas:** quem posta qual idioma fica em `features/naies/logic/redes.ts` (`IDIOMA_DA_CONTA`, pelo @). Conta nova = conectar no Zernio e acrescentar uma linha. Grátis até 2 contas; da 3ª à 10ª, US$ 6 por mês cada.
+
+## Painel novo (E11, 04/11/2026)
+
+O molde do mockup aprovado. Os endereços antigos continuam valendo; mudaram os rótulos e a organização.
+
+**Menu** (recolhível; no celular, barra com Início, Calendário, Conteúdos, Campanhas e "Mais"):
+
+| Grupo | Página | Endereço |
+|---|---|---|
+| | Início | `/hoje` |
+| | Calendário | `/agenda` |
+| Conteúdo | Conteúdos | `/conteudo/organico` |
+| | Publicações | `/conteudo/publicacoes` |
+| Campanhas | Campanhas | `/campanhas` |
+| | Contatos | `/campanhas/contatos` |
+| Tráfego pago | Anúncios | `/conteudo/pago` |
+| | Metas | `/metas` |
+| (pé) | Biblioteca (trilhas) · Conexões · Conta | `/conteudo/trilhas` · `/conta/conexoes` · `/conta` |
+
+- **Conteúdos:** quadro de arrastar (Roteiro, Gravada, Editada, Pronta, Agendada, Publicada) ou Lista (a de antes, com filtros). Pronta = editada com vídeo final e legenda; Agendada = tem post agendado (as duas se calculam). Soltar em Agendada abre o horário; sair de Agendada pede cancelar o agendamento antes. Cada mudança tem "Desfazer". O card mostra o dia, o tipo, a palavra-chave com a campanha (ou "sem campanha") e os selos das redes.
+- **NAIE:** cabeçalho com chips e a palavra-chave; barra das 6 etapas (clicável); "Próximo passo" com um botão; abas **Roteiro** (aviso da palavra e da campanha + o documento), **Gravar e editar** (modo gravação, brutos, trilha, pasta de edição, links, "Pronto, está gravada/editada"), **Publicar** (o cartão de publicar, agora com a linha da automação: palavra → campanha, trocar ou desligar) e **Histórico**. Na lateral: Ligado a (campanha), Datas e Redes. Nenhuma função saiu.
+- **Calendário:** a Agenda de antes (Calendário, Semana, Mês, Sprint) e **Conferir**: os próximos 10 dias, uma coluna por conta conectada (✓ horário, publicado, falhou, nada agendado), a automação e "Resolver". O quadro de **Sprint** passou a ser de arrastar.
+- **Publicações:** Agendadas, Publicadas, Falharam e Prontas sem agendar, com Cancelar, Tentar de novo e Agendar.
+- **Campanhas:** uma por idioma, com palavras, a DM (texto, texto antes do link, link) com prévia, até 5 respostas no comentário (sorteia uma), a resposta do TikTok, status (rascunho, ativa, pausada) e os números (DMs, pessoas, cliques, clique por DM) por post. **Duplicar para EN** copia tudo em rascunho e pede só a tradução e o link. Ativar exige palavra, DM, link e resposta do TikTok, e nenhuma palavra repetida em outra campanha ativa do mesmo idioma. Avisos de "palavra sem campanha" com "Pôr nesta campanha" ou "Criar campanha".
+- **Contatos:** quem comentou uma palavra de campanha (chega pelo aviso do Zernio).
+- **Início:** além do que já tinha, DMs e cliques das campanhas, a faixa da semana e **Precisa de você** (post que falhou, post dos próximos 2 dias sem agendar, palavra sem campanha).
+- **Conexões:** as contas do Zernio, o idioma de cada uma e o estado do aviso de comentários.
