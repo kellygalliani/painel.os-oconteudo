@@ -27,4 +27,6 @@ const r = await fetch("https://zernio.com/api/v1/webhooks/settings", {
   headers: { Authorization: `Bearer ${ZERNIO_API_KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify({ name: "Painel OS oconteudo · comentários", url, events: ["comment.received"], secret: ZERNIO_WEBHOOK_SECRET }),
 });
-console.log(`Zernio respondeu ${r.status}:`, (await r.text()).slice(0, 400));
+const resposta = await r.json().catch(() => null);
+// Não imprime o corpo: o Zernio devolve o segredo junto.
+console.log(`Zernio respondeu ${r.status}.`, resposta?.webhook ? `Aviso ${resposta.webhook._id} ativo: ${resposta.webhook.isActive}.` : (resposta?.error ?? ""));
