@@ -9,4 +9,6 @@ export { FormNaie } from "./components/FormNaie";
 export { LeituraNaie, type TrilhaOpcao } from "./components/Leitura";
 export { prepararEnvioVideo, confirmarVideo, apagarVideos, linkDoVideo } from "./server/videos";
 export { DocumentoNaie } from "./components/Documento";
+export { PublicarRapido, SelosRedes } from "./components/Redes";
+export { idiomasProntos, type PostRede } from "./logic/redes";
 export { salvarDocumento } from "./server/documento";

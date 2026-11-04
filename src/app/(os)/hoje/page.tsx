@@ -1,13 +1,17 @@
 import { Hoje } from "@/features/hoje";
 import { carregarHoje } from "@/features/hoje/server";
+import { sincronizarPostagens } from "@/features/naies/server";
 import { exigirSocia } from "@/lib/auth/exigir-socia";
 import { ddmm, DIAS_LONGOS, diaDaSemana, hojeIso } from "@/lib/datas";
 
 export const metadata = { title: "Hoje" };
+// O "Publicar" de um clique espera a resposta do Zernio.
+export const maxDuration = 60;
 
 export default async function PaginaHoje() {
   const socia = await exigirSocia();
   const hoje = hojeIso();
+  await sincronizarPostagens(socia.db);
   const { agenda, numeros, postDeHoje } = await carregarHoje(socia.db, hoje);
   return (
     <>

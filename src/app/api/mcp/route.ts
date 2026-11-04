@@ -1,3 +1,4 @@
+import { apiListarParaPostar, apiPublicarNaie, ErroNaieApi } from "@/features/naies/server";
 import { apiCriar, apiListar, apiPronto, chaveDaRequisicao, ErroApi } from "@/features/pago/server";
 
 // Servidor MCP (Model Context Protocol) mínimo, por HTTP e sem estado: initialize, tools/list e
@@ -46,6 +47,26 @@ const FERRAMENTAS = [
     inputSchema: { type: "object", required: ["id"], properties: { id: { type: "string" } } },
   },
   { name: "listar_anuncios", description: "Lista os 100 anúncios mais novos do painel, com status, idiomas e quantos arquivos têm.", inputSchema: { type: "object", properties: {} } },
+  {
+    name: "listar_naies_para_postar",
+    description: "Lista as NAIEs ainda não postadas (de 7 dias atrás até 14 à frente), com a data do post, se já têm vídeo final e legenda em PT e EN, os posts já feitos, e as contas conectadas (Instagram e TikTok de cada idioma).",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "publicar_naie",
+    description:
+      "Publica agora (ou agenda) o vídeo final e a legenda de uma NAIE no Instagram e no TikTok do idioma, pelo Zernio. Pula as contas que já têm post desta NAIE. No TikTok sai público. Antes de chamar, confirme com a pessoa o que vai ao ar. Quando todas as contas publicam, a NAIE fica 'Postada' no painel.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "id da NAIE (de listar_naies_para_postar)" },
+        idioma: { type: "string", enum: ["pt", "en"], description: "Padrão: pt" },
+        redes: { type: "array", items: { type: "string", enum: ["instagram", "tiktok"] }, description: "Padrão: todas as contas do idioma" },
+        agendar_para: { type: "string", description: "Opcional. AAAA-MM-DDTHH:MM no horário de Brasília, de 5 minutos a 6 dias à frente. Sem ele, publica agora." },
+      },
+    },
+  },
 ];
 
 type Pedido = { jsonrpc: "2.0"; id?: string | number | null; method: string; params?: Record<string, unknown> };
@@ -66,12 +87,18 @@ async function responder(p: Pedido, req: Request): Promise<object | null> {
       try {
         const chave = chaveDaRequisicao(req);
         const dados =
-          nome === "criar_anuncio" ? await apiCriar(chave, args) : nome === "confirmar_anuncio" ? await apiPronto(chave, String(args.id ?? "")) : nome === "listar_anuncios" ? await apiListar(chave) : null;
+          nome === "criar_anuncio" ? await apiCriar(chave, args)
+          : nome === "confirmar_anuncio" ? await apiPronto(chave, String(args.id ?? ""))
+          : nome === "listar_anuncios" ? await apiListar(chave)
+          : nome === "listar_naies_para_postar" ? await apiListarParaPostar(chave)
+          : nome === "publicar_naie" ? await apiPublicarNaie(chave, args)
+          : null;
         if (dados === null) return { jsonrpc: "2.0", id: p.id, error: { code: -32602, message: `Ferramenta desconhecida: ${nome}` } };
         return resposta({ content: [{ type: "text", text: JSON.stringify(dados, null, 2) }] });
       } catch (e) {
-        const msg = e instanceof ErroApi ? e.message : "Erro inesperado.";
-        if (!(e instanceof ErroApi)) console.error("[mcp]", e);
+        const conhecido = e instanceof ErroApi || e instanceof ErroNaieApi;
+        const msg = conhecido ? e.message : "Erro inesperado.";
+        if (!conhecido) console.error("[mcp]", e);
         return resposta({ content: [{ type: "text", text: msg }], isError: true });
       }
     }

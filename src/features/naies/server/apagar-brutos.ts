@@ -12,7 +12,7 @@ export async function apagarVideosDoTipo(db: ClienteDb, naieId: string, tipo: Ti
     try {
       await apagarObjeto(v.chave);
     } catch {
-      continue; // fica registrado; a faxina de 30 dias do R2 apaga depois
+      continue; // fica registrado; a faxina do R2 apaga depois
     }
     await db.from("naie_videos").delete().eq("id", v.id);
     apagados++;
@@ -21,11 +21,10 @@ export async function apagarVideosDoTipo(db: ClienteDb, naieId: string, tipo: Ti
 }
 
 /**
- * Regra: editada apaga os brutos; postada no Instagram (publicada) apaga brutos e finais.
+ * Regra: editada ou postada apaga os brutos. O vídeo final fica (90 dias no R2, pasta finais/).
  * Devolve quantos apagou.
  */
 export async function limparVideosPeloStatus(db: ClienteDb, naieId: string, status: StatusNaie): Promise<number> {
-  if (status === "editada") return apagarVideosDoTipo(db, naieId, "bruto");
-  if (status === "publicada") return (await apagarVideosDoTipo(db, naieId, "bruto")) + (await apagarVideosDoTipo(db, naieId, "final"));
+  if (status === "editada" || status === "publicada") return apagarVideosDoTipo(db, naieId, "bruto");
   return 0;
 }

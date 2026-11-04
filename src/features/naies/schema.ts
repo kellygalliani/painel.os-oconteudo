@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PostRede } from "./logic/redes";
 
 export type TipoNaie = "geral" | "nicho" | "venda";
 export type StatusNaie = "roteiro" | "gravada" | "editada" | "publicada";
@@ -54,9 +55,13 @@ export type Naie = {
   versoes: Partial<Record<Idioma, Versao>>;
   /** Vídeos brutos (apagados quando a NAIE fica editada). */
   videos: Partial<Record<Idioma, VideoBruto>>;
-  /** Vídeo final editado, para baixar no celular e postar (apagado quando a NAIE é postada). */
+  /** Vídeo final editado, para postar pelo painel ou baixar no celular (fica 90 dias no R2). */
   finais: Partial<Record<Idioma, VideoBruto>>;
   legendas: Partial<Record<Idioma, string>>;
+  /** Legenda própria do TikTok (sem ela, vai a mesma do Instagram). */
+  legendasTiktok: Partial<Record<Idioma, string>>;
+  /** Posts no Instagram e no TikTok pelo Zernio, do mais antigo ao mais novo. */
+  posts: PostRede[];
   facebookPostado: boolean;
   /** O documento .md da NAIE (null = gerado dos campos). */
   origemMd: string | null;

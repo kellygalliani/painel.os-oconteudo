@@ -61,7 +61,7 @@ Mais: `alter table naies add column trilha_id uuid null references trilhas on de
 ## 0008_videos
 | Tabela | Colunas |
 |---|---|
-| `naie_videos` | `naie_id references naies on delete cascade`, `idioma text check in ('pt','en')`, `tipo text check in ('bruto','final') default 'bruto'` (unique `naie_id, idioma, tipo`; o final fica em `naies/<naie>/final-<idioma>-<tempo>.<ext>`), `chave text unique` (caminho no R2: `naies/<naie>/<idioma>-<tempo>.<ext>`), `nome_original`, `tamanho_bytes bigint`; unique (`naie_id`, `idioma`) |
+| `naie_videos` | `naie_id references naies on delete cascade`, `idioma text check in ('pt','en')`, `tipo text check in ('bruto','final') default 'bruto'` (unique `naie_id, idioma, tipo`; o final fica em `finais/<naie>/<idioma>-<tempo>.<ext>`, 90 dias no R2; os enviados antes de 04/11/2026 ficaram em `naies/<naie>/final-…`), `chave text unique` (caminho no R2: `naies/<naie>/<idioma>-<tempo>.<ext>`), `nome_original`, `tamanho_bytes bigint`; unique (`naie_id`, `idioma`) |
 | `criativos` (0012) | ganha `status` `pronto`, `origem text check in ('painel','api')` e `nota` |
 | `criativo_versoes` | `criativo_id`, `idioma check in ('pt','en')`, `texto`, `titulo`, `descricao`, `botao`, `link_destino`; unique (`criativo_id`, `idioma`) |
 | `criativo_arquivos` | `criativo_id`, `idioma` (null = os dois), `posicionamento check in ('feed','stories')` (0013), `ordem`, `chave` (R2: `criativos/<id>/…`), `nome_original`, `tipo_mime`, `tamanho_bytes`, `enviado` |
@@ -74,6 +74,14 @@ Mais: `alter table naies add column trilha_id uuid null references trilhas on de
 | `criativos` | `titulo`, `formato text check in ('estatico','video_curto','falado')`, `status text check in ('ideia','producao','no_ar','pausado') default 'ideia'`, `link text null`, `no_ar_desde date null`, `resultado text null`, `ordem int`, `atualizado_em` |
 
 ---
+
+## 0014_postagens
+| Tabela | Colunas |
+|---|---|
+| `naies` (+) | `legenda_tiktok_pt text null`, `legenda_tiktok_en text null` (null = a mesma legenda do Instagram) |
+| `naie_posts` | `naie_id references naies on delete cascade`, `idioma check in ('pt','en')`, `rede check in ('instagram','tiktok')`, `conta_id` (conta no Zernio), `usuario` (o @), `zernio_post_id`, `status check in ('agendado','publicando','publicado','falhou','cancelado')`, `agendado_para timestamptz null`, `link`, `erro`, `criado_em`, `atualizado_em`. Um registro por conta e tentativa; vale o último de cada conta. RLS `e_socia()`. |
+
+Funções da API (security definer, conferem a chave `osc_`): `api_naie_para_postar`, `api_listar_naies_para_postar`, `api_registrar_posts`.
 
 ## Seed (`supabase/seed.sql`), cenário A
 

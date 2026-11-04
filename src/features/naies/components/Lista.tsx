@@ -5,7 +5,9 @@ import { useState } from "react";
 import { ChipCor, Vazio } from "@/components/shared/ui-base";
 import { ddmm, DIAS_CURTOS, diaDaSemana } from "@/lib/datas";
 import { cn } from "@/lib/utils";
+import { idiomasProntos } from "../logic/redes";
 import { QUEM_GRAVA, STATUS, TIPOS, type Naie, type StatusNaie, type TipoNaie } from "../schema";
+import { SelosRedes } from "./Redes";
 
 export function ChipTipo({ tipo }: { tipo: TipoNaie }) {
   return <ChipCor cor={TIPOS[tipo].cor}>{TIPOS[tipo].rotulo}</ChipCor>;
@@ -15,8 +17,8 @@ const rotuloStatus = (s: StatusNaie) => STATUS.find(([k]) => k === s)?.[1] ?? s;
 
 export function ListaNaies({ naies }: { naies: Naie[] }) {
   const [tipo, setTipo] = useState<TipoNaie | "">("");
-  const [status, setStatus] = useState<StatusNaie | "">("");
-  const filtradas = naies.filter((n) => (!tipo || n.tipo === tipo) && (!status || n.status === status));
+  const [status, setStatus] = useState<StatusNaie | "prontas" | "">("");
+  const filtradas = naies.filter((n) => (!tipo || n.tipo === tipo) && (!status || (status === "prontas" ? idiomasProntos(n).length > 0 : n.status === status)));
   const semanas = [...new Set(filtradas.map((n) => n.semana ?? "Sem semana"))];
   const sel = "h-8 rounded-full border bg-background px-3 text-xs";
 
@@ -29,8 +31,9 @@ export function ListaNaies({ naies }: { naies: Naie[] }) {
           <option value="">Todos os tipos</option>
           {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.rotulo}</option>)}
         </select>
-        <select aria-label="Status" className={sel} value={status} onChange={(e) => setStatus(e.target.value as StatusNaie | "")}>
+        <select aria-label="Status" className={sel} value={status} onChange={(e) => setStatus(e.target.value as StatusNaie | "prontas" | "")}>
           <option value="">Todos os status</option>
+          <option value="prontas">Prontas para publicar</option>
           {STATUS.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>
@@ -53,6 +56,8 @@ export function ListaNaies({ naies }: { naies: Naie[] }) {
                       <span className={cn("rounded px-1", n.versoes.pt?.roteiro ? "bg-muted" : "opacity-30")}>PT</span>
                       <span className={cn("rounded px-1", n.versoes.en?.roteiro ? "bg-muted" : "opacity-30")}>EN</span>
                     </span>
+                    <SelosRedes posts={n.posts} />
+                    {idiomasProntos(n).length > 0 && <span className="rounded-full border border-foreground/40 px-2 py-0.5 text-xs font-medium">pronta para publicar</span>}
                     <span className={cn("rounded-full border px-2 py-0.5 text-xs", n.status === "publicada" && "bg-foreground text-background")}>{rotuloStatus(n.status)}</span>
                   </Link>
                 </li>

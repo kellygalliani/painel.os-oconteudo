@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { AbasConteudo } from "@/components/layout/Navegacao";
 import { TituloPagina } from "@/components/shared/ui-base";
 import { ListaNaies } from "@/features/naies";
-import { listarNaies } from "@/features/naies/server";
+import { listarNaies, sincronizarPostagens } from "@/features/naies/server";
 import { exigirSocia } from "@/lib/auth/exigir-socia";
 
 export const metadata = { title: "Orgânico" };
 
 export default async function Organico() {
   const socia = await exigirSocia();
+  await sincronizarPostagens(socia.db);
   const naies = await listarNaies(socia.db);
   return (
     <>

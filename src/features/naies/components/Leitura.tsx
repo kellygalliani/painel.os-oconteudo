@@ -3,21 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { strToU8, zipSync } from "fflate";
-import { ArrowRight, Check, Copy, Download, Maximize2, Pause, Pencil, Play, Undo2, X } from "lucide-react";
+import { ArrowRight, Check, Download, Maximize2, Pause, Pencil, Play, Send, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { avisar } from "@/components/shared/avisar";
 import { ddmm, DIAS_LONGOS, diaDaSemana } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import { paragrafos as paragrafosDe } from "../logic/contagem";
 import { diaDoLote } from "../logic/naies-na-agenda";
-import { IconeInstagram } from "@/components/shared/IconeInstagram";
-import { apagarNaie, dadosDaPasta, escolherTrilha, mudarStatusNaie, salvarLegenda } from "../server/actions";
+import { apagarNaie, dadosDaPasta, escolherTrilha, mudarStatusNaie } from "../server/actions";
 import { QUEM_GRAVA, type Idioma, type Naie, type StatusNaie, type Versao } from "../schema";
 import { DocumentoNaie } from "./Documento";
 import { FormNaie } from "./FormNaie";
 import { ChipTipo } from "./Lista";
+import { Publicar, SelosRedes } from "./Redes";
 import { EspacoVideo, SalvarNoCelular } from "./Videos";
 
 export type TrilhaOpcao = { id: string; nome: string; favorita: boolean; url: string | null };
@@ -173,40 +171,6 @@ function BaixarPasta({ naieId }: { naieId: string }) {
   );
 }
 
-/** Legenda do post no Instagram: salva ao sair do campo. */
-function Legenda({ naieId, idioma, inicial }: { naieId: string; idioma: Idioma; inicial: string }) {
-  const [texto, setTexto] = useState(inicial);
-  const [salvo, setSalvo] = useState(inicial);
-  const [pend, start] = useTransition();
-  const salvar = () => texto !== salvo && start(async () => { if (avisar(await salvarLegenda(naieId, idioma, texto))) setSalvo(texto); });
-  return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-xl border bg-background p-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold">Legenda {idioma.toUpperCase()}</span>
-        <span className="text-xs text-muted-foreground">{pend ? "Salvando…" : texto !== salvo ? "Não salva" : texto ? "Salva" : ""}</span>
-      </div>
-      <Textarea rows={6} value={texto} onChange={(e) => setTexto(e.target.value)} onBlur={salvar} placeholder="Cole aqui a legenda do post (com as hashtags)." aria-label={`Legenda ${idioma.toUpperCase()}`} />
-      <Button
-        variant="outline"
-        size="sm"
-        className="self-start"
-        disabled={!texto.trim()}
-        onClick={async () => {
-          salvar();
-          try {
-            await navigator.clipboard.writeText(texto);
-            toast.success(`Legenda ${idioma.toUpperCase()} copiada.`);
-          } catch {
-            toast.error("O navegador bloqueou a cópia. Selecione o texto e copie.");
-          }
-        }}
-      >
-        <Copy className="size-4" /> Copiar legenda
-      </Button>
-    </div>
-  );
-}
-
 type Estado = "feito" | "agora" | "depois";
 
 function Passo({ n, titulo, resumo, estado, aberto, aoAlternar, children }: { n: number; titulo: string; resumo: string; estado: Estado; aberto: boolean; aoAlternar: () => void; children: React.ReactNode }) {
@@ -249,7 +213,7 @@ function Etapa({ titulo, children }: { titulo: string; children: React.ReactNode
 const dataCurta = (d: string) => `${DIAS_LONGOS[diaDaSemana(d)]}, ${ddmm(d)}`;
 const PASSO_DO_STATUS: Record<StatusNaie, number> = { roteiro: 1, gravada: 2, editada: 3, publicada: 3 };
 
-export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpcao[] }) {
+export function LeituraNaie({ naie, trilhas, urlsFinais }: { naie: Naie; trilhas: TrilhaOpcao[]; urlsFinais: Partial<Record<Idioma, string>> }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [gravando, setGravando] = useState(false);
@@ -291,14 +255,17 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
           <span>· grava: {QUEM_GRAVA[naie.quemGrava]}</span>
         </div>
         <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">{naie.tituloCurto}</h1>
-        <span
-          className={cn(
-            "inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 text-sm font-medium",
-            concluida ? "border-transparent bg-foreground text-background" : "text-muted-foreground",
-          )}
-        >
-          <IconeInstagram className="size-4" /> {concluida ? "Postada no Instagram ✓" : "Ainda não postada no Instagram"}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
+              concluida ? "border-transparent bg-foreground text-background" : "text-muted-foreground",
+            )}
+          >
+            <Send className="size-4" /> {concluida ? "Postada ✓" : "Ainda não postada"}
+          </span>
+          <SelosRedes posts={naie.posts} />
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => setGravando(true)}><Maximize2 className="size-4" /> Modo gravação</Button>
           <Button variant="outline" size="sm" onClick={() => document.getElementById("roteiro")?.scrollIntoView({ behavior: "smooth" })}>Ver o roteiro</Button>
@@ -332,8 +299,8 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
 
         <Passo
           n={2}
-          titulo="Editar e agendar"
-          resumo={`Baixe a pasta, edite com a Máquina e suba o vídeo final.${editarEm ? ` Dia de editar: ${dataCurta(editarEm)}.` : ""}`}
+          titulo="Editar"
+          resumo={`Baixe a pasta e edite com a Máquina de Reels.${editarEm ? ` Dia de editar: ${dataCurta(editarEm)}.` : ""}`}
           estado={estadoDo(2)}
           aberto={aberto === 2}
           aoAlternar={() => alternar(2)}
@@ -355,18 +322,11 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
               </ul>
             )}
           </Etapa>
-          <Etapa titulo="3. Suba o vídeo final (opcional)">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <EspacoVideo naieId={naie.id} idioma="en" tipo="final" video={naie.finais.en} dica="para postar do celular" />
-              <EspacoVideo naieId={naie.id} idioma="pt" tipo="final" video={naie.finais.pt} dica="opcional" />
-            </div>
-            <p className="text-xs text-muted-foreground">Por enquanto só o EN precisa subir. Ele fica aqui para você salvar no celular e postar no Instagram, e é apagado quando você marca como postada.</p>
-          </Etapa>
-          <Etapa titulo="4. Deixe pronto para o dia do post">
-            <p className="text-sm text-muted-foreground">Agende no Instagram para {naie.dataPrevista ? dataCurta(naie.dataPrevista) : "o dia do post"} ou deixe o vídeo final aqui para postar do celular no passo 3.</p>
+          <Etapa titulo="3. Suba o vídeo final no passo 3">
+            <p className="text-sm text-muted-foreground">O vídeo editado sobe direto em “Publicar”, ao lado da legenda, e fica lá para postar pelo painel ou salvar no celular.</p>
           </Etapa>
           {status === "gravada" || status === "roteiro" ? (
-            <Button className="self-start" disabled={pend} onClick={() => irPara("editada", "Marcada como editada e agendada.")}>Pronto, editada e agendada <ArrowRight className="size-4" /></Button>
+            <Button className="self-start" disabled={pend} onClick={() => irPara("editada", "Marcada como editada.")}>Pronto, está editada <ArrowRight className="size-4" /></Button>
           ) : (
             <Button variant="ghost" size="sm" className="self-start" disabled={pend} onClick={() => irPara("gravada", "Voltou para gravada.")}><Undo2 className="size-4" /> Voltar para gravada</Button>
           )}
@@ -374,52 +334,32 @@ export function LeituraNaie({ naie, trilhas }: { naie: Naie; trilhas: TrilhaOpca
 
         <Passo
           n={3}
-          titulo="Postar"
-          resumo={`Copie a legenda, salve o vídeo no celular, poste no Instagram e marque como postada.${naie.dataPrevista ? ` Dia do post: ${dataCurta(naie.dataPrevista)}.` : ""}`}
+          titulo="Publicar"
+          resumo={`Suba o vídeo final, confira a legenda e publique no Instagram e no TikTok, agora ou agendado.${naie.dataPrevista ? ` Dia do post: ${dataCurta(naie.dataPrevista)}.` : ""}`}
           estado={estadoDo(3)}
           aberto={aberto === 3}
           aoAlternar={() => alternar(3)}
         >
-          <Etapa titulo="1. Legenda">
-            <div className="grid gap-2 lg:grid-cols-2">
-              <Legenda naieId={naie.id} idioma="pt" inicial={naie.legendas.pt ?? ""} />
-              <Legenda naieId={naie.id} idioma="en" inicial={naie.legendas.en ?? ""} />
-            </div>
-          </Etapa>
-          <Etapa titulo="2. Salve o vídeo no celular">
-            {finais.length ? (
+          <Publicar naie={naie} urls={urlsFinais} />
+          {finais.length > 0 && (
+            <Etapa titulo="Ou poste do celular">
               <div className="flex flex-wrap gap-2">{finais.map((i) => <SalvarNoCelular key={i} naieId={naie.id} idioma={i} />)}</div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nenhum vídeo final aqui. Suba no passo 2 ou poste com o vídeo que já está no seu celular.</p>
-            )}
-          </Etapa>
-          <Etapa titulo="3. Postou no Instagram?">
-            {status === "publicada" ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-emerald-600 bg-emerald-600/10 p-4 dark:border-emerald-500">
-                <span className="flex items-center gap-3">
-                  <IconeInstagram className="size-7" />
-                  <span className="flex flex-col">
-                    <span className="font-semibold">Postada no Instagram ✓</span>
-                    <span className="text-xs text-muted-foreground">Os vídeos finais foram apagados do painel.</span>
-                  </span>
-                </span>
-                <Button variant="ghost" size="sm" disabled={pend} onClick={() => irPara("editada", "Marcada como não postada.")}><Undo2 className="size-4" /> Ainda não postei</Button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 rounded-xl border-2 border-dashed p-4">
-                <span className="flex items-center gap-3">
-                  <IconeInstagram className="size-7 text-muted-foreground" />
-                  <span className="flex flex-col">
-                    <span className="font-semibold">Ainda não postada no Instagram</span>
-                    <span className="text-xs text-muted-foreground">Postou? Marque aqui. Dá para marcar mesmo sem vídeo final no painel.</span>
-                  </span>
-                </span>
-                <Button size="lg" className="self-start" disabled={pend} onClick={() => irPara("publicada", "Postada no Instagram.")}>
-                  <IconeInstagram className="size-5" /> Postei no Instagram
-                </Button>
-              </div>
-            )}
-          </Etapa>
+            </Etapa>
+          )}
+          {status === "publicada" ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-emerald-600 bg-emerald-600/10 p-4 dark:border-emerald-500">
+              <span className="flex flex-col">
+                <span className="font-semibold">Postada ✓</span>
+                <span className="text-xs text-muted-foreground">O vídeo final continua aqui por 90 dias.</span>
+              </span>
+              <Button variant="ghost" size="sm" disabled={pend} onClick={() => irPara("editada", "Marcada como não postada.")}><Undo2 className="size-4" /> Ainda não postei</Button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Postou do celular? Marque aqui. Pelo painel, ela fica postada sozinha.</span>
+              <Button variant="outline" size="sm" disabled={pend} onClick={() => irPara("publicada", "Marcada como postada.")}><Check className="size-4" /> Marcar como postada</Button>
+            </div>
+          )}
         </Passo>
       </ol>
 

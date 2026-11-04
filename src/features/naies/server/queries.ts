@@ -1,8 +1,9 @@
 import "server-only";
 import type { ClienteDb } from "@/lib/supabase/server";
 import type { Idioma, Naie, Versao, VideoBruto } from "../schema";
+import { mapearPost } from "./postagens";
 
-const COLUNAS = "*, naie_versoes(idioma, titulos, titulo_escolhido, roteiro, contagem), naie_videos(idioma, tipo, chave, nome_original, tamanho_bytes)";
+const COLUNAS = "*, naie_versoes(idioma, titulos, titulo_escolhido, roteiro, contagem), naie_videos(idioma, tipo, chave, nome_original, tamanho_bytes), naie_posts(*)";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapearNaie(r: any): Naie {
@@ -33,6 +34,8 @@ export function mapearNaie(r: any): Naie {
     videos,
     finais,
     legendas: { ...(r.legenda_pt ? { pt: r.legenda_pt } : {}), ...(r.legenda_en ? { en: r.legenda_en } : {}) },
+    legendasTiktok: { ...(r.legenda_tiktok_pt ? { pt: r.legenda_tiktok_pt } : {}), ...(r.legenda_tiktok_en ? { en: r.legenda_tiktok_en } : {}) },
+    posts: [...(r.naie_posts ?? [])].sort((a, b) => String(a.criado_em).localeCompare(String(b.criado_em))).map(mapearPost),
     facebookPostado: !!r.facebook_postado,
     origemMd: r.origem_md ?? null,
   };

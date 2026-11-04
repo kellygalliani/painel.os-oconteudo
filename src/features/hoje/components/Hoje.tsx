@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { BarraCarga, Kpi, Secao, Vazio } from "@/components/shared/ui-base";
 import { DialogMover, ItemAgenda, Pendentes, type DadosAgenda, type ItemDoDia, type Mover } from "@/features/agenda";
-import { ChipTipo, type Naie } from "@/features/naies";
+import { ChipTipo, PublicarRapido, SelosRedes, type Naie } from "@/features/naies";
 import { diaDaSemana, minutosLegivel } from "@/lib/datas";
 import type { Numeros } from "../server";
 
@@ -60,10 +60,13 @@ export function Hoje({ dados, eu, numeros, postDeHoje }: { dados: DadosAgenda; e
             const v = n.versoes.pt;
             const t = v && v.tituloEscolhido != null ? v.titulos[v.tituloEscolhido] : v?.titulos[0];
             return (
-              <Link key={n.id} href={`/conteudo/organico/${n.id}`} className="flex flex-col gap-1 rounded-xl border bg-card p-4 hover:bg-muted/40">
-                <span className="flex items-center gap-2"><ChipTipo tipo={n.tipo} /><span className="font-semibold">{n.tituloCurto}</span></span>
-                {t && <span className="text-sm text-muted-foreground">{t}</span>}
-              </Link>
+              <div key={n.id} className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+                <Link href={`/conteudo/organico/${n.id}`} className="flex flex-col gap-1 hover:opacity-80">
+                  <span className="flex flex-wrap items-center gap-2"><ChipTipo tipo={n.tipo} /><span className="font-semibold">{n.tituloCurto}</span><SelosRedes posts={n.posts} /></span>
+                  {t && <span className="text-sm text-muted-foreground">{t}</span>}
+                </Link>
+                <PublicarRapido naie={n} />
+              </div>
             );
           })}
         </Secao>

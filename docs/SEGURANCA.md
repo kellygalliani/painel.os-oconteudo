@@ -52,6 +52,7 @@ O mesmo script com `--redefinir` gera uma nova senha provisória, para quando al
   - a `SUPABASE_SERVICE_ROLE_KEY` existe **só** no `.env.local` e em `scripts/`. O `harness:check` falha se ela aparecer em `src/`;
   - `.env.local` fica no `.gitignore`. O `.env.example` lista os nomes sem valores.
 - **R2 (vídeos):** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` são só de servidor (`lib/r2.ts`, com `server-only`). O token do R2 tem permissão de leitura e escrita só neste bucket. O navegador recebe apenas URLs assinadas de curta duração, geradas depois de `exigirSocia()`.
+- **Zernio (postar no Instagram e no TikTok):** `ZERNIO_API_KEY` é só de servidor (`lib/zernio.ts`, com `server-only`), na Vercel e no `.env.local`. O Zernio recebe um link assinado de 7 dias do vídeo final (só leitura daquele arquivo). Os logins do Instagram e do TikTok ficam no Zernio, nunca no painel.
 - **Cabeçalhos** em `next.config.ts`:
   - `X-Frame-Options: SAMEORIGIN` (a planilha de projeção roda num iframe do próprio painel)
   - `X-Content-Type-Options: nosniff`
@@ -63,7 +64,7 @@ O mesmo script com `--redefinir` gera uma nova senha provisória, para quando al
 ## Chaves de API (anúncios pela IA)
 
 - Formato `osc_` + 32 caracteres aleatórios. Aparece uma vez, ao gerar; o banco guarda só o SHA-256 (`api_chaves.hash`).
-- A chave não abre sessão: as rotas `/api/anuncios` e `/api/mcp` usam o cliente anon, e só as funções `api_*` (security definer) aceitam a chave. Elas criam e listam anúncios; não leem nem mudam nada além disso.
+- A chave não abre sessão: as rotas `/api/anuncios` e `/api/mcp` usam o cliente anon, e só as funções `api_*` (security definer) aceitam a chave. Elas criam e listam anúncios e (0014) leem uma NAIE para postar e registram os posts dela; não leem nem mudam nada além disso.
 - Apagar a chave em Conta corta o acesso na hora. `ultimo_uso` mostra quando foi usada.
 - A chave no endereço do MCP (`?chave=`) fica em registros de acesso: usar uma chave só para isso e apagar se vazar.
 

@@ -100,11 +100,14 @@ Leva para o painel o `../Estratégia/Reestruturação/agenda-oconteudo.html`, co
 - **Título fixo:** a escolha fica fora do texto (um seletor PT e um EN, com a contagem sobre 2.200), mas reescreve o `[x]` dentro do `.md`. O texto copiado já sai com o título certo marcado.
 - **Editar texto:** abre o `.md` inteiro para editar. Ao salvar, tipo, título curto, ficha, títulos, roteiros e contagem são lidos de volta do texto (`server/documento.ts`). NAIE criada pelo formulário ganha um `.md` no formato padrão.
 - **Editar detalhes:** data, semana, quem grava, status, template, links e o dia de editar e agendar.
-- **Na agenda:** uma NAIE por dia, de domingo a sábado. "Editar e agendar" cai no lote: os posts de domingo, segunda e terça na sexta anterior; quarta e quinta na segunda; sexta e sábado na terça (`logic/naies-na-agenda.ts`). No dia do post aparece "Postar no Instagram", com o ícone do Instagram. Marcar "Editar e agendar" deixa a NAIE editada e apaga os vídeos brutos.
+- **Na agenda:** uma NAIE por dia, de domingo a sábado. "Editar e agendar" cai no lote: os posts de domingo, segunda e terça na sexta anterior; quarta e quinta na segunda; sexta e sábado na terça (`logic/naies-na-agenda.ts`). No dia do post aparece "Postar no Instagram", com o ícone do Instagram. Marcar "Editar" deixa a NAIE editada e apaga os vídeos brutos.
 - **Passo a passo** no topo da página, com o passo da vez aberto e marcado como "agora":
   1. **Gravar:** escolher o título fixo, abrir o modo gravação, subir os brutos PT e EN, "Pronto, está gravada".
-  2. **Editar e agendar:** trilha, baixar a pasta de edição, subir o **vídeo final** (opcional; por enquanto só o EN), agendar no Instagram ou deixar para postar do celular, "Pronto, editada e agendada" (apaga os brutos).
-  3. **Postar:** legenda PT e EN (salva ao sair do campo, com "Copiar legenda"), "Salvar vídeo no celular" (no celular abre o compartilhar, que salva na galeria; no computador baixa), e o bloco "Postou no Instagram?" com o botão "Postei no Instagram". Marcado, fica verde ("Postada no Instagram ✓") e apaga os vídeos brutos e finais; pode ser marcado sem vídeo final. O topo da página mostra sempre "Postada no Instagram ✓" ou "Ainda não postada no Instagram".
+  2. **Editar:** trilha, baixar a pasta de edição, "Pronto, está editada" (apaga os brutos). O vídeo final sobe no passo 3.
+  3. **Publicar:** um cartão por idioma (PT sempre; EN quando houver conta ou vídeo EN). No cartão: subir ou trocar o **vídeo final** (com prévia), a **legenda** (salva ao sair do campo, com contador até 2.200 e "Copiar"), "Legenda diferente no TikTok" (opcional), as **contas** do idioma como botões com ícone (já ligadas as que ainda não têm post), **Agora | Agendar** (agendar sugere o dia do post às 18h, horário de Brasília, até 6 dias à frente) e um botão só: "Publicar no Instagram + TikTok" ou "Agendar para sáb, 07/11 às 18h". "Agora" espera 5 segundos com **Desfazer** antes de mandar. Antes do clique, o cartão já avisa o que a rede recusaria (sem vídeo ou legenda, legenda acima de 2.200, mais de 30 hashtags no Instagram, Reel acima de 300 MB, duração fora do limite) e alerta vídeo fora de 9:16. Embaixo, cada post: publicado (com "ver post"), agendado (com **Cancelar**), publicando, ou não foi (com o erro e **Tentar de novo**). No TikTok sai público, com comentários, dueto e stitch.
+     - A NAIE fica **Postada sozinha** quando todas as contas conectadas publicaram. Para quem postou do celular: "Marcar como postada". Postada **não apaga mais o vídeo final** (ele fica 90 dias); só os brutos são apagados. "Ou poste do celular" mantém o "Salvar vídeo no celular".
+     - O status de um post agendado é lido do Zernio quando alguém abre a NAIE, a lista ou o Hoje (não há webhook).
+  O topo da página mostra "Postada ✓" ou "Ainda não postada" e os selos de cada rede (✓ publicado, agendado, publicando, ✕ falhou).
   Cada passo feito pode voltar um passo. O roteiro completo fica abaixo dos passos.
 - **Legenda no .md:** um bloco `**Legenda:**` dentro da versão PT ou EN entra como legenda na importação (e ao salvar o texto). Sem o bloco, a legenda do painel fica como está.
 
@@ -183,3 +186,11 @@ Formulário da análise semanal com gasto, impressões, cliques, CPC (custo por 
 - Notificações e e-mail.
 - Cenário B visível.
 - Outras usuárias.
+
+
+## Publicar pelo painel (Zernio)
+
+- **Hoje:** o post do dia mostra os selos de cada rede e, quando tem vídeo final e legenda, o botão **"Publicar PT no Instagram + TikTok"** (um clique, com 5 segundos para desfazer), sem abrir a NAIE.
+- **Orgânico:** cada NAIE mostra os selos das redes e "pronta para publicar"; o filtro de status tem **"Prontas para publicar"** (vídeo final e legenda, sem post ativo no idioma).
+- **Pelo chat:** as ferramentas `listar_naies_para_postar` e `publicar_naie` no MCP do painel ([API.md](API.md)).
+- **Contas:** quem posta qual idioma fica em `features/naies/logic/redes.ts` (`IDIOMA_DA_CONTA`, pelo @). Conta nova = conectar no Zernio e acrescentar uma linha. Grátis até 2 contas; da 3ª à 10ª, US$ 6 por mês cada.

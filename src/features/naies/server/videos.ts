@@ -29,17 +29,18 @@ export async function prepararEnvioVideo(dados: unknown): Promise<Resultado<{ ur
   const d = entrada.safeParse(dados);
   if (!d.success) return erro(d.error.issues[0]?.message ?? "Dados inválidos");
   const ext = (d.data.nome.match(/\.(\w{2,5})$/)?.[1] ?? "mp4").toLowerCase();
-  const prefixo = d.data.tipo === "final" ? "final-" : "";
-  const chave = `naies/${d.data.naieId}/${prefixo}${d.data.idioma}-${Date.now()}.${ext}`;
+  // Brutos em naies/ (a faxina do R2 apaga em 30 dias); finais em finais/ (apaga em 90 dias).
+  const pasta = d.data.tipo === "final" ? "finais" : "naies";
+  const chave = `${pasta}/${d.data.naieId}/${d.data.idioma}-${Date.now()}.${ext}`;
   return ok({ url: await urlDeEnvio(chave), chave });
 }
 
 export async function confirmarVideo(dados: unknown): Promise<Resultado> {
   const socia = await exigirSocia();
-  const d = entrada.extend({ chave: z.string().startsWith("naies/") }).safeParse(dados);
+  const d = entrada.extend({ chave: z.string().regex(/^(naies|finais)\//) }).safeParse(dados);
   if (!d.success) return erro("Dados inválidos");
   const { naieId, idioma, tipo, nome, tamanho, chave } = d.data;
-  if (!chave.startsWith(`naies/${naieId}/`)) return erro("Dados inválidos");
+  if (!chave.startsWith(`${tipo === "final" ? "finais" : "naies"}/${naieId}/`)) return erro("Dados inválidos");
   const { data: antigo } = await socia.db.from("naie_videos").select("chave").match({ naie_id: naieId, idioma, tipo }).maybeSingle();
   const { error } = await socia.db
     .from("naie_videos")

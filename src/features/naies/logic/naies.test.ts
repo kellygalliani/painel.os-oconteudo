@@ -90,6 +90,8 @@ const naie = (parcial: Partial<Naie> = {}): Naie => ({
   videos: {},
   finais: {},
   legendas: {},
+  legendasTiktok: {},
+  posts: [],
   facebookPostado: false,
   origemMd: null,
   versoes: {
