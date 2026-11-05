@@ -124,7 +124,7 @@ export function EditarCampanha({ campanha, proximos = [], contatos = [], modelos
           <div className="flex flex-col gap-2.5 rounded-2xl border bg-card p-4 shadow-sombra">
             <p className={rotulo}>Próximos posts com estas palavras</p>
             {proximos.length ? proximos.map((p) => (
-              <Link key={p.naieId} href={`/conteudo/organico/${p.naieId}`} className="flex items-center gap-2 text-sm hover:opacity-80"><ChipPalavra palavra={p.palavra} /><b className="min-w-0 flex-1 truncate font-semibold">{p.titulo}</b><span className="whitespace-nowrap text-muted-foreground tabular-nums">{dia(p.data)}</span></Link>
+              <Link key={p.naieId} href={`/conteudo/organico/${p.naieId}`} className="flex min-w-0 items-center gap-2 text-sm hover:opacity-80"><ChipPalavra palavra={p.palavra} /><b className="min-w-0 flex-1 truncate font-semibold">{p.titulo}</b><span className="whitespace-nowrap text-muted-foreground tabular-nums">{dia(p.data)}</span></Link>
             )) : <span className="text-sm text-muted-foreground">Nenhum roteiro pede estas palavras ainda.</span>}
           </div>
           {campanha && (

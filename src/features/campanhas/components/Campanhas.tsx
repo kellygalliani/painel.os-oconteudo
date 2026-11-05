@@ -43,7 +43,7 @@ export function ListaCampanhas({ campanhas, soltas }: { campanhas: Campanha[]; s
           {campanhas.map((c) => {
             const taxa = taxaDeClique(c.numeros);
             return (
-              <article key={c.id} className="flex flex-col gap-3.5 rounded-2xl border bg-card p-5 shadow-sombra">
+              <article key={c.id} className="flex min-w-0 flex-col gap-3.5 rounded-2xl border bg-card p-5 shadow-sombra">
                 <div className="flex items-center justify-between gap-2">
                   <Link href={`/campanhas/${c.id}`} className="flex min-w-0 items-center gap-2 hover:opacity-80">
                     <ChipIdioma idioma={c.idioma} />
@@ -52,7 +52,7 @@ export function ListaCampanhas({ campanhas, soltas }: { campanhas: Campanha[]; s
                   <ChipStatusCampanha status={c.status} />
                 </div>
                 <div className="flex flex-wrap gap-1.5">{c.palavras.length ? c.palavras.map((p) => <ChipPalavra key={p} palavra={p} />) : <span className="text-sm text-muted-foreground">Sem palavras ainda.</span>}</div>
-                {c.link && <span className="flex min-w-0 items-center gap-1.5 truncate text-sm text-muted-foreground"><Link2 className="size-3.5 shrink-0" />{c.link}</span>}
+                {c.link && <span className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground" title={c.link}><Link2 className="size-3.5 shrink-0" /><span className="min-w-0 truncate">{c.link.replace(/^https?:\/\/(www\.)?/i, "")}</span></span>}
                 <dl className="grid grid-cols-4 gap-2 border-t pt-3 text-center sm:text-left">
                   {[["DMs", c.numeros.dms], ["pessoas", c.numeros.contatos], ["cliques", c.numeros.cliques], ["clique/DM", taxa == null ? "—" : `${taxa}%`]].map(([r, v]) => (
                     <div key={r as string}><dd className="text-lg font-semibold tabular-nums">{v}</dd><dt className="text-xs text-muted-foreground">{r}</dt></div>

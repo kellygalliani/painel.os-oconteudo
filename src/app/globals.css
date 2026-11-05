@@ -152,6 +152,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Link ou palavra comprida sem espaço quebra dentro da caixa em vez de empurrar a tela para o lado. */
+    overflow-wrap: anywhere;
   }
   html {
     @apply font-sans;
