@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checarPost, contasLivres, corpoDaAutomacao, corpoDoPost, explicarErro, lerNumerosAutomacao, semAutomacaoNaRede, erroDoAgendamento, idiomasProntos, lerContas, lerPost, postsAtuais, quandoLegivel, statusDoZernio, sugestaoAgendamento, todasPublicadas, type PostRede } from "./redes";
+import { checarPost, contasLivres, corpoDaAutomacao, corpoDoPost, expandirPalavras, explicarErro, lerNumerosAutomacao, semAutomacaoNaRede, erroDoAgendamento, idiomasProntos, lerContas, lerPost, postsAtuais, quandoLegivel, statusDoZernio, sugestaoAgendamento, todasPublicadas, type PostRede } from "./redes";
 
 const contasApi = [
   { _id: "ig1", platform: "instagram", username: "oconteudo.ia", isActive: true },
@@ -134,7 +134,7 @@ describe("automação da campanha", () => {
   const campanha = { id: "c1", nome: "Máquina de Reels", palavra: "TÊNIS", palavras: ["TÊNIS", "QUERO"], dm: "Oi! Aqui está o acesso.", botao: "Quero a Máquina", link: "oconteudoia.com.br/maquina", textoDm: "Oi!\n\nQuero: https://x.com", respostas: [" Te mandei no direct! ", ""], respostaTiktok: "Link na bio" };
   it("Instagram: DM com botão que abre o link; respostas; ligada ao post do Zernio", () => {
     const c = corpoDaAutomacao({ conta: { ...ig, perfilId: "p1" }, campanha, zernioPostId: "z1", titulo: "Tênis" });
-    expect(c).toMatchObject({ profileId: "p1", accountId: "ig1", postId: "z1", keywords: ["TÊNIS", "QUERO"], matchMode: "word", dmMessage: "Oi! Aqui está o acesso.", commentReplyVariations: ["Te mandei no direct!"], repeatPolicy: { mode: "once" }, linkTracking: true });
+    expect(c).toMatchObject({ profileId: "p1", accountId: "ig1", postId: "z1", matchMode: "word", typoTolerance: true, dmMessage: "Oi! Aqui está o acesso.", commentReplyVariations: ["Te mandei no direct!"], repeatPolicy: { mode: "once" }, linkTracking: true });
     expect(c).toMatchObject({ buttons: [{ type: "url", title: "Quero a Máquina", url: "https://oconteudoia.com.br/maquina" }] });
     expect(c.name).toBe("Máquina de Reels · Tênis · Instagram");
   });
@@ -171,5 +171,24 @@ describe("erros explicados", () => {
   });
   it("automação: falta a resposta do TikTok", () => {
     expect(explicarErro(400, { error: "commentReply is required on tiktok", param: "commentReply" }, "tiktok", "automacao")).toBe("No TikTok, a automação não foi criada: a campanha não tem a resposta do TikTok. Escreva essa resposta na campanha.");
+  });
+});
+
+describe("começo da palavra", () => {
+  it("MÁQUINA vale também por M, maq e sem acento", () => {
+    const p = expandirPalavras(["MÁQUINA"]);
+    expect(p).toEqual(expect.arrayContaining(["M", "MA", "MAQ", "MAQUINA", "MÁ", "MÁQ", "MÁQUINA"]));
+    expect(new Set(p).size).toBe(p.length);
+  });
+  it("começo que é palavra comum fica de fora; a palavra inteira sempre vale", () => {
+    const p = expandirPalavras(["QUERO", "ESPAÇO"]);
+    expect(p).toEqual(expect.arrayContaining(["Q", "QU", "QUER", "QUERO", "ES", "ESP", "ESPAÇO", "ESPACO"]));
+    expect(p).not.toContain("QUE");
+    expect(p).not.toContain("E");
+    expect(expandirPalavras(["SIM"])).toContain("SIM");
+  });
+  it("vai na automação no lugar das palavras puras", () => {
+    const c = corpoDaAutomacao({ conta: ig, campanha: { id: "c", nome: "N", palavra: "SIM", palavras: ["SIM"], dm: "Oi", botao: "", link: "", textoDm: "Oi", respostas: [], respostaTiktok: "x" }, zernioPostId: "z", titulo: "T" });
+    expect(c.keywords).toEqual(["S", "SI", "SIM"]);
   });
 });

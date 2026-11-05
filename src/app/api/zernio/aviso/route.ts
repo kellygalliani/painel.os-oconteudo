@@ -12,10 +12,24 @@ function assinaturaOk(corpo: string, recebida: string, segredo: string) {
 
 type Aviso = {
   event?: string;
-  post?: { id?: string };
-  account?: { platform?: string };
-  comment?: { id?: string; postId?: string; platform?: string; text?: string; author?: { id?: string; username?: string; isOwnAccount?: boolean } };
+  post?: { id?: string; platformPostId?: string };
+  account?: { platform?: string; accountId?: string };
+  comment?: { id?: string; postId?: string; platformPostId?: string; platform?: string; text?: string; author?: { id?: string; username?: string; isOwnAccount?: boolean } };
 };
+
+/** Texto inteiro do comentário: o do aviso, ou o lido no Zernio quando o aviso vem curto (até 3 letras). */
+async function textoCompleto(texto: string, comentarioId?: string, platformPostId?: string, contaId?: string): Promise<string> {
+  if (texto.trim().length > 3 || !comentarioId || !platformPostId || !process.env.ZERNIO_API_KEY) return texto;
+  try {
+    const q = contaId ? `?accountId=${encodeURIComponent(contaId)}` : "";
+    const r = await fetch(`https://zernio.com/api/v1/inbox/comments/${encodeURIComponent(platformPostId)}${q}`, { headers: { Authorization: `Bearer ${process.env.ZERNIO_API_KEY}` }, cache: "no-store" });
+    const d = (await r.json().catch(() => null)) as { comments?: { id?: string; message?: string; text?: string }[] } | null;
+    const achado = d?.comments?.find((x) => x.id === comentarioId);
+    return achado?.message ?? achado?.text ?? texto;
+  } catch {
+    return texto;
+  }
+}
 
 export async function POST(req: Request) {
   const segredo = process.env.ZERNIO_WEBHOOK_SECRET;
@@ -34,9 +48,12 @@ export async function POST(req: Request) {
   const rede = c.platform ?? d.account?.platform;
   if (rede !== "instagram" && rede !== "tiktok") return Response.json({ ok: true });
 
+  // O aviso às vezes chega com o texto cortado (ex.: "M" em vez de "Maquina"): busca o comentário inteiro no Zernio.
+  const texto = await textoCompleto(c.text ?? "", c.id, d.post?.platformPostId ?? c.platformPostId, d.account?.accountId);
+
   const { error } = await clienteAnonimo().rpc("webhook_registrar_contato", {
     p_segredo_hash: createHash("sha256").update(segredo).digest("hex"),
-    p_dados: { zernio_post_id: d.post?.id ?? c.postId ?? "", rede, autor_id: c.author?.id ?? "", usuario: c.author?.username ?? null, comentario: c.text ?? "", comentario_id: c.id ?? null },
+    p_dados: { zernio_post_id: d.post?.id ?? c.postId ?? "", rede, autor_id: c.author?.id ?? "", usuario: c.author?.username ?? null, comentario: texto, comentario_id: c.id ?? null },
   });
   if (error) console.error("[aviso zernio]", error.message);
   // Responde 200 mesmo com erro do banco: o Zernio tenta de novo só se a entrega falhar.

@@ -1196,6 +1196,7 @@ export type Database = {
       }
       api_socia: { Args: { p_chave: string }; Returns: string }
       e_socia: { Args: never; Returns: boolean }
+      sem_acento: { Args: { t: string }; Returns: string }
       webhook_registrar_contato: {
         Args: { p_dados: Json; p_segredo_hash: string }
         Returns: undefined

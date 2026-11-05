@@ -226,6 +226,35 @@ export type CampanhaDoPost = {
   respostaTiktok: string;
 };
 
+/** Tira acento e põe em maiúsculas: "Máquina" → "MAQUINA". */
+export const semAcento = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleUpperCase("pt-BR");
+
+/**
+ * As palavras da automação mais todos os começos de cada uma, com e sem acento: quem comenta
+ * "M", "maq" ou "Maquina" também recebe ("MÁQUINA" → M, MA, MAQ, …, MÁ, MÁQ, …). O Zernio compara
+ * palavra inteira, então "Muito bom" não dispara.
+ */
+export function expandirPalavras(palavras: string[]): string[] {
+  const fora: string[] = [];
+  for (const p of palavras) {
+    for (const v of [p.toLocaleUpperCase("pt-BR"), semAcento(p)]) {
+      for (let n = 1; n <= v.length; n++) {
+        const pedaco = v.slice(0, n);
+        // A palavra inteira sempre vale; um começo que é palavra comum ("que", "e", "de") ficaria disparando à toa.
+        if (n < v.length && COMUNS.has(semAcento(pedaco))) continue;
+        if (!fora.includes(pedaco)) fora.push(pedaco);
+      }
+    }
+  }
+  return fora;
+}
+
+/** Palavras comuns em comentário (PT e EN): não entram como começo de palavra-chave. */
+const COMUNS = new Set(
+  ("A E O AS OS UM UMA DE DA DO DAS DOS EM NA NO NAS NOS QUE SE SO TA TE ME MEU MAS MAIS MAL MAE MI PRA PRO POR COM SEM SIM NAO EU ELE ELA VAI VOU TEM SER SOU AI OI OK KK KKK HA LA JA BOM BEM TOP AMEI AMO ESSE ESSA ISSO QUEM COMO QUAL ATE PODE NOSSA MANO VC VOCE TU DAR " +
+    "I AN THE TO OF IN IS IT ON MY NO YES GO DO OH WOW LOL WE YOU HI BE SHE HE").split(" "),
+);
+
 /** O Instagram aceita até 3 botões; o texto de cada um tem até 20 caracteres e a DM com botão, até 640. */
 export const LIMITES_DM = { botao: 20, dmComBotao: 640, dmSemBotao: 1000 } as const;
 
@@ -250,8 +279,10 @@ export function corpoDaAutomacao({ conta, campanha, zernioPostId, titulo }: { co
     accountId: conta.id,
     name: `${campanha.nome} · ${titulo} · ${REDES[conta.rede]}`.slice(0, 120),
     postId: zernioPostId,
-    keywords: campanha.palavras,
+    keywords: expandirPalavras(campanha.palavras),
     matchMode: "word",
+    // "Maquina", "maquinaa" e "MÁQUINA" contam como a mesma palavra.
+    typoTolerance: true,
     repeatPolicy: { mode: "once" },
     isActive: true,
   };
