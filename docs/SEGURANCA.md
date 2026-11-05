@@ -65,7 +65,7 @@ O mesmo script com `--redefinir` gera uma nova senha provisória, para quando al
 ## Chaves de API (anúncios pela IA)
 
 - Formato `osc_` + 32 caracteres aleatórios. Aparece uma vez, ao gerar; o banco guarda só o SHA-256 (`api_chaves.hash`).
-- A chave não abre sessão: as rotas `/api/anuncios` e `/api/mcp` usam o cliente anon, e só as funções `api_*` (security definer) aceitam a chave. Elas criam e listam anúncios e (0014) leem uma NAIE para postar e registram os posts dela; não leem nem mudam nada além disso.
+- A chave não abre sessão: as rotas `/api/anuncios` e `/api/mcp` usam o cliente anon, e só as funções `api_*` (security definer) aceitam a chave. Elas criam e listam anúncios, (0014) leem uma NAIE para postar e registram os posts dela e (0016) listam, leem e gravam o texto das NAIEs (importar e substituir, nunca apagar NAIE nem mudar data, status ou vídeos); não leem nem mudam nada além disso.
 - Apagar a chave em Conta corta o acesso na hora. `ultimo_uso` mostra quando foi usada.
 - A chave no endereço do MCP (`?chave=`) fica em registros de acesso: usar uma chave só para isso e apagar se vazar.
 

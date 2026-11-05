@@ -1,4 +1,4 @@
-import { apiListarParaPostar, apiPublicarNaie, ErroNaieApi } from "@/features/naies/server";
+import { apiImportarNaies, apiLerNaie, apiListarNaies, apiListarParaPostar, apiPublicarNaie, apiSubstituirNaie, ErroNaieApi } from "@/features/naies/server";
 import { apiCriar, apiListar, apiPronto, chaveDaRequisicao, ErroApi } from "@/features/pago/server";
 
 // Servidor MCP (Model Context Protocol) mínimo, por HTTP e sem estado: initialize, tools/list e
@@ -7,6 +7,9 @@ import { apiCriar, apiListar, apiPronto, chaveDaRequisicao, ErroApi } from "@/fe
 export const maxDuration = 60;
 
 const versao = { type: "object", properties: { texto: { type: "string", description: "Texto principal (a legenda do anúncio)" }, titulo: { type: "string" }, descricao: { type: "string" }, botao: { type: "string", description: "Ex.: Saiba mais, Comprar agora" }, link: { type: "string", description: "Link de destino" } } };
+
+/** Como o .md da NAIE precisa vir (vale para importar_naies e substituir_naie). */
+const FORMATO = "Formato do .md (o mesmo da tela Importar e de Roteiros/_modelo-roteiro.md): cabeçalho '# AAAA-MM-DD · Geral|Nicho|Venda · Nome curto', '## Ficha', a seção '## 🇧🇷 Versão PT' e, depois de uma linha '---', a seção '## 🇺🇸 Versão EN'. Em cada seção: títulos fixos como '- [x] **Opção 1:** texto' (EN: '**Option 1:**'), '**Pílula emocional:**', '**Alavanca Fatal:**', '**Desenvolvimento da Narrativa:**', '**Conexão:**', '**CTA:**' (EN: '**Emotional pill:**', '**Fatal Hook (Alavanca Fatal):**', '**Story:**', '**Connection:**', '**CTA:**') e, se houver, '**Legenda:**' no fim.";
 
 const FERRAMENTAS = [
   {
@@ -67,6 +70,54 @@ const FERRAMENTAS = [
       },
     },
   },
+  {
+    name: "listar_naies",
+    description: "Lista TODAS as NAIEs do painel (ou filtradas por semana e/ou datas), em ordem de data: id, semana, dia (1 a 7), data do post e dia da semana, tipo (geral, nicho, venda), título curto, status (roteiro, gravada, editada, publicada), dia de editar, título fixo e caracteres de cada idioma, e se já têm legenda e vídeo final em PT e EN. Devolve também a lista de semanas. Use para descobrir o id antes de ler ou substituir.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        semana: { type: "string", description: "Opcional. Nome da semana, ex.: 'Semana 2' (aceita % como curinga: 'Semana%')" },
+        desde: { type: "string", description: "Opcional. AAAA-MM-DD" },
+        ate: { type: "string", description: "Opcional. AAAA-MM-DD" },
+      },
+    },
+  },
+  {
+    name: "ler_naie",
+    description: "Lê uma NAIE inteira: semana, dia, data, tipo, status, legendas PT e EN e o documento .md completo (ficha, apuração, versão PT e versão EN, com o título fixo marcado com [x]). Com 'idioma', o documento vem só com aquele idioma (a ficha vai junto).",
+    inputSchema: { type: "object", required: ["id"], properties: { id: { type: "string" }, idioma: { type: "string", enum: ["pt", "en"] } } },
+  },
+  {
+    name: "importar_naies",
+    description: `Sobe NAIEs em lote (até 20 arquivos .md), como a tela 'Importar .md'. O nome do arquivo diz o dia e o tipo: Dia-0N-GERAL|NICHO|VENDA-Nome-Curto.md. O Dia 01 cai em data_dia01 (sempre um domingo) e o Dia N em Dia 01 + (N − 1). Mesma semana e mesmo dia ATUALIZA a NAIE (não duplica). Use so_previa: true para conferir os avisos sem gravar. ${FORMATO}`,
+    inputSchema: {
+      type: "object",
+      required: ["semana", "data_dia01", "arquivos"],
+      properties: {
+        semana: { type: "string", description: "Ex.: 'Semana 3'" },
+        data_dia01: { type: "string", description: "AAAA-MM-DD do Dia 01 (domingo)" },
+        arquivos: { type: "array", items: { type: "object", required: ["nome", "texto"], properties: { nome: { type: "string", description: "Dia-01-GERAL-Nome.md" }, texto: { type: "string", description: "O .md inteiro" } } } },
+        so_previa: { type: "boolean", description: "true = só lê e mostra os avisos, sem gravar" },
+      },
+    },
+  },
+  {
+    name: "substituir_naie",
+    description: `Substitui o texto de uma NAIE que já existe, sem mudar a data, a semana, o status nem os vídeos. Mande 'pt' e/ou 'en' com a seção do idioma (com ou sem o cabeçalho '## 🇧🇷 Versão PT' / '## 🇺🇸 Versão EN'): só aquele idioma é trocado e o resto do documento fica. Ou 'documento' com o .md inteiro. 'apagar_en': true tira a versão EN. 'legenda_pt'/'legenda_en' trocam só a legenda. O painel relê títulos, roteiros e contagem. Leia antes com ler_naie. ${FORMATO}`,
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string" },
+        pt: { type: "string", description: "A nova seção PT" },
+        en: { type: "string", description: "A nova seção EN" },
+        documento: { type: "string", description: "O .md inteiro (substitui tudo)" },
+        apagar_en: { type: "boolean" },
+        legenda_pt: { type: "string" },
+        legenda_en: { type: "string" },
+      },
+    },
+  },
 ];
 
 type Pedido = { jsonrpc: "2.0"; id?: string | number | null; method: string; params?: Record<string, unknown> };
@@ -92,6 +143,10 @@ async function responder(p: Pedido, req: Request): Promise<object | null> {
           : nome === "listar_anuncios" ? await apiListar(chave)
           : nome === "listar_naies_para_postar" ? await apiListarParaPostar(chave)
           : nome === "publicar_naie" ? await apiPublicarNaie(chave, args)
+          : nome === "listar_naies" ? await apiListarNaies(chave, args)
+          : nome === "ler_naie" ? await apiLerNaie(chave, args)
+          : nome === "importar_naies" ? await apiImportarNaies(chave, args)
+          : nome === "substituir_naie" ? await apiSubstituirNaie(chave, args)
           : null;
         if (dados === null) return { jsonrpc: "2.0", id: p.id, error: { code: -32602, message: `Ferramenta desconhecida: ${nome}` } };
         return resposta({ content: [{ type: "text", text: JSON.stringify(dados, null, 2) }] });

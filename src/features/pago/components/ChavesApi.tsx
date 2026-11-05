@@ -30,7 +30,7 @@ export function ChavesApi({ chaves, endereco }: { chaves: Chave[]; endereco: str
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">Para o GPT ou o Claude subirem anúncios em Pago. A chave só cria e lista anúncios, nada mais do painel.</p>
+      <p className="text-sm text-muted-foreground">Para o GPT ou o Claude subirem anúncios e lerem, subirem, corrigirem e publicarem NAIEs. A chave não mexe em agenda, metas, campanhas nem na conta.</p>
       {nova && (
         <div className="flex flex-col gap-2 rounded-xl border-2 border-foreground p-3">
           <span className="text-sm font-semibold">Copie agora: a chave não aparece de novo.</span>

@@ -7,7 +7,7 @@ A IA sobe anúncios para o painel, em **Conteúdo › Pago › Anúncios**. O an
 Em **Conta › Chaves de API**, dê um nome (ex.: "Claude da Kelly") e clique em **Gerar**.
 
 - A chave começa com `osc_` e aparece uma vez só.
-- Ela só cria e lista anúncios. Não dá acesso ao resto do painel.
+- Ela cria e lista anúncios e lê, sobe, substitui e publica NAIEs. Não dá acesso ao resto do painel (agenda, metas, campanhas, conta).
 - O banco guarda só o hash, e quem confere a chave são as funções `api_*` do banco (migração 0012), sem a chave secreta do Supabase.
 - Apagou a chave, ela para de funcionar na hora.
 
@@ -74,10 +74,16 @@ Um nome terminando em `-pt` ou `-en` (ex.: `take2-en.mp4`) fica só naquele idio
 
 ## 4. MCP
 
-Endereço: `https://painel-os-oconteudo.vercel.app/api/mcp`. É MCP por HTTP, sem streaming, e tem cinco ferramentas: `criar_anuncio`, `confirmar_anuncio`, `listar_anuncios`, e para as NAIEs:
+Endereço: `https://painel-os-oconteudo.vercel.app/api/mcp`. É MCP por HTTP, sem streaming, e tem nove ferramentas: `criar_anuncio`, `confirmar_anuncio`, `listar_anuncios`, e para as NAIEs:
 
 - `listar_naies_para_postar`: as NAIEs não postadas (7 dias atrás até 14 à frente), com data, se têm vídeo final e legenda por idioma, os posts já feitos e as contas conectadas.
 - `publicar_naie`: `id`, `idioma` (`pt` padrão), `redes` (opcional, `instagram` e/ou `tiktok`), `agendar_para` (opcional, `AAAA-MM-DDTHH:MM` em Brasília, de 5 minutos a 6 dias à frente). Publica o vídeo final e a legenda pelo Zernio nas contas do idioma que ainda não têm post ativo; no TikTok sai público. Faz as mesmas checagens da tela. Se a legenda pedir uma palavra ("Comenta TÊNIS") que está numa campanha ativa do idioma, cria também a automação de comentário (a resposta diz qual campanha).
+- `listar_naies`: **todas** as NAIEs, em ordem de data (filtros opcionais `semana`, `desde`, `ate`), com id, semana, dia (1 a 7), data e dia da semana, tipo, título curto, status, dia de editar, título fixo e caracteres de cada idioma, e se têm legenda e vídeo final em PT e EN. Devolve também a lista de semanas.
+- `ler_naie`: `id` e, opcional, `idioma`. A NAIE inteira: semana, dia, data, tipo, status, legendas e o documento `.md` completo (ou só de um idioma, com a ficha).
+- `importar_naies`: `semana`, `data_dia01` (o domingo) e `arquivos` (até 20, cada um `{ nome, texto }` com o `.md` inteiro). Igual à tela "Importar .md": o nome `Dia-0N-GERAL|NICHO|VENDA-Nome.md` diz o dia e o tipo, o Dia N cai em Dia 01 + (N − 1), e a mesma semana e dia **atualiza** (não duplica). Com `so_previa: true`, só mostra o que leu e os avisos, sem gravar. O bloco `**Legenda:**` de cada versão entra como legenda.
+- `substituir_naie`: `id` e o que trocar. `pt` e/ou `en` com a seção do idioma (com ou sem o cabeçalho `## 🇧🇷 Versão PT` / `## 🇺🇸 Versão EN`): só aquele idioma muda e o resto do documento fica. Ou `documento` com o `.md` inteiro. `apagar_en: true` tira o EN; `legenda_pt` e `legenda_en` trocam só a legenda. **Não muda** data, semana, status nem vídeos. O painel relê títulos, roteiros e contagem, como no "Editar texto".
+
+O formato do `.md` é o de `Roteiros/_modelo-roteiro.md` (e da Semana 2): cabeçalho `# AAAA-MM-DD · Tipo · Nome`, `## Ficha`, `## 🇧🇷 Versão PT`, uma linha `---` e `## 🇺🇸 Versão EN`, com os rótulos `**Alavanca Fatal:**`, `**Desenvolvimento da Narrativa:**`, `**Conexão:**` e `**CTA:**` (EN: `**Fatal Hook (Alavanca Fatal):**`, `**Story:**`, `**Connection:**`, `**CTA:**`), os títulos como `- [x] **Opção 1:**` e, se houver, `**Legenda:**` no fim de cada versão.
 
 - **Claude Code:**
   ```
@@ -99,4 +105,15 @@ Quando eu disser "sobe no painel", suba o anúncio que eu indicar para o painel 
 - Anúncio de imagem tem duas versões: a de Feed (1:1 ou 4:5) com "posicionamento": "feed" e a de Stories (9:16) com "posicionamento": "stories", no mesmo anúncio.
 - Se a resposta trouxer "enviar", faça o PUT de cada arquivo e chame confirmar_anuncio com o id.
 - No fim, me diga o título e o link do anúncio no painel.
+```
+
+Para as NAIEs:
+
+```
+O painel OS oconteudo guarda as NAIEs (MCP os-oconteudo). Regras:
+- Para ver o que existe: listar_naies (todas, ou por semana). Cada NAIE tem semana, dia (1 a 7, domingo a sábado), data e status.
+- Para subir uma semana nova: importar_naies com semana "Semana N", data_dia01 = o domingo e um .md por NAIE, nome Dia-0N-GERAL|NICHO|VENDA-Nome-Curto.md, no formato de Roteiros/_modelo-roteiro.md, com PT e EN no mesmo arquivo e a legenda no bloco **Legenda:**. Rode primeiro com so_previa: true e me mostre os avisos.
+- Para corrigir uma NAIE: ler_naie, depois substituir_naie só com o idioma que mudou (pt ou en). Não mande o documento inteiro se só um idioma mudou.
+- Teto: cada versão até 2.100 caracteres, contando a pílula. O EN espelha o PT (mesmos fatos).
+- No fim, me diga o que mudou, a semana e a data de cada NAIE.
 ```

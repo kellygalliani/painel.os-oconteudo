@@ -21,3 +21,4 @@ export async function urlsDosFinais(naie: Naie): Promise<Partial<Record<Idioma, 
   for (const i of ["pt", "en"] as const) if (naie.finais[i]) urls[i] = await urlDeVer(naie.finais[i]!.chave);
   return urls;
 }
+export { apiImportarNaies, apiLerNaie, apiListarNaies, apiSubstituirNaie } from "./server/conteudo-api";

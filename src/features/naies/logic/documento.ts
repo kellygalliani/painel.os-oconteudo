@@ -97,3 +97,33 @@ export function gerarMd(naie: Naie): string {
 
 /** O documento da NAIE: o .md salvo ou, se não houver, um gerado dos campos. */
 export const documentoDa = (naie: Naie) => (naie.origemMd ? normalizar(naie.origemMd) : gerarMd(naie));
+
+const CABECALHO: Record<Idioma, string> = { pt: "## 🇧🇷 Versão PT", en: "## 🇺🇸 Versão EN" };
+
+/**
+ * Troca a seção de um idioma pelo texto novo e mantém o resto (ficha, apuração, o outro idioma).
+ * O texto novo pode vir com ou sem o "## 🇧🇷 Versão PT" no topo. Vazio apaga a seção.
+ * Sem a seção ainda, ela entra no lugar certo (PT antes do EN).
+ */
+export function trocarSecao(md: string, idioma: Idioma, nova: string): string {
+  let corpo = normalizar(nova).trim();
+  if (corpo && !/^## /.test(corpo)) corpo = `${CABECALHO[idioma]}\n\n${corpo}`;
+  if (corpo && idiomaDaSecao(corpo.split("\n")[0]) !== idioma) corpo = `${CABECALHO[idioma]}\n\n${corpo.split("\n").slice(1).join("\n").trim()}`;
+  const ts = trechos(md);
+  const separador: Trecho = { titulo: null, idioma: null, texto: "---\n" };
+  const i = ts.findIndex((t) => t.idioma === idioma);
+  if (i >= 0) {
+    if (corpo) ts[i] = { ...ts[i], texto: `${corpo}\n` };
+    else {
+      ts.splice(i, 1);
+      if (ts[i - 1]?.texto.trim() === "---") ts.splice(i - 1, 1);
+    }
+  } else if (corpo) {
+    const novo: Trecho = { titulo: CABECALHO[idioma].slice(3), idioma, texto: `${corpo}\n` };
+    const outro = ts.findIndex((t) => t.idioma === (idioma === "pt" ? "en" : "pt"));
+    if (outro < 0) ts.push(separador, novo);
+    else if (idioma === "pt") ts.splice(outro, 0, novo, separador);
+    else ts.splice(outro + 1, 0, separador, novo);
+  }
+  return ts.map((t) => t.texto.trim()).filter(Boolean).join("\n\n").replace(/\n{3,}/g, "\n\n").concat("\n");
+}

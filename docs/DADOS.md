@@ -147,3 +147,13 @@ Com essas rotinas, a Anne usa cerca de 75 min por dia e fica sem folga para spri
 - **Feriados de 2026:** 02/11 Finados, 20/11 Consciência Negra, 25/12 Natal.
 - **Feriados de 2027:** 01/01 Ano-novo, 08/02 e 09/02 Carnaval, 26/03 Sexta-feira Santa, 21/04 Tiradentes, 01/05 Dia do Trabalho, 27/05 Corpus Christi, 07/09 Independência, 12/10 Nossa Senhora Aparecida, 02/11 Finados, 15/11 Proclamação da República, 20/11 Consciência Negra, 25/12 Natal.
 - **Recesso:** de 24/12/2026 a 01/01/2027 (cada dia como `recesso`).
+
+## 0016_naies_api
+
+Sem tabela nova. Funções para as NAIEs pelo MCP, todas `security definer` e conferindo a chave com `api_socia`:
+
+| Função | O que faz |
+|---|---|
+| `api_listar_naies(chave, semana?, desde?, ate?)` | Todas as NAIEs (ou filtradas), com semana, dia, data, status, resumo de cada idioma, legenda e vídeo final |
+| `api_ler_naie(chave, naie)` | A NAIE com `naie_versoes` e `naie_videos` aninhados (o formato de `mapearNaie`) |
+| `api_gravar_naie(chave, dados)` | Com `id`: substitui tipo, título curto, ficha, documento, versões e as legendas enviadas. Sem `id`: cria ou atualiza a mesma semana e dia. `apagar_en` tira o EN. Nunca muda data, status nem vídeos de uma NAIE existente |

@@ -192,7 +192,7 @@ Formulário da análise semanal com gasto, impressões, cliques, CPC (custo por 
 
 - **Hoje:** o post do dia mostra os selos de cada rede e, quando tem vídeo final e legenda, o botão **"Publicar PT no Instagram + TikTok"** (um clique, com 5 segundos para desfazer), sem abrir a NAIE.
 - **Orgânico:** cada NAIE mostra os selos das redes e "pronta para publicar"; o filtro de status tem **"Prontas para publicar"** (vídeo final e legenda, sem post ativo no idioma).
-- **Pelo chat:** as ferramentas `listar_naies_para_postar` e `publicar_naie` no MCP do painel ([API.md](API.md)).
+- **Pelo chat:** no MCP do painel ([API.md](API.md)): `listar_naies_para_postar` e `publicar_naie` para postar; `listar_naies` (todas, com semana, dia e data), `ler_naie` (o documento inteiro), `importar_naies` (em lote, igual à tela Importar, com prévia) e `substituir_naie` (troca só o PT, só o EN, os dois, o documento ou a legenda, sem mudar data, status nem vídeos).
 - **Contas:** quem posta qual idioma fica em `features/naies/logic/redes.ts` (`IDIOMA_DA_CONTA`, pelo @). Conta nova = conectar no Zernio e acrescentar uma linha. Grátis até 2 contas; da 3ª à 10ª, US$ 6 por mês cada.
 
 ## Painel novo (E11, 04/11/2026)
