@@ -29,13 +29,19 @@ painel/
 │  │  ├─ (acesso)/entrar/        login
 │  │  ├─ (acesso)/trocar-senha/  primeiro acesso e senha esquecida pelo script
 │  │  ├─ (os)/layout.tsx         menu lateral (computador) e barra inferior (celular)
-│  │  ├─ (os)/hoje/
-│  │  ├─ (os)/agenda/            ?visao=calendario|semana|mes|sprint
-│  │  ├─ (os)/conteudo/organico/ lista · [id]/ · importar/ · nova/
-│  │  ├─ (os)/conteudo/trilhas/
-│  │  ├─ (os)/conteudo/pago/
+│  │  ├─ (os)/loading.tsx        esqueleto que aparece no instante do clique (T-17)
+│  │  ├─ (os)/hoje/              Início
+│  │  ├─ (os)/agenda/            Calendário: ?visao=calendario|semana|mes|sprint|conferir
+│  │  ├─ (os)/conteudo/organico/ Conteúdos: quadro ou lista · [id]/ · importar/ · nova/
+│  │  ├─ (os)/conteudo/publicacoes/
+│  │  ├─ (os)/conteudo/trilhas/  Biblioteca
+│  │  ├─ (os)/conteudo/pago/     Anúncios · anuncios/[id]/
+│  │  ├─ (os)/campanhas/         lista · [id]/ · nova/ · contatos/
 │  │  ├─ (os)/metas/
-│  │  ├─ (os)/conta/
+│  │  ├─ (os)/conta/             · conexoes/
+│  │  ├─ api/anuncios/           REST para a IA (T-11) · [id]/pronto/
+│  │  ├─ api/mcp/                MCP por HTTP: anúncios e NAIEs (T-11, T-16)
+│  │  ├─ api/zernio/aviso/       webhook de comentários (T-15)
 │  │  ├─ layout.tsx · globals.css · page.tsx (redireciona para /hoje)
 │  ├─ features/                  um módulo por pasta (ver "Módulo" abaixo)
 │  │  ├─ acesso/  agenda/  hoje/  naies/  trilhas/  pago/  metas/  conta/  campanhas/
@@ -56,6 +62,7 @@ painel/
 │  └─ seed.sql                   dados iniciais (rotinas, sprints, áreas)
 ├─ scripts/                      roda local, com a chave secreta do .env.local
 │  ├─ criar-socia.mjs  subir-trilhas.mjs  test-rls.mjs  harness-check.mjs
+│  ├─ aplicar-cenario.mjs  importar-projecao.mjs  gerar-tipos.mjs  subir-anuncio.mjs  zernio-aviso.mjs
 └─ tests/fixtures/naies/         cópias dos .md reais para testar o importador
 ```
 
@@ -102,7 +109,7 @@ O `scripts/harness-check.mjs` confere essas regras (ver `docs/PLANOS.md`).
    }
    ```
    `Resultado<T> = { ok: true; dados: T } | { ok: false; erro: string }`, definido em `lib/utils.ts`.
-4. **Sem rota de API (`route.ts`)** na v1. Exceção futura: webhook.
+4. **Rota de API (`route.ts`) só para quem não tem sessão:** a IA (`/api/anuncios`, `/api/mcp`, com chave `osc_`) e o webhook do Zernio. A tela continua usando Server Actions.
 5. **Regra de negócio nunca na tela.** Se um componente faz conta de data, carga ou dinheiro, a conta vai para `logic/`.
 6. **Constantes de regra num lugar só**, por exemplo `features/agenda/logic/regras.ts` com os limites de carga e o tamanho dos blocos. Mudar de ideia é mudar uma linha.
 7. **Tipos do banco** vêm de `src/types/database.ts`. Tipos de tela vêm do `schema.ts` do módulo.
@@ -121,7 +128,7 @@ page.tsx (Server)  →  features/x/server/queries.ts  →  Supabase (RLS)
 
 | # | Decisão | Motivo |
 |---|---|---|
-| T-01 | A agenda **não guarda o calendário calculado**. O encaixe dos sprints roda na hora (`encaixarSprints`), a partir das regras. | Mudar uma regra reorganiza tudo sem sobrar dado velho. Só se salvam exceções: marcações, movimentos e blocos fixados. |
+| T-01 | (substituída pela T-10 no encaixe) A agenda **não guarda o calendário calculado**. O encaixe dos sprints roda na hora (`encaixarSprints`), a partir das regras. | Mudar uma regra reorganiza tudo sem sobrar dado velho. Só se salvam exceções: marcações, movimentos e blocos fixados. |
 | T-02 | Depois de importada, **a NAIE no banco é a fonte**. O `.md` serve só para importar. | As sócias editam no painel. |
 | T-03 | Trilhas convertidas para **MP3 192 kbps** antes de subir. O original fica no computador. | Limite de 50 MB por arquivo e 1 GB no plano gratuito. 29 trilhas somam cerca de 150 MB. |
 | T-04 | Vídeo bruto vai para o **Cloudflare R2** (bucket `os-oconteudo-videos`), nunca para o Supabase. O navegador envia direto com URL assinada (`lib/r2.ts`); o banco guarda só o registro (`naie_videos`). Sobe original, sem recompressão. Na pasta de edição vira link de 7 dias. Quando a NAIE fica **editada** (ou publicada), o servidor apaga os brutos sozinho (`naies/server/apagar-brutos.ts`); ciclo de vida do bucket: `naies/` (brutos) apaga com 30 dias e `finais/` (vídeos finais, desde 04/11/2026) com 90 dias. O link do Drive continua aceito. | Vídeo de celular passa do limite do Supabase gratuito (50 MB por arquivo, 1 GB no total). R2: 10 GB grátis e sem custo de download. |
@@ -136,4 +143,5 @@ page.tsx (Server)  →  features/x/server/queries.ts  →  Supabase (RLS)
 | T-14 | (04/11/2026) Quadro de arrastar único (`components/shared/Quadro.tsx`, dnd-kit com DragOverlay) para Conteúdos e Sprint, com atualização otimista e volta se o servidor recusar. As colunas Pronta e Agendada do quadro de Conteúdos são calculadas (`naies/logic/quadro.ts`). | Pedido das sócias: arrastar e ver o card indo. Sem status novo no banco. |
 | T-15 | (04/11/2026) **Aviso de comentários do Zernio** (webhook) em `/api/zernio/aviso`: confere o HMAC SHA-256 (`X-Zernio-Signature`) com `ZERNIO_WEBHOOK_SECRET` e chama `webhook_registrar_contato` (security definer), que confere o hash do segredo guardado em `config_segura` e só grava quando o comentário tem uma palavra da campanha do post. Liga com `npm run zernio:aviso -- <endereço>`. | Contatos sem a chave secreta do Supabase no servidor (mesmo padrão da API de anúncios). |
 | T-16 | (05/11/2026) **NAIEs pelo MCP** (`naies/server/conteudo-api.ts`, migração 0016): `listar_naies`, `ler_naie`, `importar_naies` e `substituir_naie`. O `.md` é lido no servidor com o mesmo `lerNaieMd` da tela de importar, e `trocarSecao` (`logic/documento.ts`) troca só a seção PT ou EN do documento; o banco só grava (`api_gravar_naie`). Substituir nunca muda data, semana, status nem vídeos. | A IA escreve as NAIEs; ela precisa ver o que existe e corrigir um idioma sem refazer o outro. |
+| T-17 | (05/11/2026) **Navegação rápida:** `(os)/loading.tsx` mostra um esqueleto no instante do clique; as leituras do Zernio (`sincronizarPostagens`, `sincronizarNumeros`) rodam com `after()` do `next/server`, depois que a página foi enviada (o status novo aparece na próxima abertura); `experimental.staleTimes` (`next.config.ts`) guarda as páginas no navegador por 30 s (dinâmicas) e 180 s (estáticas), e toda Server Action continua com `revalidatePath`. Página nova que precise do Zernio segue o mesmo padrão: nunca `await` de sincronização antes de mostrar. | A função roda em iad1 (perto do Supabase), mas cada clique saindo do Brasil leva cerca de 0,2 s de ida e volta; sem tela de carregamento, a tela antiga ficava parada e parecia travada. |
 | T-07 | **Só o cenário A de dedicação** existe no painel. O cenário B está anotado em `../Estratégia/Reestruturação/6 - funcoes-e-rotinas.md`. | O painel consolida decisões em vigor. Quando o B entrar em vigor, mudam as donas e as capacidades no banco, sem código novo. |

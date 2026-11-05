@@ -17,8 +17,9 @@ Kelly e Anne. O painel responde, todo dia, a seis perguntas:
 
 ## Menu
 
-- **Computador:** menu lateral com Hoje, Agenda, Conteúdo (Orgânico, Trilhas, Pago), Metas e, embaixo, Conta.
-- **Celular:** barra inferior com Hoje, Agenda, Conteúdo, Metas e Conta.
+O menu atual é o do **Painel novo (E11)**, no fim deste arquivo: Início, Calendário, Conteúdos, Publicações, Campanhas, Contatos, Anúncios, Metas e, no pé, Biblioteca, Conexões e Conta. As seções 1 a 7 abaixo usam os nomes da v1 (Hoje = Início, Agenda = Calendário, Orgânico = Conteúdos, Pago = Anúncios).
+
+**Navegação:** ao clicar no menu, aparece na hora um esqueleto cinza enquanto a página carrega; voltar a uma página aberta há menos de 30 s é instantâneo (ARCHITECTURE T-17).
 
 ---
 
@@ -180,10 +181,12 @@ Formulário da análise semanal com gasto, impressões, cliques, CPC (custo por 
 - **Sair** e **Sair de todos os aparelhos**.
 
 ## Fora da v1
-- Integração automática com Meta ou Hotmart.
+
+(Desde então entraram: publicar no Instagram e TikTok pelo Zernio, números das campanhas, API e MCP para a IA.)
+
+- Integração automática com Meta Ads ou Hotmart (os anúncios ficam no painel e são baixados para subir na Meta).
 - Envio de trilha pela tela.
 - Decisões e documentos dentro do painel.
-- Métricas dos posts orgânicos.
 - Notificações e e-mail.
 - Cenário B visível.
 - Outras usuárias.

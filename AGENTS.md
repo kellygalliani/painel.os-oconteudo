@@ -8,6 +8,15 @@ O **OS oconteudo** é o painel interno da empresa oconteudo. Só duas pessoas us
 
 **Regra de produto:** o painel é a consolidação das decisões das sócias. Ele não decide nada. Uma decisão nova nasce em `../Estratégia/Reestruturação/0 - DECISÕES.md` e depois entra no painel. Nem tudo o que está nos documentos vai para o painel.
 
+## Estado atual (05/11/2026)
+
+A v1 (`docs/ROTEIRO.md`) está pronta e no ar; o trabalho agora é por pedido das sócias, não por etapa. O que existe está no [README.md](./README.md) e em [docs/PRODUTO.md](./docs/PRODUTO.md); as decisões técnicas mais novas são T-10 a T-17 do [ARCHITECTURE.md](./ARCHITECTURE.md); a API e o MCP, em [docs/API.md](./docs/API.md).
+
+Pendências conhecidas:
+- 3 vídeos finais EN da semana 1 (Sixto, Jonathan, Susan) foram enviados com o prefixo `naies/` do R2, que apaga com 30 dias (por volta de 03/12/2026). Se ainda forem necessários, copiar para `finais/`.
+- Anúncios criados pelo ChatGPT antes de 05/11 podem ter arquivo que não chegou ("não chegou" no painel): reenviar pelo botão "Enviar este arquivo" ou pelo `enviar_arquivo_anuncio` do MCP.
+- Agente conectado ao MCP antes de 05/11 guarda a lista antiga de ferramentas: atualizar o conector para ver as 10.
+
 ## Leia antes de qualquer mudança
 
 1. [ARCHITECTURE.md](./ARCHITECTURE.md): pastas, camadas e o que pode importar o quê.
@@ -25,7 +34,7 @@ O **OS oconteudo** é o painel interno da empresa oconteudo. Só duas pessoas us
 
 ## Regras obrigatórias
 
-1. **Uma etapa por vez.** Siga `docs/ROTEIRO.md` na ordem. Não adiante funcionalidade de etapa futura.
+1. **Um pedido por vez.** Faça só o que foi pedido, sem adiantar funcionalidade. (Na construção da v1, isso era seguir `docs/ROTEIRO.md` na ordem.)
 2. **Contexto fica no repositório**, não só no chat. Se o código muda uma regra escrita, atualize o documento na mesma mudança.
 3. **Banco só por migração do Supabase CLI** (`supabase/migrations/`). Nunca criar tabela, política ou bucket pelo painel do Supabase.
 4. **Toda tabela nasce com RLS ligada** e a política `e_socia()`. Sem exceção.
