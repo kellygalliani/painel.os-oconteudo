@@ -35,9 +35,12 @@ export type Campanha = {
   posts: PostDaCampanha[];
 };
 
+/** Um modelo de resposta no comentário, para escolher nas campanhas. */
+export type ModeloResposta = { id: string; rede: "instagram" | "tiktok"; idioma: IdiomaCampanha; texto: string };
+
 export type Contato = { id: string; campanhaId: string | null; campanha: string | null; rede: "instagram" | "tiktok"; usuario: string | null; comentario: string | null; palavra: string | null; quando: string; post: string | null };
 
-const texto = (max: number) => z.string().trim().max(max);
+const texto = (max: number, msg?: string) => z.string().trim().max(max, msg);
 
 export const campanhaSchema = z.object({
   id: z.string().uuid().nullable(),
@@ -45,12 +48,12 @@ export const campanhaSchema = z.object({
   idioma: z.enum(["pt", "en"]),
   status: z.enum(["rascunho", "ativa", "pausada"]),
   palavras: z.array(texto(40).min(2)).max(30, "Até 30 palavras."),
-  dm: texto(1000),
-  botao: texto(40),
+  dm: texto(1000, "A DM passa de 1.000 caracteres."),
+  botao: texto(20, "O texto do botão tem até 20 caracteres (limite do Instagram)."),
   link: texto(500),
   respostas: z.array(texto(300)).max(5, "Até 5 respostas."),
   respostaTiktok: texto(300),
   origemId: z.string().uuid().nullable().default(null),
-});
+}).refine((c) => !(c.botao && c.link && c.dm.length > 640), { message: "Com botão, a DM tem até 640 caracteres (limite do Instagram). Encurte o texto.", path: ["dm"] });
 
 export type CampanhaForm = z.infer<typeof campanhaSchema>;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checarPost, contasLivres, corpoDaAutomacao, corpoDoPost, lerNumerosAutomacao, erroDoAgendamento, idiomasProntos, lerContas, lerPost, postsAtuais, quandoLegivel, statusDoZernio, sugestaoAgendamento, todasPublicadas, type PostRede } from "./redes";
+import { checarPost, contasLivres, corpoDaAutomacao, corpoDoPost, explicarErro, lerNumerosAutomacao, semAutomacaoNaRede, erroDoAgendamento, idiomasProntos, lerContas, lerPost, postsAtuais, quandoLegivel, statusDoZernio, sugestaoAgendamento, todasPublicadas, type PostRede } from "./redes";
 
 const contasApi = [
   { _id: "ig1", platform: "instagram", username: "oconteudo.ia", isActive: true },
@@ -76,9 +76,9 @@ describe("resposta do Zernio", () => {
   it("agendado, falhou, duplicado e erro do servidor", () => {
     const ag = lerPost(201, { post: { _id: "p2", status: "scheduled", scheduledFor: "2026-11-07T21:00:00.000Z", platforms: [{ accountId: "tt1", status: "pending" }] } }, tt, agora);
     expect(ag).toMatchObject({ status: "agendado", agendadoPara: "2026-11-07T21:00:00.000Z" });
-    expect(lerPost(207, { post: { _id: "p3", platforms: [{ accountId: "tt1", status: "failed", errorMessage: "vídeo curto" }] } }, tt, agora)).toMatchObject({ status: "falhou", erro: "vídeo curto" });
+    expect(lerPost(207, { post: { _id: "p3", platforms: [{ accountId: "tt1", status: "failed", errorMessage: "vídeo curto" }] } }, tt, agora)).toMatchObject({ status: "falhou", erro: "O TikTok não aceitou o post: vídeo curto." });
     expect(lerPost(409, { error: "dup" }, ig, agora).erro).toMatch(/24 horas/);
-    expect(lerPost(500, { error: "caiu" }, ig, agora)).toMatchObject({ status: "falhou", erro: "caiu" });
+    expect(lerPost(500, { error: "caiu" }, ig, agora)).toMatchObject({ status: "falhou", erro: expect.stringMatching(/Zernio não respondeu/) });
   });
 
   it("agendado que já passou da hora conta como publicando", () => {
@@ -131,19 +131,45 @@ describe("tela", () => {
 });
 
 describe("automação da campanha", () => {
-  const campanha = { id: "c1", nome: "Máquina de Reels", palavra: "TÊNIS", palavras: ["TÊNIS", "QUERO"], textoDm: "Oi!\n\nQuero: https://x.com", respostas: [" Te mandei no direct! ", ""], respostaTiktok: "Link na bio" };
-  it("Instagram: DM com link e respostas; ligada ao post do Zernio", () => {
+  const campanha = { id: "c1", nome: "Máquina de Reels", palavra: "TÊNIS", palavras: ["TÊNIS", "QUERO"], dm: "Oi! Aqui está o acesso.", botao: "Quero a Máquina", link: "oconteudoia.com.br/maquina", textoDm: "Oi!\n\nQuero: https://x.com", respostas: [" Te mandei no direct! ", ""], respostaTiktok: "Link na bio" };
+  it("Instagram: DM com botão que abre o link; respostas; ligada ao post do Zernio", () => {
     const c = corpoDaAutomacao({ conta: { ...ig, perfilId: "p1" }, campanha, zernioPostId: "z1", titulo: "Tênis" });
-    expect(c).toMatchObject({ profileId: "p1", accountId: "ig1", postId: "z1", keywords: ["TÊNIS", "QUERO"], matchMode: "word", dmMessage: "Oi!\n\nQuero: https://x.com", commentReplyVariations: ["Te mandei no direct!"], repeatPolicy: { mode: "once" } });
+    expect(c).toMatchObject({ profileId: "p1", accountId: "ig1", postId: "z1", keywords: ["TÊNIS", "QUERO"], matchMode: "word", dmMessage: "Oi! Aqui está o acesso.", commentReplyVariations: ["Te mandei no direct!"], repeatPolicy: { mode: "once" }, linkTracking: true });
+    expect(c).toMatchObject({ buttons: [{ type: "url", title: "Quero a Máquina", url: "https://oconteudoia.com.br/maquina" }] });
     expect(c.name).toBe("Máquina de Reels · Tênis · Instagram");
+  });
+  it("Instagram sem botão: o link vai no texto", () => {
+    const c = corpoDaAutomacao({ conta: ig, campanha: { ...campanha, botao: "" }, zernioPostId: "z1", titulo: "T" });
+    expect(c).toMatchObject({ dmMessage: "Oi!\n\nQuero: https://x.com" });
+    expect("buttons" in c).toBe(false);
   });
   it("TikTok: só resposta no comentário, sem DM", () => {
     const c = corpoDaAutomacao({ conta: tt, campanha, zernioPostId: "z2", titulo: "Tênis" });
     expect(c).toMatchObject({ commentReply: "Link na bio", accountId: "tt1" });
     expect("dmMessage" in c).toBe(false);
   });
+  it("diz antes quando a rede vai sem automação", () => {
+    expect(semAutomacaoNaRede({ ...campanha, respostaTiktok: " " }, "tiktok")).toMatch(/resposta do TikTok/);
+    expect(semAutomacaoNaRede(campanha, "tiktok")).toBeNull();
+    expect(semAutomacaoNaRede({ ...campanha, botao: "Um botão com texto comprido demais" }, "instagram")).toMatch(/20 caracteres/);
+    expect(semAutomacaoNaRede({ ...campanha, dm: "x".repeat(641) }, "instagram")).toMatch(/640/);
+    expect(semAutomacaoNaRede(campanha, "instagram")).toBeNull();
+  });
   it("lê os números do Zernio", () => {
     expect(lerNumerosAutomacao({ stats: { triggered: 10, dmsSent: 9, dmsFailed: 1, uniqueContacts: 8, uniqueClicks: 3, linkClicks: 5 } })).toEqual({ disparos: 10, dms: 9, falhas: 1, contatos: 8, cliques: 3 });
     expect(lerNumerosAutomacao(null).dms).toBe(0);
+  });
+});
+
+describe("erros explicados", () => {
+  it("post: duplicado, conta desconectada, limite, vídeo recusado, Zernio fora", () => {
+    expect(explicarErro(409, null, "instagram")).toMatch(/já foi enviado para o Instagram.*não foi postado de novo/);
+    expect(explicarErro(401, null, "tiktok")).toMatch(/TikTok pediu para entrar de novo/);
+    expect(explicarErro(200, { errorCategory: "platform_rate_limit" }, "instagram")).toMatch(/pediu um tempo/);
+    expect(explicarErro(200, { errorCategory: "user_content", errorMessage: "video too short" }, "instagram")).toMatch(/recusou o vídeo: video too short/);
+    expect(explicarErro(502, null, "instagram")).toMatch(/Confira em Publicações/);
+  });
+  it("automação: falta a resposta do TikTok", () => {
+    expect(explicarErro(400, { error: "commentReply is required on tiktok", param: "commentReply" }, "tiktok", "automacao")).toBe("No TikTok, a automação não foi criada: a campanha não tem a resposta do TikTok. Escreva essa resposta na campanha.");
   });
 });

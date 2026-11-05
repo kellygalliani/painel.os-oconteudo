@@ -7,8 +7,8 @@ import { r2Configurado } from "@/lib/r2";
 import { erro, ok, type Resultado } from "@/lib/utils";
 import { apagarAutomacaoZernio, apagarPostZernio, zernioConfigurado } from "@/lib/zernio";
 import { detectarPalavras } from "../logic/palavras";
-import { erroDoAgendamento, type ContaRede } from "../logic/redes";
-import { campanhaParaPost, conferirPostada, contasConectadas, linhaDoPost, publicarNasContas } from "./postagens";
+import { erroDoAgendamento, quandoLegivel, REDES, type ContaRede, type Rede } from "../logic/redes";
+import { campanhaParaPost, conferirPostada, contasConectadas, linhaDoPost, publicarNasContas, sincronizarPostagens } from "./postagens";
 
 // Postar no Instagram e no TikTok pelo Zernio: só quando a sócia clica, agora ou agendado.
 const SEM_ZERNIO = "A postagem pelo painel ainda não foi configurada (ZERNIO_API_KEY na Vercel e no .env.local).";
@@ -39,16 +39,22 @@ const entrada = z.object({
   /** Campanha escolhida na tela; sem ela, vale a campanha ativa da palavra do roteiro. */
   campanhaId: z.string().uuid().nullable().default(null),
   semAutomacao: z.boolean().default(false),
+  /** Um por clique (a tela gera): o Zernio não duplica se o mesmo pedido chegar duas vezes. */
+  chave: z.string().min(8).max(100).optional(),
 });
 
+/** O resultado de cada conta, para a tela mostrar na hora. */
+export type ResultadoConta = { rede: Rede; usuario: string; status: "publicado" | "publicando" | "agendado" | "falhou"; link: string | null; erro: string | null; quando: string | null };
+export type ResultadoPostar = { certos: number; falhas: string[]; avisos: string[]; postada: boolean; contas: ResultadoConta[]; publicando: boolean };
+
 /** Publica (ou agenda) o vídeo final e a legenda do idioma nas contas escolhidas. Devolve quantas deram certo. */
-export async function postarNasRedes(dados: unknown): Promise<Resultado<{ certos: number; falhas: string[]; postada: boolean }>> {
+export async function postarNasRedes(dados: unknown): Promise<Resultado<ResultadoPostar>> {
   const socia = await exigirSocia();
   const d = entrada.safeParse(dados);
   if (!d.success) return erro(d.error.issues[0]?.message ?? "Dados inválidos");
   if (!zernioConfigurado()) return erro(SEM_ZERNIO);
   if (!r2Configurado()) return erro("O armazenamento de vídeos ainda não foi configurado.");
-  const { naieId, idioma, contaIds, agendarPara, campanhaId, semAutomacao } = d.data;
+  const { naieId, idioma, contaIds, agendarPara, campanhaId, semAutomacao, chave } = d.data;
   if (agendarPara) {
     const e = erroDoAgendamento(agendarPara, new Date());
     if (e) return erro(e);
@@ -71,19 +77,49 @@ export async function postarNasRedes(dados: unknown): Promise<Resultado<{ certos
   } catch {
     return erro(SEM_CONEXAO);
   }
-  const contas = todas.filter((c) => c.idioma === idioma && contaIds.includes(c.id));
-  if (!contas.length) return erro(`Nenhuma conta ${I} conectada no Zernio.`);
+  const pedidas = todas.filter((c) => c.idioma === idioma && contaIds.includes(c.id));
+  if (!pedidas.length) return erro(`Nenhuma conta ${I} conectada no Zernio. Veja em Conexões.`);
+
+  // Trava contra post duplicado: a conta que já tem post publicado, agendado ou publicando desta NAIE fica de fora.
+  const { data: existentes } = await socia.db.from("naie_posts").select("conta_id, rede, status, link, agendado_para").eq("naie_id", naieId).eq("idioma", idioma).in("status", ["publicado", "agendado", "publicando"]);
+  const ocupadas = new Map((existentes ?? []).map((e) => [e.conta_id, e]));
+  const contas = pedidas.filter((c) => !ocupadas.has(c.id));
+  const jaFeitos = pedidas.filter((c) => ocupadas.has(c.id)).map((c) => {
+    const e = ocupadas.get(c.id)!;
+    return e.status === "publicado" ? `${REDES[c.rede]}: já está publicado. Não foi postado de novo.` : e.status === "agendado" ? `${REDES[c.rede]}: já está agendado${e.agendado_para ? ` para ${quandoLegivel(e.agendado_para)}` : ""}. Não foi agendado de novo.` : `${REDES[c.rede]}: já está publicando. Espere um pouco e atualize.`;
+  });
+  if (!contas.length) return erro(jaFeitos.join(" "));
 
   const palavras = detectarPalavras(`${versao?.roteiro ?? ""}
 ${legenda}`);
   const campanha = semAutomacao ? null : await campanhaParaPost(socia.db, idioma, palavras, campanhaId);
-  const posts = await publicarNasContas({ chaveVideo: video.chave, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo: naie?.titulo_curto });
+  const posts = await publicarNasContas({ chaveVideo: video.chave, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo: naie?.titulo_curto, chave: chave ?? crypto.randomUUID() });
   const { error } = await socia.db.from("naie_posts").insert(posts.map((p) => linhaDoPost(naieId, p)));
-  if (error) console.error("[postar] registro", error);
+  if (error) {
+    console.error("[postar] registro", error);
+    // O post pode ter saído: não deixa a tela oferecer "postar de novo" sem avisar.
+    jaFeitos.push("O painel não conseguiu guardar o resultado. Confira no Instagram e no TikTok antes de postar de novo.");
+  }
   const postada = await conferirPostada(socia.db, naieId, todas);
   atualizar(naieId);
-  const falhas = [...posts.filter((p) => p.status === "falhou").map((p) => p.erro ?? "falhou"), ...posts.flatMap((p) => (p.erroAutomacao ? [`O post saiu, mas ${p.erroAutomacao}`] : []))];
-  return ok({ certos: posts.filter((p) => p.status !== "falhou").length, falhas, postada });
+  return ok({
+    certos: posts.filter((p) => p.status !== "falhou").length,
+    falhas: posts.filter((p) => p.status === "falhou").map((p) => p.erro ?? `${REDES[p.rede]}: não foi postado.`),
+    avisos: [...jaFeitos, ...posts.flatMap((p) => (p.erroAutomacao && p.status !== "falhou" ? [p.erroAutomacao] : []))],
+    postada,
+    publicando: posts.some((p) => p.status === "publicando"),
+    contas: posts.map((p) => ({ rede: p.rede, usuario: p.usuario, status: p.status === "cancelado" ? "falhou" : p.status, link: p.link, erro: p.erro, quando: p.agendadoPara })),
+  });
+}
+
+/** A tela chama enquanto algum post está "publicando": lê o resultado no Zernio e diz se ainda falta. */
+export async function atualizarPostsDaNaie(naieId: string): Promise<Resultado<{ publicando: boolean }>> {
+  const socia = await exigirSocia();
+  if (!z.string().uuid().safeParse(naieId).success) return erro("Dados inválidos");
+  await sincronizarPostagens(socia.db, naieId);
+  const { data } = await socia.db.from("naie_posts").select("id").eq("naie_id", naieId).eq("status", "publicando").limit(1);
+  atualizar(naieId);
+  return ok({ publicando: !!data?.length });
 }
 
 /** Cancela um post agendado (apaga no Zernio). */

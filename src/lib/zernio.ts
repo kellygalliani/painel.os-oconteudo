@@ -35,7 +35,8 @@ export async function contasZernio(): Promise<unknown[]> {
 }
 
 /** Cria o post (agora ou agendado; o corpo vem pronto de `corpoDoPost`). */
-export const criarPostZernio = (corpo: unknown) => chamar("/posts", { method: "POST", body: JSON.stringify(corpo) });
+export const criarPostZernio = (corpo: unknown, chaveIdempotencia?: string) =>
+  chamar("/posts", { method: "POST", body: JSON.stringify(corpo), headers: chaveIdempotencia ? { "Idempotency-Key": chaveIdempotencia.slice(0, 255) } : {} });
 
 export const consultarPostZernio = (id: string) => chamar(`/posts/${encodeURIComponent(id)}`);
 

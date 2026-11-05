@@ -1,3 +1,3 @@
 import "server-only";
 
-export { listarCampanhas, obterCampanha, listarContatos } from "./server/queries";
+export { listarCampanhas, obterCampanha, listarContatos, listarModelos } from "./server/queries";

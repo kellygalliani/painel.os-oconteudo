@@ -446,6 +446,30 @@ export type Database = {
           },
         ]
       }
+      modelos_resposta: {
+        Row: {
+          criado_em: string
+          id: string
+          idioma: string
+          rede: string
+          texto: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          idioma: string
+          rede: string
+          texto: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          idioma?: string
+          rede?: string
+          texto?: string
+        }
+        Relationships: []
+      }
       naie_posts: {
         Row: {
           agendado_para: string | null

@@ -133,7 +133,7 @@ export function DialogDuplicar({ campanha, aoFechar }: { campanha: Campanha; aoF
         {campo("nome", "Nome")}
         {campo("palavras", "Palavras-chave (separe por vírgula)")}
         {campo("dm", "DM", true)}
-        {campo("botao", "Texto antes do link")}
+        {campo("botao", "Texto do botão (até 20 caracteres)")}
         {campo("link", "Link da página de destino")}
         {campo("respostas", "Respostas no comentário (uma por linha)", true)}
         {campo("respostaTiktok", "Resposta no TikTok")}

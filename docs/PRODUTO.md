@@ -225,3 +225,12 @@ O molde do mockup aprovado. Os endereços antigos continuam valendo; mudaram os 
 - **Contatos:** quem comentou uma palavra de campanha (chega pelo aviso do Zernio).
 - **Início:** além do que já tinha, DMs e cliques das campanhas, a faixa da semana e **Precisa de você** (post que falhou, post dos próximos 2 dias sem agendar, palavra sem campanha).
 - **Conexões:** as contas do Zernio, o idioma de cada uma e o estado do aviso de comentários.
+
+## Publicar sem duplicar e DM com botão (05/11/2026)
+
+- **Não posta duas vezes:** o servidor pula a conta que já tem post publicado, agendado ou publicando daquela NAIE no idioma e diz por quê ("Instagram: já está publicado. Não foi postado de novo."). Cada clique manda uma chave ao Zernio (`Idempotency-Key`): se o mesmo pedido chegar de novo em 24 horas, ele devolve o post original.
+- **Aparece na hora:** durante o envio, o cartão mostra "Enviando para o Instagram…" conta por conta. Se o Zernio responder "publicando", o painel pergunta a cada 8 segundos (até uns 3 minutos) e atualiza sozinho até virar ✓ com o link.
+- **Erros explicados:** cada falha diz o que aconteceu e o que fazer (conta que pediu para entrar de novo, limite de posts, vídeo recusado, Zernio fora do ar, vídeo já enviado nas últimas 24 horas). O aviso da automação vem separado do resultado do post.
+- **DM com botão:** a DM do Instagram vai com a mensagem e um **botão** (texto até 20 caracteres) que abre o link da página; a mensagem com botão tem até 640 caracteres. Sem texto do botão, o link vai no fim da mensagem. Os cliques no botão são contados.
+- **TikTok:** sem a resposta do TikTok na campanha, o TikTok vai sem automação, e o cartão de publicar avisa antes do clique.
+- **Modelos de resposta:** nas campanhas, modelos de resposta no comentário do Instagram e do TikTok (PT e EN), para tocar e usar; cada resposta tem "salvar como modelo"; o × apaga um modelo (pede confirmação). Uma campanha nova já vem com três modelos do Instagram e um do TikTok.

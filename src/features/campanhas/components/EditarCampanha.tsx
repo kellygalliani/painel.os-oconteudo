@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Copy, ExternalLink, Pause, Play, Plus, Save, Trash2, X } from "lucide-react";
+import { Copy, ExternalLink, Pause, Play, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Kpi } from "@/components/shared/ui-base";
 import { avisar } from "@/components/shared/avisar";
 import { ddmm, DIAS_CURTOS, diaDaSemana } from "@/lib/datas";
 import { cn } from "@/lib/utils";
-import { faltaParaAtivar, limparPalavras, taxaDeClique, textoDaDm } from "../logic/campanhas";
+import { faltaParaAtivar, limparPalavras, taxaDeClique } from "../logic/campanhas";
 import { apagarCampanha, salvarCampanha } from "../server/actions";
-import type { Campanha, CampanhaForm, Contato, IdiomaCampanha } from "../schema";
+import type { Campanha, CampanhaForm, Contato, IdiomaCampanha, ModeloResposta } from "../schema";
 import { ChipIdioma, ChipPalavra, ChipStatusCampanha, DialogDuplicar } from "./Campanhas";
+import { OQueRecebe } from "./Recebe";
 
 /** Um post que vai pedir uma palavra desta campanha. */
 export type ProximoPost = { naieId: string; titulo: string; data: string | null; palavra: string };
@@ -21,7 +22,7 @@ const dia = (d: string | null) => (d ? `${DIAS_CURTOS[diaDaSemana(d.slice(0, 10)
 const rotulo = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 const caixa = "rounded-lg border bg-background px-3 text-sm";
 
-export function EditarCampanha({ campanha, proximos = [], contatos = [], novaCom }: { campanha: Campanha | null; proximos?: ProximoPost[]; contatos?: Contato[]; novaCom?: { idioma: IdiomaCampanha; palavra?: string } }) {
+export function EditarCampanha({ campanha, proximos = [], contatos = [], modelos = [], novaCom }: { campanha: Campanha | null; proximos?: ProximoPost[]; contatos?: Contato[]; modelos?: ModeloResposta[]; novaCom?: { idioma: IdiomaCampanha; palavra?: string } }) {
   const router = useRouter();
   const [pend, start] = useTransition();
   const [duplicando, setDuplicando] = useState(false);
@@ -29,7 +30,12 @@ export function EditarCampanha({ campanha, proximos = [], contatos = [], novaCom
   const [f, setF] = useState<CampanhaForm>(() =>
     campanha
       ? { id: campanha.id, nome: campanha.nome, idioma: campanha.idioma, status: campanha.status, palavras: campanha.palavras, dm: campanha.dm, botao: campanha.botao, link: campanha.link, respostas: campanha.respostas.length ? campanha.respostas : [""], respostaTiktok: campanha.respostaTiktok, origemId: campanha.origemId }
-      : { id: null, nome: "", idioma: novaCom?.idioma ?? "pt", status: "rascunho", palavras: novaCom?.palavra ? [novaCom.palavra] : [], dm: "", botao: "", link: "", respostas: [""], respostaTiktok: "", origemId: null },
+      : (() => {
+          const idioma = novaCom?.idioma ?? "pt";
+          const ig = modelos.filter((m) => m.rede === "instagram" && m.idioma === idioma).slice(0, 3).map((m) => m.texto);
+          const tt = modelos.find((m) => m.rede === "tiktok" && m.idioma === idioma)?.texto ?? "";
+          return { id: null, nome: "", idioma, status: "rascunho" as const, palavras: novaCom?.palavra ? [novaCom.palavra] : [], dm: "", botao: "", link: "", respostas: ig.length ? ig : [""], respostaTiktok: tt, origemId: null };
+        })(),
   );
   const [nova, setNova] = useState("");
   const salvar = (status = f.status) =>
@@ -80,7 +86,7 @@ export function EditarCampanha({ campanha, proximos = [], contatos = [], novaCom
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="flex min-w-0 flex-col gap-5">
-          <section className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sombra">
+          <section className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sombra">
             <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 className="text-lg font-semibold">Palavras-chave</h2><span className="text-xs text-muted-foreground">palavra inteira, aceita erro de digitação</span></div>
             <div className="flex flex-wrap items-center gap-2">
               {f.palavras.map((p) => (
@@ -90,34 +96,8 @@ export function EditarCampanha({ campanha, proximos = [], contatos = [], novaCom
             </div>
           </section>
 
-          <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sombra">
-            <h2 className="text-lg font-semibold">O que a pessoa recebe</h2>
-            <div className="grid items-start gap-5 md:grid-cols-2">
-              <div className="flex flex-col gap-3">
-                <label className="flex flex-col gap-1"><span className={rotulo}>DM no Instagram</span><textarea rows={5} value={f.dm} onChange={(e) => setF({ ...f, dm: e.target.value })} placeholder="Oi! Que bom que você comentou. Aqui está o acesso…" className={cn(caixa, "py-2")} /></label>
-                <div className="grid grid-cols-[1fr_1.4fr] gap-2">
-                  <label className="flex flex-col gap-1"><span className={rotulo}>Antes do link</span><input value={f.botao} onChange={(e) => setF({ ...f, botao: e.target.value })} placeholder="Quero a Máquina" className={cn(caixa, "h-9")} /></label>
-                  <label className="flex flex-col gap-1"><span className={rotulo}>Link da página</span><input value={f.link} onChange={(e) => setF({ ...f, link: e.target.value })} placeholder="oconteudoia.com.br/maquina" className={cn(caixa, "h-9")} /></label>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 rounded-2xl bg-muted p-3">
-                <span className={rotulo}>Como chega</span>
-                <p className="whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-card px-3 py-2.5 text-sm shadow-sombra">{textoDaDm(f) || <span className="text-muted-foreground">A DM aparece aqui.</span>}</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className={rotulo}>Resposta no comentário (sorteia uma, para não parecer robô)</span>
-              {f.respostas.map((r, k) => (
-                <div key={k} className="flex gap-2">
-                  <input value={r} onChange={(e) => setF({ ...f, respostas: f.respostas.map((x, j) => (j === k ? e.target.value : x)) })} placeholder="Te mandei no direct! 💌" className={cn(caixa, "h-9 flex-1")} />
-                  {f.respostas.length > 1 && <Button variant="ghost" size="icon" aria-label="Tirar resposta" onClick={() => setF({ ...f, respostas: f.respostas.filter((_, j) => j !== k) })}><X className="size-4" /></Button>}
-                </div>
-              ))}
-              {f.respostas.length < 5 && <Button variant="ghost" size="sm" className="self-start" onClick={() => setF({ ...f, respostas: [...f.respostas, ""] })}><Plus className="size-4" /> Outra resposta</Button>}
-            </div>
-            <label className="flex flex-col gap-1"><span className={rotulo}>No TikTok (só comentário: o TikTok não deixa mandar DM)</span><input value={f.respostaTiktok} onChange={(e) => setF({ ...f, respostaTiktok: e.target.value })} placeholder="O link está na bio 💛" className={cn(caixa, "h-9")} /></label>
-            {f.status !== "ativa" && falta.length > 0 && <p className="text-sm text-aviso">Para ativar, falta {falta.join(", ")}.</p>}
-          </section>
+          <OQueRecebe f={f} setF={setF} modelos={modelos} />
+          {f.status !== "ativa" && falta.length > 0 && <p className="text-sm text-aviso">Para ativar, falta {falta.join(", ")}.</p>}
 
           {campanha && (
             <section className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sombra">

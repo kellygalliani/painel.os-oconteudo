@@ -93,6 +93,11 @@ Funções da API (security definer, conferem a chave `osc_`): `api_naie_para_pos
 
 Funções: `webhook_registrar_contato` (aviso do Zernio), `api_campanha_da_palavra` e `api_registrar_posts` (refeita com campanha, palavra e automação), para o MCP.
 
+## 0019_modelos_resposta
+| Tabela | Colunas |
+|---|---|
+| `modelos_resposta` | `rede check in ('instagram','tiktok')`, `idioma check in ('pt','en')`, `texto` (1 a 300), `criado_em`; unique (`rede`, `idioma`, `texto`). RLS `e_socia()`. Vem com modelos iniciais. |
+
 ## Seed (`supabase/seed.sql`), cenário A
 
 O `seed.sql` só tem dados que não dependem de usuário (áreas, rotinas, sprints, tarefas e dias especiais). As donas e as capacidades dependem do `id` das sócias, então o `scripts/criar-socia.mjs` as preenche a partir da tabela abaixo, gravada em `scripts/dados/cenario-a.json`.

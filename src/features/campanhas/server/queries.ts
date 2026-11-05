@@ -1,7 +1,7 @@
 import "server-only";
 import type { ClienteDb } from "@/lib/supabase/server";
 import { NUMEROS_ZERO, somar } from "../logic/campanhas";
-import type { Campanha, Contato, Numeros, PostDaCampanha } from "../schema";
+import type { Campanha, Contato, ModeloResposta, Numeros, PostDaCampanha } from "../schema";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const numerosDe = (p: any): Numeros => ({ disparos: p.disparos ?? 0, dms: p.dms ?? 0, falhas: p.falhas_dm ?? 0, contatos: p.contatos ?? 0, cliques: p.cliques ?? 0 });
@@ -52,4 +52,9 @@ export async function listarContatos(db: ClienteDb, campanhaId?: string): Promis
   const { data } = await q;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data ?? []).map((r: any) => ({ id: r.id, campanhaId: r.campanha_id, campanha: r.campanhas?.nome ?? null, rede: r.rede, usuario: r.usuario, comentario: r.comentario, palavra: r.palavra, quando: r.criado_em, post: r.naie_posts?.naies?.titulo_curto ?? null }));
+}
+
+export async function listarModelos(db: ClienteDb): Promise<ModeloResposta[]> {
+  const { data } = await db.from("modelos_resposta").select("id, rede, idioma, texto").order("criado_em");
+  return (data ?? []) as ModeloResposta[];
 }

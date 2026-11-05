@@ -54,3 +54,25 @@ export async function apagarCampanha(id: string): Promise<Resultado> {
   atualizar();
   return ok(null);
 }
+
+const modeloSchema = z.object({ rede: z.enum(["instagram", "tiktok"]), idioma: z.enum(["pt", "en"]), texto: z.string().trim().min(1, "Escreva a resposta antes de salvar.").max(300, "A resposta passa de 300 caracteres.") });
+
+/** Guarda uma resposta como modelo, para aparecer nas próximas campanhas. */
+export async function salvarModelo(entrada: unknown): Promise<Resultado<{ id: string }>> {
+  const socia = await exigirSocia();
+  const d = modeloSchema.safeParse(entrada);
+  if (!d.success) return erro(d.error.issues[0]?.message ?? "Dados inválidos");
+  const { data, error } = await socia.db.from("modelos_resposta").upsert(d.data, { onConflict: "rede,idioma,texto" }).select("id").single();
+  if (error || !data) return erro("Não deu para salvar o modelo. Tente de novo.");
+  revalidatePath("/campanhas", "layout");
+  return ok({ id: data.id });
+}
+
+export async function apagarModelo(id: string): Promise<Resultado> {
+  const socia = await exigirSocia();
+  if (!z.string().uuid().safeParse(id).success) return erro("Dados inválidos");
+  const { error } = await socia.db.from("modelos_resposta").delete().eq("id", id);
+  if (error) return erro("Não deu para apagar o modelo. Tente de novo.");
+  revalidatePath("/campanhas", "layout");
+  return ok(null);
+}

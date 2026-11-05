@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { idiomasProntos, postsAtuais, quandoLegivel, REDES } from "../logic/redes";
 import { cancelarPost, postarNasRedes } from "../server/redes";
 import type { Naie } from "../schema";
-import { DialogAgendar, IconeRede } from "./Redes";
+import { avisoDoResultado, DialogAgendar, IconeRede } from "./Redes";
 
 type Filtro = "agendadas" | "publicadas" | "falharam" | "prontas";
 const NOMES: Record<Filtro, string> = { agendadas: "Agendadas", publicadas: "Publicadas", falharam: "Falharam", prontas: "Prontas sem agendar" };
@@ -67,7 +67,7 @@ export function ListaPublicacoes({ naies }: { naies: Naie[] }) {
               </span>
               {p.palavra && <ChipPalavra palavra={p.palavra} />}
               {p.status === "agendado" && <Button size="sm" variant="ghost" disabled={pend} onClick={() => start(async () => { if (avisar(await cancelarPost(p.id), "Agendamento cancelado.")) router.refresh(); })}>Cancelar</Button>}
-              {p.status === "falhou" && <Button size="sm" variant="outline" disabled={pend} onClick={() => start(async () => { const r = await postarNasRedes({ naieId: p.n.id, idioma: p.idioma, contaIds: [p.contaId], agendarPara: null }); if (avisar(r, r.ok && !r.dados.falhas.length ? "Publicado." : undefined) && r.dados.falhas.length) avisar({ ok: false, erro: r.dados.falhas[0] }); router.refresh(); })}><RotateCcw className="size-4" /> Tentar de novo</Button>}
+              {p.status === "falhou" && <Button size="sm" variant="outline" disabled={pend} onClick={() => start(async () => { const r = await postarNasRedes({ naieId: p.n.id, idioma: p.idioma, contaIds: [p.contaId], agendarPara: null, chave: crypto.randomUUID() }); if (avisar(r)) avisoDoResultado(r.dados, false); router.refresh(); })}><RotateCcw className="size-4" /> Tentar de novo</Button>}
               {p.link && <Button asChild size="sm" variant="ghost"><a href={p.link} target="_blank" rel="noreferrer">Ver post <ExternalLink className="size-3.5" /></a></Button>}
             </div>
           ))

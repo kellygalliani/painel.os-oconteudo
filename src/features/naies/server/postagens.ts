@@ -3,7 +3,7 @@ import type { ClienteDb } from "@/lib/supabase/server";
 import { urlDeVer } from "@/lib/r2";
 import { textoDaDm } from "@/lib/mensagem";
 import { automacoesZernio, consultarPostZernio, contasZernio, criarAutomacaoZernio, criarPostZernio } from "@/lib/zernio";
-import { corpoDaAutomacao, corpoDoPost, lerContas, lerNumerosAutomacao, lerPost, todasPublicadas, type CampanhaDoPost, type ContaRede, type NovoPost, type PostRede } from "../logic/redes";
+import { corpoDaAutomacao, corpoDoPost, explicarErro, lerContas, lerNumerosAutomacao, lerPost, semAutomacaoNaRede, todasPublicadas, type CampanhaDoPost, type ContaRede, type NovoPost, type PostRede } from "../logic/redes";
 import type { Idioma } from "../schema";
 
 // Núcleo da postagem, usado pela tela (Server Actions) e pelo MCP (API com chave).
@@ -11,7 +11,7 @@ import type { Idioma } from "../schema";
 export const contasConectadas = async (): Promise<ContaRede[]> => lerContas(await contasZernio());
 
 /** Um post do Zernio por conta, em paralelo. O Zernio baixa o vídeo do R2 por um link de 7 dias (o máximo do R2). */
-export async function publicarNasContas({ chaveVideo, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo }: {
+export async function publicarNasContas({ chaveVideo, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo, chave }: {
   chaveVideo: string;
   legenda: string;
   legendaTiktok: string | null;
@@ -21,33 +21,36 @@ export async function publicarNasContas({ chaveVideo, legenda, legendaTiktok, co
   /** Com campanha, cada post ganha a automação de comentário (liga quando o post sai). */
   campanha?: CampanhaDoPost | null;
   titulo?: string;
+  /** Um por clique: o Zernio devolve o post original se o mesmo pedido chegar de novo (24 horas). */
+  chave?: string;
 }): Promise<(NovoPost & { erroAutomacao?: string })[]> {
   const videoUrl = await urlDeVer(chaveVideo, 604800);
   return Promise.all(
     contas.map(async (conta) => {
       try {
-        const r = await criarPostZernio(corpoDoPost({ legenda, legendaTiktok, videoUrl, conta, agendarPara }));
+        const r = await criarPostZernio(corpoDoPost({ legenda, legendaTiktok, videoUrl, conta, agendarPara }), chave ? `${chave}:${conta.id}` : undefined);
         const post: NovoPost & { erroAutomacao?: string } = { idioma, ...lerPost(r.status, r.dados, conta, new Date()) };
         if (campanha && post.zernioPostId && post.status !== "falhou") {
           post.campanhaId = campanha.id;
           post.palavra = campanha.palavra;
-          try {
-            const a = await criarAutomacaoZernio(corpoDaAutomacao({ conta, campanha, zernioPostId: post.zernioPostId, titulo: titulo ?? "NAIE" }));
-            post.automacaoId = (a.dados as { automation?: { id?: string; _id?: string } } | null)?.automation?.id ?? (a.dados as { automation?: { _id?: string } } | null)?.automation?._id ?? null;
-            if (!post.automacaoId) post.erroAutomacao = `a automação de ${REDE_NOME[conta.rede]} não foi criada (${(a.dados as { error?: string } | null)?.error ?? a.status}).`;
-          } catch {
-            post.erroAutomacao = `a automação de ${REDE_NOME[conta.rede]} não foi criada (sem conexão).`;
-          }
+          const motivo = semAutomacaoNaRede(campanha, conta.rede);
+          if (motivo) post.erroAutomacao = motivo;
+          else
+            try {
+              const a = await criarAutomacaoZernio(corpoDaAutomacao({ conta, campanha, zernioPostId: post.zernioPostId, titulo: titulo ?? "NAIE" }));
+              post.automacaoId = (a.dados as { automation?: { id?: string; _id?: string } } | null)?.automation?.id ?? (a.dados as { automation?: { _id?: string } } | null)?.automation?._id ?? null;
+              if (!post.automacaoId) post.erroAutomacao = explicarErro(a.status, a.dados, conta.rede, "automacao");
+            } catch {
+              post.erroAutomacao = explicarErro(0, null, conta.rede, "automacao");
+            }
         }
         return post;
       } catch {
-        return { idioma, rede: conta.rede, contaId: conta.id, usuario: conta.usuario, zernioPostId: null, status: "falhou" as const, agendadoPara: null, link: null, erro: "Não deu para falar com o Zernio. Confira no painel do Zernio antes de tentar de novo." };
+        return { idioma, rede: conta.rede, contaId: conta.id, usuario: conta.usuario, zernioPostId: null, status: "falhou" as const, agendadoPara: null, link: null, erro: explicarErro(0, null, conta.rede) };
       }
     }),
   );
 }
-
-const REDE_NOME = { instagram: "Instagram", tiktok: "TikTok" } as const;
 
 export const linhaDoPost = (naieId: string, p: NovoPost) => ({
   campanha_id: p.campanhaId ?? null,
@@ -92,7 +95,7 @@ export async function campanhaParaPost(db: ClienteDb, idioma: Idioma, palavras: 
   const c = data?.[0];
   if (!c) return null;
   const palavra = palavras.find((p) => (c.palavras as string[]).includes(p)) ?? (c.palavras as string[])[0] ?? "";
-  return { id: c.id, nome: c.nome, palavra, palavras: c.palavras as string[], textoDm: textoDaDm(c), respostas: (c.respostas as string[]) ?? [], respostaTiktok: c.resposta_tiktok };
+  return { id: c.id, nome: c.nome, palavra, palavras: c.palavras as string[], dm: c.dm, botao: c.botao, link: c.link, textoDm: textoDaDm(c), respostas: (c.respostas as string[]) ?? [], respostaTiktok: c.resposta_tiktok };
 }
 
 /**

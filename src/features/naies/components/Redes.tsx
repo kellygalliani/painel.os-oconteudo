@@ -11,6 +11,7 @@ import { IconeInstagram } from "@/components/shared/IconeInstagram";
 import { IconeTiktok } from "@/components/shared/IconeTiktok";
 import { cn } from "@/lib/utils";
 import {
+  semAutomacaoNaRede,
   checarPost,
   contasLivres,
   erroDoAgendamento,
@@ -26,9 +27,9 @@ import {
   type Rede,
 } from "../logic/redes";
 import { salvarLegenda } from "../server/actions";
-import { cancelarPost, contasParaPostar, postarNasRedes, salvarLegendaTiktok } from "../server/redes";
+import { atualizarPostsDaNaie, cancelarPost, contasParaPostar, postarNasRedes, salvarLegendaTiktok, type ResultadoPostar } from "../server/redes";
 import type { Idioma, Naie } from "../schema";
-import { campanhaDasPalavras, ChipPalavra, type Campanha } from "@/features/campanhas";
+import { campanhaDasPalavras, ChipPalavra, textoDaDm, type Campanha } from "@/features/campanhas";
 import { EspacoVideo } from "./Videos";
 
 const ESPERA_DESFAZER = 5000;
@@ -84,10 +85,38 @@ function useComDesfazer() {
   return { contando, agendar };
 }
 
-function avisoDoResultado(r: { certos: number; falhas: string[]; postada: boolean }, agendado: boolean) {
-  if (r.falhas.length && !r.certos) toast.error(`Não foi: ${r.falhas[0]}`);
-  else if (r.falhas.length) toast.warning(`Uma conta falhou: ${r.falhas[0]}`);
-  else toast.success(agendado ? "Agendado." : r.postada ? "Publicado. A NAIE está marcada como postada." : "Enviado para publicar.");
+export function avisoDoResultado(r: ResultadoPostar, agendado: boolean) {
+  const certas = r.contas.filter((c) => c.status !== "falhou");
+  if (certas.length) {
+    const quais = certas.map((c) => REDES[c.rede]).join(" e ");
+    const titulo = agendado ? `Agendado no ${quais}${certas[0].quando ? ` para ${quandoLegivel(certas[0].quando)}` : ""}.` : r.publicando ? `Enviado para o ${quais}. O resultado aparece aqui sozinho em alguns segundos.` : `Publicado no ${quais}.${r.postada ? " A NAIE ficou marcada como postada." : ""}`;
+    toast.success(titulo, { duration: 6000 });
+  }
+  for (const f of r.falhas) toast.error(f, { duration: 15000 });
+  for (const a of r.avisos) toast.warning(a, { duration: 15000 });
+}
+
+/** Enquanto algum post está "publicando", pergunta ao Zernio a cada 8 s (até ~3 min) e atualiza a tela sozinha. */
+function useAcompanhar(naieId: string, ativo: boolean) {
+  const router = useRouter();
+  useEffect(() => {
+    if (!ativo) return;
+    let vezes = 0;
+    let parar = false;
+    const t = setInterval(async () => {
+      if (parar) return;
+      vezes++;
+      const r = await atualizarPostsDaNaie(naieId);
+      router.refresh();
+      if ((r.ok && !r.dados.publicando) || vezes >= 22) {
+        parar = true;
+        clearInterval(t);
+        if (r.ok && !r.dados.publicando) toast.success("Pronto: o post já está no ar.");
+        else toast("Ainda publicando. Atualize a página em alguns minutos para ver o resultado.");
+      }
+    }, 8000);
+    return () => clearInterval(t);
+  }, [naieId, ativo, router]);
 }
 
 /** Os selos de cada conta: publicado, agendado, publicando ou falhou. */
@@ -218,10 +247,21 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo, campanhas }: { naie: N
   const erroQuando = modo === "agendar" ? erroDoAgendamento(quando, new Date()) : null;
   const nomes = [...new Set(redes)].map((r) => REDES[r]).join(" + ");
   const ocupado = pend || contando;
+  const [enviando, setEnviando] = useState<string[]>([]);
+  useAcompanhar(naie.id, posts.some((p) => p.status === "publicando"));
+  // Antes do clique: qual rede vai sem automação e por quê.
+  const semAuto = automacao && campanha ? [...new Set(redes)].flatMap((r) => {
+    const m = semAutomacaoNaRede({ dm: campanha.dm, botao: campanha.botao, link: campanha.link, respostaTiktok: campanha.respostaTiktok, textoDm: textoDaDm(campanha) }, r);
+    return m ? [m] : [];
+  }) : [];
 
   function enviar(contaIds: string[], agendarPara: string | null) {
+    setEnviando(contaIds);
+    // Uma chave por clique: se o pedido chegar duas vezes ao Zernio, ele devolve o mesmo post.
+    const chave = crypto.randomUUID();
     start(async () => {
-      const r = await postarNasRedes({ naieId: naie.id, idioma, contaIds, agendarPara, campanhaId: automacao ? campanhaId : null, semAutomacao: !automacao || !campanhaId });
+      const r = await postarNasRedes({ naieId: naie.id, idioma, contaIds, agendarPara, campanhaId: automacao ? campanhaId : null, semAutomacao: !automacao || !campanhaId, chave });
+      setEnviando([]);
       if (avisar(r)) avisoDoResultado(r.dados, !!agendarPara);
       router.refresh();
     });
@@ -359,7 +399,12 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo, campanhas }: { naie: N
       {(bloqueios.length > 0 || avisos.length > 0 || erroQuando) && (
         <ul className="flex flex-col gap-1 text-sm">
           {[...bloqueios, ...(erroQuando ? [erroQuando] : [])].map((b) => <li key={b} className="flex gap-2 text-destructive"><X className="mt-0.5 size-4 shrink-0" /> {b}</li>)}
-          {avisos.map((a) => <li key={a} className="flex gap-2 text-amber-700 dark:text-amber-400"><AlertTriangle className="mt-0.5 size-4 shrink-0" /> {a}</li>)}
+          {avisos.map((a) => <li key={a} className="flex gap-2 text-aviso"><AlertTriangle className="mt-0.5 size-4 shrink-0" /> {a}</li>)}
+        </ul>
+      )}
+      {semAuto.length > 0 && campanha && (
+        <ul className="flex flex-col gap-1 rounded-xl bg-aviso-soft px-3 py-2 text-sm">
+          {semAuto.map((m) => <li key={m} className="flex gap-2"><AlertTriangle className="mt-0.5 size-4 shrink-0 text-aviso" /><span>{m} <a href={`/campanhas/${campanha.id}`} className="font-semibold underline underline-offset-2">Abrir a campanha</a></span></li>)}
         </ul>
       )}
 
@@ -368,6 +413,14 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo, campanhas }: { naie: N
         {pend ? "Enviando… deixe esta tela aberta" : contando ? "Publicando em 5 s…" : modo === "agendar" ? `Agendar para ${quandoLegivel(`${quando}:00-03:00`)}` : `Publicar no ${nomes || "…"}`}
       </Button>
       {redes.includes("tiktok") && <p className="-mt-2 text-xs text-muted-foreground">No TikTok sai público, com comentários, dueto e stitch liberados.</p>}
+      {pend && enviando.length > 0 && (
+        <ul className="flex flex-col gap-1.5 rounded-xl border bg-muted px-3 py-2.5 text-sm" aria-live="polite">
+          {contas.filter((c) => enviando.includes(c.id)).map((c) => (
+            <li key={c.id} className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" /><IconeRede rede={c.rede} className="size-4" />Enviando para o {REDES[c.rede]} @{c.usuario}…</li>
+          ))}
+          <li className="text-xs text-muted-foreground">Reels levam uns 20 segundos. Não feche nem clique de novo: o painel não posta duas vezes.</li>
+        </ul>
+      )}
 
       {posts.length > 0 && (
         <ul className="flex flex-col gap-1.5">
@@ -414,7 +467,7 @@ export function PublicarRapido({ naie }: { naie: Naie }) {
             onClick={() =>
               agendar(`Publicando ${i.toUpperCase()} em ${nomes} em 5 segundos…`, () =>
                 start(async () => {
-                  const r = await postarNasRedes({ naieId: naie.id, idioma: i, contaIds: livres.map((c) => c.id), agendarPara: null });
+                  const r = await postarNasRedes({ naieId: naie.id, idioma: i, contaIds: livres.map((c) => c.id), agendarPara: null, chave: crypto.randomUUID() });
                   if (avisar(r)) avisoDoResultado(r.dados, false);
                   router.refresh();
                 }),
@@ -444,7 +497,7 @@ export function DialogAgendar({ naie, aoFechar }: { naie: Naie; aoFechar: () => 
   const escolhidas = livres.filter((c) => !fora.includes(c.id));
   const agendar = () =>
     start(async () => {
-      const r = await postarNasRedes({ naieId: naie.id, idioma: atual, contaIds: escolhidas.map((c) => c.id), agendarPara: quando });
+      const r = await postarNasRedes({ naieId: naie.id, idioma: atual, contaIds: escolhidas.map((c) => c.id), agendarPara: quando, chave: crypto.randomUUID() });
       if (avisar(r)) avisoDoResultado(r.dados, true);
       aoFechar();
       router.refresh();

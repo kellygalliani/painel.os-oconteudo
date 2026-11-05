@@ -85,7 +85,7 @@ export function corpoDoPost({ legenda, legendaTiktok, videoUrl, conta, agendarPa
   };
 }
 
-type Plataforma = { platform?: string; accountId?: string | { _id?: string }; status?: string; platformPostUrl?: string; errorMessage?: string; error?: string };
+type Plataforma = { errorCategory?: string; platform?: string; accountId?: string | { _id?: string }; status?: string; platformPostUrl?: string; errorMessage?: string; error?: string };
 type PostZernio = { _id?: string; status?: string; scheduledFor?: string; platforms?: Plataforma[] };
 
 /** Status da conta no painel, a partir do post do Zernio. */
@@ -97,13 +97,41 @@ export function statusDoZernio(post: PostZernio | undefined, p: Plataforma | und
   return "publicando";
 }
 
+type ErroZernio = { error?: string; message?: string; code?: string; param?: string; errorCategory?: string; errorMessage?: string } | null;
+
+/**
+ * Explica, em português e com o que fazer, por que o Zernio ou a rede recusaram.
+ * `acao`: o post ou a automação de comentários.
+ */
+export function explicarErro(status: number, dados: unknown, rede: Rede, acao: "post" | "automacao" = "post"): string {
+  const d = dados as ErroZernio;
+  const R = REDES[rede];
+  const msg = d?.errorMessage ?? d?.error ?? d?.message ?? "";
+  const cat = d?.errorCategory ?? "";
+  if (acao === "automacao") {
+    if (d?.param === "commentReply" || /commentReply/i.test(msg)) return `No ${R}, a automação não foi criada: a campanha não tem a resposta do ${R}. Escreva essa resposta na campanha.`;
+    if (/640|too long|max/i.test(msg) && /dm|message/i.test(msg)) return "A automação não foi criada: a DM passa de 640 caracteres (o limite do Instagram quando tem botão). Encurte a DM na campanha.";
+    if (/20/.test(msg) && /title|button/i.test(msg)) return "A automação não foi criada: o texto do botão passa de 20 caracteres. Encurte na campanha.";
+    if (status === 409) return `No ${R}, este post já tinha uma automação. A que existe continua valendo.`;
+    if (status === 401 || status === 403) return `A automação do ${R} não foi criada: o Zernio perdeu o acesso à conta. Entre de novo com ela em Conexões.`;
+    if (status >= 500 || status === 0) return `A automação do ${R} não foi criada: o Zernio não respondeu. O post saiu; ligue a automação de novo depois.`;
+    return `A automação do ${R} não foi criada${msg ? `: ${msg}` : ""}.`;
+  }
+  if (status === 409) return `Este vídeo já foi enviado para o ${R} nas últimas 24 horas. Ele não foi postado de novo.`;
+  if (cat === "auth_expired" || status === 401 || status === 403) return `O ${R} pediu para entrar de novo na conta. Nada foi postado. Reconecte a conta no Zernio (veja Conexões) e tente de novo.`;
+  if (cat === "platform_rate_limit" || cat === "quota_exhausted" || status === 429) return `O ${R} pediu um tempo: muitos posts seguidos. Nada foi postado agora; tente de novo daqui a alguns minutos.`;
+  if (cat === "user_content") return `O ${R} recusou o vídeo${msg ? `: ${msg}` : ""}. Confira o formato (vertical 9:16) e a duração.`;
+  if (status >= 500 || status === 0) return `O Zernio não respondeu. Confira em Publicações antes de tentar de novo: o post pode ter saído mesmo assim.`;
+  return `O ${R} não aceitou o post${msg ? `: ${msg}` : ""}.`;
+}
+
 /** Uma resposta do Zernio (criar ou consultar) → o post da conta. */
 export function lerPost(status: number, dados: unknown, conta: ContaRede, agora: Date): Omit<NovoPost, "idioma"> {
   const base = { rede: conta.rede, contaId: conta.id, usuario: conta.usuario };
   const d = dados as { post?: PostZernio; error?: string; message?: string } | null;
-  if (status === 409) return { ...base, zernioPostId: null, status: "falhou", agendadoPara: null, link: null, erro: "Esse vídeo já foi enviado para esta conta nas últimas 24 horas." };
+  if (status === 409) return { ...base, zernioPostId: null, status: "falhou", agendadoPara: null, link: null, erro: explicarErro(409, dados, conta.rede) };
   const post = d?.post;
-  if (status >= 300 && status !== 207 || !post) return { ...base, zernioPostId: post?._id ?? null, status: "falhou", agendadoPara: null, link: null, erro: d?.error ?? d?.message ?? `O Zernio respondeu ${status}.` };
+  if ((status >= 300 && status !== 207) || !post) return { ...base, zernioPostId: post?._id ?? null, status: "falhou", agendadoPara: null, link: null, erro: explicarErro(status, dados, conta.rede) };
   const p = post.platforms?.find((x) => (typeof x.accountId === "object" ? x.accountId?._id : x.accountId) === conta.id) ?? post.platforms?.[0];
   const st = statusDoZernio(post, p, agora);
   return {
@@ -112,7 +140,7 @@ export function lerPost(status: number, dados: unknown, conta: ContaRede, agora:
     status: st,
     agendadoPara: st === "agendado" ? (post.scheduledFor ?? null) : null,
     link: p?.platformPostUrl ?? null,
-    erro: st === "falhou" ? (p?.errorMessage ?? p?.error ?? "A rede recusou o post.") : null,
+    erro: st === "falhou" ? explicarErro(status, p ?? null, conta.rede) : null,
   };
 }
 
@@ -182,7 +210,35 @@ export const idiomasProntos = (n: Pick<Naie, "status" | "finais" | "legendas" | 
 // ---------- automação de comentários da campanha ----------
 
 /** O que a publicação precisa saber da campanha (montado no servidor a partir da tabela campanhas). */
-export type CampanhaDoPost = { id: string; nome: string; palavra: string; palavras: string[]; textoDm: string; respostas: string[]; respostaTiktok: string };
+export type CampanhaDoPost = {
+  id: string;
+  nome: string;
+  palavra: string;
+  palavras: string[];
+  /** A mensagem da DM, sem o link (o link vai no botão). */
+  dm: string;
+  /** Texto do botão (até 20 caracteres) e o link que ele abre. */
+  botao: string;
+  link: string;
+  /** DM em texto corrido com o link, para quando não há botão. */
+  textoDm: string;
+  respostas: string[];
+  respostaTiktok: string;
+};
+
+/** O Instagram aceita até 3 botões; o texto de cada um tem até 20 caracteres e a DM com botão, até 640. */
+export const LIMITES_DM = { botao: 20, dmComBotao: 640, dmSemBotao: 1000 } as const;
+
+/** Por que esta campanha não vira automação nesta rede (null = pode). */
+export function semAutomacaoNaRede(campanha: Pick<CampanhaDoPost, "respostaTiktok" | "dm" | "botao" | "link" | "textoDm">, rede: Rede): string | null {
+  if (rede === "tiktok") return campanha.respostaTiktok.trim() ? null : "No TikTok vai sem automação: a campanha não tem a resposta do TikTok.";
+  if (!campanha.dm.trim() && !campanha.textoDm.trim()) return "No Instagram vai sem automação: a campanha não tem o texto da DM.";
+  if (campanha.botao.trim() && campanha.botao.trim().length > LIMITES_DM.botao) return `No Instagram vai sem automação: o texto do botão passa de ${LIMITES_DM.botao} caracteres.`;
+  if (campanha.botao.trim() && campanha.link.trim() && campanha.dm.trim().length > LIMITES_DM.dmComBotao) return `No Instagram vai sem automação: a DM passa de ${LIMITES_DM.dmComBotao} caracteres.`;
+  return null;
+}
+
+const comHttps = (link: string) => (!link ? "" : /^https?:\/\//i.test(link) ? link : `https://${link}`);
 
 /**
  * Corpo do POST /comment-automations para uma conta, ligado ao post do Zernio (liga quando o post sai).
@@ -199,9 +255,17 @@ export function corpoDaAutomacao({ conta, campanha, zernioPostId, titulo }: { co
     repeatPolicy: { mode: "once" },
     isActive: true,
   };
-  if (conta.rede === "tiktok") return { ...base, commentReply: campanha.respostaTiktok };
+  if (conta.rede === "tiktok") return { ...base, commentReply: campanha.respostaTiktok.trim() };
   const respostas = campanha.respostas.map((r) => r.trim()).filter(Boolean);
-  return { ...base, dmMessage: campanha.textoDm, ...(respostas.length ? { commentReplyVariations: respostas } : {}) };
+  const comBotao = !!(campanha.botao.trim() && campanha.link.trim());
+  return {
+    ...base,
+    // Com botão: a mensagem vai em cima e o botão abre a página. Sem botão: o link vai no texto.
+    dmMessage: comBotao ? campanha.dm.trim() : campanha.textoDm,
+    ...(comBotao ? { buttons: [{ type: "url", title: campanha.botao.trim().slice(0, LIMITES_DM.botao), url: comHttps(campanha.link.trim()) }] } : {}),
+    linkTracking: true,
+    ...(respostas.length ? { commentReplyVariations: respostas } : {}),
+  };
 }
 
 /** Os números da automação no Zernio (stats) → os do painel. */

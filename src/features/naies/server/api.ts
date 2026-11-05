@@ -82,9 +82,9 @@ ${legendaTiktok ?? ""}`);
   if (palavras.length) {
     const { data: c } = await db.rpc("api_campanha_da_palavra", { p_chave: chave, p_idioma: idioma, p_palavras: palavras });
     const k = c as unknown as { id: string; nome: string; palavras: string[]; dm: string; botao: string; link: string; respostas: string[]; resposta_tiktok: string; palavra: string } | null;
-    if (k) campanha = { id: k.id, nome: k.nome, palavra: k.palavra, palavras: k.palavras, textoDm: textoDaDm(k), respostas: k.respostas ?? [], respostaTiktok: k.resposta_tiktok };
+    if (k) campanha = { id: k.id, nome: k.nome, palavra: k.palavra, palavras: k.palavras, dm: k.dm, botao: k.botao, link: k.link, textoDm: textoDaDm(k), respostas: k.respostas ?? [], respostaTiktok: k.resposta_tiktok };
   }
-  const posts = await publicarNasContas({ chaveVideo: final!.chave, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo: n.titulo });
+  const posts = await publicarNasContas({ chaveVideo: final!.chave, legenda, legendaTiktok, contas, idioma, agendarPara, campanha, titulo: n.titulo, chave: crypto.randomUUID() });
   const todosPosts = [...n.posts.map((p) => ({ contaId: p.conta_id, status: p.status as "publicado" })), ...posts.map((p) => ({ contaId: p.contaId, status: p.status }))];
   const postada = todasPublicadas(todas, todosPosts);
   const linhas = posts.map((p) => ({ idioma: p.idioma, rede: p.rede, conta_id: p.contaId, usuario: p.usuario, zernio_post_id: p.zernioPostId, status: p.status, agendado_para: p.agendadoPara, link: p.link, erro: p.erro, campanha_id: p.campanhaId ?? "", palavra: p.palavra, automacao_id: p.automacaoId }));
