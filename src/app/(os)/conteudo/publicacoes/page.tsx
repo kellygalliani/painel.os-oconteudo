@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { AbasConteudo } from "@/components/layout/Navegacao";
 import { TituloPagina } from "@/components/shared/ui-base";
 import { ListaPublicacoes } from "@/features/naies";
@@ -10,7 +11,8 @@ export const maxDuration = 60;
 
 export default async function PaginaPublicacoes() {
   const socia = await exigirSocia();
-  await Promise.all([sincronizarPostagens(socia.db), sincronizarNumeros(socia.db)]);
+  // Conversa com o Zernio depois que a página já foi entregue: não segura a abertura da tela.
+  after(() => Promise.all([sincronizarPostagens(socia.db), sincronizarNumeros(socia.db)]));
   const naies = await listarNaies(socia.db);
   return (
     <>

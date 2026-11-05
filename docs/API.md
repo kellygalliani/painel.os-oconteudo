@@ -104,7 +104,7 @@ Quando eu disser "sobe no painel", suba o anúncio que eu indicar para o painel 
 - Use a ferramenta criar_anuncio do MCP os-oconteudo (ou a API em docs/API.md).
 - titulo: um nome curto e reconhecível; nota: de onde veio (hipótese, gancho, criativo nº).
 - formato: estatico para imagem; video_curto para vídeo (falado se for a pessoa falando para a câmera).
-- versoes: pt e, se houver, en, cada uma com texto (o texto principal completo), titulo (até 40 caracteres), descricao (até 30), botao e link.
+- versoes: pt e, se houver, en, cada uma com texto (a legenda completa) e titulo (até 40 caracteres). Botão e link são opcionais: por enquanto não mande.
 - arquivos: na ordem certa. Vídeo em vários takes vai como vários arquivos, em sequência. Arquivo só de um idioma leva "idioma": "pt" ou "en".
 - Anúncio de imagem tem duas versões: a de Feed (1:1 ou 4:5) com "posicionamento": "feed" e a de Stories (9:16) com "posicionamento": "stories", no mesmo anúncio.
 - No ChatGPT ou no Claude.ai: mande a primeira imagem em base64 no criar_anuncio e cada outra com enviar_arquivo_anuncio (uma por chamada; acima de 3 MB, converta para JPEG). Nunca use "tamanho" se você não consegue fazer PUT.

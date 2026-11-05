@@ -266,28 +266,28 @@ function Textos({ a }: { a: Criativo }) {
       {v ? (
         <div className="grid gap-3" onBlur={salvar}>
           <div className="flex flex-col gap-1.5">
-            <span className="flex items-center justify-between gap-2"><Label htmlFor="a-texto">Texto principal (a legenda)</Label><Contador n={v.texto.length} limite={LIMITE_VISIVEL.texto} /></span>
+            <span className="flex items-center justify-between gap-2"><Label htmlFor="a-texto">Legenda</Label><Contador n={v.texto.length} limite={LIMITE_VISIVEL.texto} /></span>
             <Textarea id="a-texto" rows={7} value={v.texto} onChange={(e) => mudar("texto", e.target.value)} placeholder="A primeira linha é o gancho: é o que aparece antes do 'ver mais'." />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <span className="flex items-center justify-between gap-2"><Label htmlFor="a-titulo">Título</Label><Contador n={v.titulo.length} limite={LIMITE_VISIVEL.titulo} /></span>
-              <Input id="a-titulo" value={v.titulo} onChange={(e) => mudar("titulo", e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="flex items-center justify-between gap-2"><Label htmlFor="a-desc">Descrição</Label><Contador n={v.descricao.length} limite={LIMITE_VISIVEL.descricao} /></span>
-              <Input id="a-desc" value={v.descricao} onChange={(e) => mudar("descricao", e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="a-botao">Botão</Label>
-              <Input id="a-botao" list="botoes" value={v.botao} onChange={(e) => mudar("botao", e.target.value)} />
-              <datalist id="botoes">{BOTOES.map((b) => <option key={b} value={b} />)}</datalist>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="a-link">Link de destino</Label>
-              <Input id="a-link" type="url" inputMode="url" value={v.link} onChange={(e) => mudar("link", e.target.value)} placeholder="https://" />
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="flex items-center justify-between gap-2"><Label htmlFor="a-titulo">Título</Label><Contador n={v.titulo.length} limite={LIMITE_VISIVEL.titulo} /></span>
+            <Input id="a-titulo" value={v.titulo} onChange={(e) => mudar("titulo", e.target.value)} />
           </div>
+          {/* Por enquanto o anúncio sobe só com legenda e título; botão e link ficam guardados, opcionais. */}
+          <details className="rounded-xl border px-3 py-2" open={!!(v.botao && v.botao !== "Saiba mais") || !!v.link}>
+            <summary className="text-sm text-muted-foreground">Botão e link de destino (opcional)</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="a-botao">Texto do botão</Label>
+                <Input id="a-botao" list="botoes" value={v.botao} onChange={(e) => mudar("botao", e.target.value)} />
+                <datalist id="botoes">{BOTOES.map((b) => <option key={b} value={b} />)}</datalist>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="a-link">Link de destino</Label>
+                <Input id="a-link" type="url" inputMode="url" value={v.link} onChange={(e) => mudar("link", e.target.value)} placeholder="https://" />
+              </div>
+            </div>
+          </details>
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
@@ -343,9 +343,8 @@ function Previa({ a, idioma }: { a: Criativo; idioma: Idioma }) {
       <div className="flex items-center justify-between gap-2 border-t bg-muted/40 px-3 py-2">
         <span className="flex min-w-0 flex-col">
           <span className="truncate text-sm font-semibold">{v?.titulo || "Título"}</span>
-          {v?.descricao && <span className="truncate text-xs text-muted-foreground">{v.descricao}</span>}
         </span>
-        <span className="shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-semibold text-background">{v?.botao || "Saiba mais"}</span>
+        {v?.botao && <span className="shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-semibold text-background">{v.botao}</span>}
       </div>
     </div>
     </div>

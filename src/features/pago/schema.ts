@@ -36,7 +36,7 @@ export const COLUNAS: [StatusCriativo, string][] = [
   ["pausado", "Pausado"],
 ];
 export const BOTOES = ["Saiba mais", "Comprar agora", "Inscreva-se", "Enviar mensagem", "Baixar", "Ver mais"];
-export const VERSAO_VAZIA: VersaoAnuncio = { texto: "", titulo: "", descricao: "", botao: "Saiba mais", link: "" };
+export const VERSAO_VAZIA: VersaoAnuncio = { texto: "", titulo: "", descricao: "", botao: "", link: "" };
 
 /** Tamanhos que a Meta mostra antes de cortar (referência para o contador). */
 export const LIMITE_VISIVEL = { texto: 125, titulo: 40, descricao: 30 };

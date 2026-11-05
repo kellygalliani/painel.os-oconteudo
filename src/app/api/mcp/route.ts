@@ -6,7 +6,7 @@ import { apiCriar, apiEnviarArquivo, apiListar, apiPronto, chaveDaRequisicao, Er
 
 export const maxDuration = 60;
 
-const versao = { type: "object", properties: { texto: { type: "string", description: "Texto principal (a legenda do anúncio)" }, titulo: { type: "string" }, descricao: { type: "string" }, botao: { type: "string", description: "Ex.: Saiba mais, Comprar agora" }, link: { type: "string", description: "Link de destino" } } };
+const versao = { type: "object", required: ["texto", "titulo"], properties: { texto: { type: "string", description: "A legenda do anúncio (texto principal)" }, titulo: { type: "string", description: "O título (até 40 caracteres)" }, botao: { type: "string", description: "Opcional, por enquanto não precisa" }, link: { type: "string", description: "Opcional, por enquanto não precisa" } } };
 
 /** Como o .md da NAIE precisa vir (vale para importar_naies e substituir_naie). */
 const FORMATO = "Formato do .md (o mesmo da tela Importar e de Roteiros/_modelo-roteiro.md): cabeçalho '# AAAA-MM-DD · Geral|Nicho|Venda · Nome curto', '## Ficha', a seção '## 🇧🇷 Versão PT' e, depois de uma linha '---', a seção '## 🇺🇸 Versão EN'. Em cada seção: títulos fixos como '- [x] **Opção 1:** texto' (EN: '**Option 1:**'), '**Pílula emocional:**', '**Alavanca Fatal:**', '**Desenvolvimento da Narrativa:**', '**Conexão:**', '**CTA:**' (EN: '**Emotional pill:**', '**Fatal Hook (Alavanca Fatal):**', '**Story:**', '**Connection:**', '**CTA:**') e, se houver, '**Legenda:**' no fim.";

@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -15,7 +16,8 @@ export default async function PaginaNaie({ params }: { params: Promise<{ id: str
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const socia = await exigirSocia();
-  await sincronizarPostagens(socia.db, id);
+  // Conversa com o Zernio depois que a página já foi entregue: não segura a abertura da tela.
+  after(() => sincronizarPostagens(socia.db, id));
   const [naie, trilhas, campanhas] = await Promise.all([obterNaie(socia.db, id), listarTrilhas(socia.db), listarCampanhas(socia.db)]);
   if (!naie) notFound();
   const urlsFinais = await urlsDosFinais(naie);

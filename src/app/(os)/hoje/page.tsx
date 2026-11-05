@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { palavrasSoltas } from "@/features/campanhas";
 import { listarCampanhas } from "@/features/campanhas/server";
 import { Hoje } from "@/features/hoje";
@@ -13,7 +14,8 @@ export const maxDuration = 60;
 export default async function PaginaHoje() {
   const socia = await exigirSocia();
   const hoje = hojeIso();
-  await Promise.all([sincronizarPostagens(socia.db), sincronizarNumeros(socia.db)]);
+  // Conversa com o Zernio depois que a página já foi entregue: não segura a abertura da tela.
+  after(() => Promise.all([sincronizarPostagens(socia.db), sincronizarNumeros(socia.db)]));
   const [{ agenda, numeros, postDeHoje, naiesSemana, segunda }, campanhas, todas] = await Promise.all([carregarHoje(socia.db, hoje), listarCampanhas(socia.db), listarNaies(socia.db)]);
   const ativas = campanhas.filter((c) => c.status !== "rascunho");
   const extras = {

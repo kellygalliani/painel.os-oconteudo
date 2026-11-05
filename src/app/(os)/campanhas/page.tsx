@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ export const metadata = { title: "Campanhas" };
 
 export default async function PaginaCampanhas() {
   const socia = await exigirSocia();
-  await sincronizarNumeros(socia.db);
+  // Conversa com o Zernio depois que a página já foi entregue: não segura a abertura da tela.
+  after(() => sincronizarNumeros(socia.db));
   const [campanhas, naies] = await Promise.all([listarCampanhas(socia.db), listarNaies(socia.db)]);
   return (
     <>

@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
+    // Volta a uma tela aberta há menos de 30 s sem ir ao servidor (salvar algo continua atualizando na hora).
+    staleTimes: { dynamic: 30, static: 180 },
   },
 };
 

@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import Link from "next/link";
 import { Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ export const metadata = { title: "Conteúdos" };
 export default async function Organico({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
   const lista = (await searchParams).vista === "lista";
   const socia = await exigirSocia();
-  await sincronizarPostagens(socia.db);
+  // Conversa com o Zernio depois que a página já foi entregue: não segura a abertura da tela.
+  after(() => sincronizarPostagens(socia.db));
   const [naies, campanhas] = await Promise.all([listarNaies(socia.db), listarCampanhas(socia.db)]);
   const aba = (on: boolean) => cn("rounded-[9px] px-3.5 py-1.5 text-sm font-semibold", on ? "bg-card text-foreground shadow-sombra" : "text-muted-foreground");
   return (

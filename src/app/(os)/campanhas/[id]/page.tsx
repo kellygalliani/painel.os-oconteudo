@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -13,7 +14,8 @@ export default async function PaginaCampanha({ params }: { params: Promise<{ id:
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const socia = await exigirSocia();
-  await sincronizarNumeros(socia.db);
+  // Conversa com o Zernio depois que a página já foi entregue: não segura a abertura da tela.
+  after(() => sincronizarNumeros(socia.db));
   const [campanha, naies, contatos] = await Promise.all([obterCampanha(socia.db, id), listarNaies(socia.db), listarContatos(socia.db, id)]);
   if (!campanha) notFound();
   return (

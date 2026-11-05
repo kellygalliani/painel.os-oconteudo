@@ -2,17 +2,18 @@ import { slug } from "@/lib/utils";
 import type { ArquivoAnuncio, Criativo, Idioma } from "../schema";
 
 const IDIOMAS: Idioma[] = ["pt", "en"];
-const ROTULOS: Record<Idioma, [string, string, string, string, string]> = {
-  pt: ["Texto principal", "Título", "Descrição", "Botão", "Link de destino"],
-  en: ["Primary text", "Headline", "Description", "Button", "Destination link"],
+const ROTULOS: Record<Idioma, [string, string, string, string]> = {
+  pt: ["Legenda", "Título", "Botão", "Link de destino"],
+  en: ["Caption (primary text)", "Headline", "Button", "Destination link"],
 };
 
 /** O texto de um idioma, pronto para colar na Meta (vai no .txt do download). */
 export function textoDoAnuncio(a: Pick<Criativo, "titulo" | "versoes">, idioma: Idioma): string {
   const v = a.versoes[idioma];
   if (!v) return "";
-  const [t, ti, d, b, l] = ROTULOS[idioma];
-  return [`${a.titulo} · ${idioma.toUpperCase()}`, "", `${t}:`, v.texto, "", `${ti}: ${v.titulo}`, `${d}: ${v.descricao}`, `${b}: ${v.botao}`, `${l}: ${v.link}`, ""].join("\n");
+  const [t, ti, b, l] = ROTULOS[idioma];
+  const extras = [v.botao && `${b}: ${v.botao}`, v.link && `${l}: ${v.link}`].filter(Boolean) as string[];
+  return [`${a.titulo} · ${idioma.toUpperCase()}`, "", `${t}:`, v.texto, "", `${ti}: ${v.titulo}`, ...extras, ""].join("\n");
 }
 
 /** Todos os textos de vários anúncios, para copiar de uma vez. */

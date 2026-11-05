@@ -14,7 +14,8 @@ const anuncio: Pick<Criativo, "titulo" | "versoes" | "criadoEm"> = {
 
 describe("texto do anúncio", () => {
   it("monta o .txt com os rótulos do idioma", () => {
-    expect(textoDoAnuncio(anuncio, "pt")).toContain("Texto principal:\nComenta TÊNIS");
+    expect(textoDoAnuncio(anuncio, "pt")).toContain("Legenda:\nComenta TÊNIS");
+    expect(textoDoAnuncio({ titulo: "X", versoes: { pt: { texto: "a", titulo: "b", descricao: "", botao: "", link: "" } } }, "pt")).not.toContain("Botão");
     expect(textoDoAnuncio(anuncio, "en")).toContain("Headline: Edit in 5 min");
   });
   it("junta PT e EN de vários anúncios", () => {
