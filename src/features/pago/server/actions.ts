@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { exigirSocia } from "@/lib/auth/exigir-socia";
 import { diaDaSemana } from "@/lib/datas";
-import { apagarObjeto, r2Configurado, urlDeDownload, urlDeEnvio } from "@/lib/r2";
+import { apagarObjeto, existeObjeto, r2Configurado, urlDeDownload, urlDeEnvio } from "@/lib/r2";
 import { erro, ok, type Resultado } from "@/lib/utils";
 import { obterCriativo } from "../server";
 import { dadosAnuncioSchema, semanaSchema, versaoSchema, VERSAO_VAZIA, type Criativo } from "../schema";
@@ -191,7 +191,33 @@ export async function apagarCriativo(id: string): Promise<Resultado> {
   return ok(null);
 }
 
-export type ParaBaixar = { anuncio: Criativo; links: Record<string, string> };
+/** Enviar pelo painel um arquivo que não chegou: usa o mesmo lugar no R2 (mantém ordem, Feed/Stories e idioma). */
+export async function prepararReenvio(criativoId: string, arquivoId: string): Promise<Resultado<{ url: string }>> {
+  const socia = await exigirSocia();
+  if (!uuid.safeParse(criativoId).success || !uuid.safeParse(arquivoId).success) return erro("Dados inválidos");
+  if (!r2Configurado()) return erro(SEM_R2);
+  const { data } = await socia.db.from("criativo_arquivos").select("chave").match({ id: arquivoId, criativo_id: criativoId }).maybeSingle();
+  if (!data) return erro("Arquivo não encontrado.");
+  return ok({ url: await urlDeEnvio(data.chave) });
+}
+
+export async function confirmarReenvio(criativoId: string, arquivoId: string, dados: unknown): Promise<Resultado<{ pronto: boolean }>> {
+  const socia = await exigirSocia();
+  const d = z.object({ nome: z.string().min(1).max(200), tipo: z.string().regex(/^(image|video)\//), tamanho: z.number().int().positive() }).safeParse(dados);
+  if (!uuid.safeParse(criativoId).success || !uuid.safeParse(arquivoId).success || !d.success) return erro("Dados inválidos");
+  const { data } = await socia.db.from("criativo_arquivos").select("chave").match({ id: arquivoId, criativo_id: criativoId }).maybeSingle();
+  if (!data || !(await existeObjeto(data.chave))) return erro("O arquivo não chegou. Tente de novo.");
+  const { error } = await socia.db.from("criativo_arquivos").update({ enviado: true, nome_original: d.data.nome, tipo_mime: d.data.tipo, tamanho_bytes: d.data.tamanho }).eq("id", arquivoId);
+  if (error) return erro(FALHOU);
+  // Anúncio da IA que estava esperando os arquivos: com todos aqui, fica pronto para subir.
+  const { data: faltam } = await socia.db.from("criativo_arquivos").select("id").eq("criativo_id", criativoId).eq("enviado", false);
+  const pronto = !faltam?.length;
+  if (pronto) await socia.db.from("criativos").update({ status: "pronto" }).eq("id", criativoId).eq("origem", "api").eq("status", "producao");
+  atualizar(criativoId);
+  return ok({ pronto });
+}
+
+export type ParaBaixar = { anuncio: Criativo; links: Record<string, string>; faltam: string[] };
 
 /** Os anúncios escolhidos, com um link de download (1 hora) para cada arquivo. */
 export async function paraBaixar(ids: unknown): Promise<Resultado<ParaBaixar[]>> {
@@ -203,10 +229,15 @@ export async function paraBaixar(ids: unknown): Promise<Resultado<ParaBaixar[]>>
   for (const id of d.data) {
     const anuncio = await obterCriativo(socia.db, id);
     if (!anuncio) continue;
-    const { data } = await socia.db.from("criativo_arquivos").select("id, chave, nome_original").eq("criativo_id", id);
+    // Só o que chegou ao R2 ganha link (arquivo que não chegou daria "não encontrado").
+    const { data } = await socia.db.from("criativo_arquivos").select("id, chave, nome_original, enviado").eq("criativo_id", id);
     const links: Record<string, string> = {};
-    for (const a of data ?? []) links[a.id] = await urlDeDownload(a.chave, a.nome_original, 3600);
-    out.push({ anuncio, links });
+    const faltam: string[] = [];
+    for (const a of data ?? []) {
+      if (a.enviado) links[a.id] = await urlDeDownload(a.chave, a.nome_original, 3600);
+      else faltam.push(`${anuncio.titulo}: ${a.nome_original}`);
+    }
+    out.push({ anuncio, links, faltam });
   }
   return ok(out);
 }

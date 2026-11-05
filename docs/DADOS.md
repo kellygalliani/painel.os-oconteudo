@@ -157,3 +157,8 @@ Sem tabela nova. Funções para as NAIEs pelo MCP, todas `security definer` e co
 | `api_listar_naies(chave, semana?, desde?, ate?)` | Todas as NAIEs (ou filtradas), com semana, dia, data, status, resumo de cada idioma, legenda e vídeo final |
 | `api_ler_naie(chave, naie)` | A NAIE com `naie_versoes` e `naie_videos` aninhados (o formato de `mapearNaie`) |
 | `api_gravar_naie(chave, dados)` | Com `id`: substitui tipo, título curto, ficha, documento, versões e as legendas enviadas. Sem `id`: cria ou atualiza a mesma semana e dia. `apagar_en` tira o EN. Nunca muda data, status nem vídeos de uma NAIE existente |
+
+## 0017 e 0018 · arquivos de anúncio que não chegaram
+
+- `api_marcar_enviado(chave, criativo, arquivo, tamanho, tipo)`: marca um arquivo como enviado depois que o painel confere que ele está no R2 (usada por `enviar_arquivo_anuncio`).
+- `api_listar_anuncios` passa a devolver cada arquivo (`arquivo_id`, `nome`, `enviado`, `posicionamento`, `idioma`) e `faltam_arquivos`.

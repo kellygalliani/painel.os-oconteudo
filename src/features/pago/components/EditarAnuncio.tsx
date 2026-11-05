@@ -17,10 +17,12 @@ import {
   apagarArquivo,
   apagarCriativo,
   confirmarArquivo,
+  confirmarReenvio,
   idiomaDoArquivo,
   moverArquivo,
   paraBaixar,
   posicionamentoDoArquivo,
+  prepararReenvio,
   prepararEnvioArquivo,
   salvarDadosAnuncio,
   salvarVersaoAnuncio,
@@ -118,16 +120,43 @@ function Arquivos({ a }: { a: Criativo }) {
 
   const agir = (fn: () => Promise<Resultado>) => start(async () => { if (avisar(await fn())) router.refresh(); });
 
+  // Arquivo que não chegou (a IA criou o lugar, mas não conseguiu mandar): envia no mesmo lugar.
+  const reenvio = useRef<HTMLInputElement>(null);
+  const [alvo, setAlvo] = useState<ArquivoAnuncio | null>(null);
+  const faltam = a.arquivos.filter((f) => !f.enviado);
+  async function reenviar(arq?: File) {
+    if (!arq || !alvo) return;
+    const prep = await prepararReenvio(a.id, alvo.id);
+    if (!avisar(prep)) return;
+    setEnviando([{ nome: arq.name, p: 0 }]);
+    try {
+      await enviar(prep.dados.url, arq, (p) => setEnviando([{ nome: arq.name, p }]));
+      const r = await confirmarReenvio(a.id, alvo.id, { nome: arq.name, tipo: arq.type || "image/png", tamanho: arq.size });
+      if (avisar(r)) toast.success(r.dados.pronto ? "Chegou. Todos os arquivos estão aqui: o anúncio está pronto para subir." : "Chegou.");
+    } catch {
+      toast.error(`${arq.name}: o envio parou. Confira a internet e tente de novo.`);
+    }
+    setEnviando([]);
+    setAlvo(null);
+    if (reenvio.current) reenvio.current.value = "";
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col gap-3">
+      {faltam.length > 0 && (
+        <p className="rounded-xl border-2 border-[var(--carga-alta)] px-3 py-2 text-sm">
+          <strong>{faltam.length} arquivo(s) não chegaram</strong> (a IA criou o lugar, mas não conseguiu mandar a imagem). Toque em <strong>Enviar este arquivo</strong> em cada um e escolha a imagem certa: ela entra no mesmo lugar, com o mesmo Feed ou Stories.
+        </p>
+      )}
       {a.arquivos.length > 0 && (
         <ol className="flex flex-col gap-2">
           {a.arquivos.map((f, i) => (
-            <li key={f.id} className="flex min-w-0 items-center gap-3 rounded-xl border bg-background p-2">
+            <li key={f.id} className={cn("flex min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-background p-2", !f.enviado && "border-dashed border-[var(--carga-alta)]")}>
               <span className="w-6 shrink-0 text-center text-sm font-semibold tabular-nums text-muted-foreground">{i + 1}</span>
               <Midia f={f} className="size-14 shrink-0 rounded-lg" />
               <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="truncate text-sm">{f.nome}</span>
+                <span className="truncate text-sm">{f.nome}{!f.enviado && <span className="ml-2 rounded bg-[var(--carga-alta)] px-1.5 py-0.5 text-[11px] font-semibold text-background">não chegou</span>}</span>
                 <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                   {mb(f.tamanho)} ·
                   <select
@@ -155,6 +184,11 @@ function Arquivos({ a }: { a: Criativo }) {
                 </span>
               </span>
               <span className="flex shrink-0 items-center">
+                {!f.enviado && (
+                  <Button size="sm" className="mr-1" disabled={pend || enviando.length > 0} onClick={() => { setAlvo(f); reenvio.current?.click(); }}>
+                    <Upload className="size-4" /> Enviar este arquivo
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="size-8" aria-label="Subir na ordem" disabled={pend || i === 0} onClick={() => agir(() => moverArquivo(a.id, f.id, -1))}><ArrowUp className="size-4" /></Button>
                 <Button variant="ghost" size="icon" className="size-8" aria-label="Descer na ordem" disabled={pend || i === a.arquivos.length - 1} onClick={() => agir(() => moverArquivo(a.id, f.id, 1))}><ArrowDown className="size-4" /></Button>
                 <Button variant="ghost" size="icon" className="size-8" aria-label={`Apagar ${f.nome}`} disabled={pend} onClick={() => confirm(`Apagar ${f.nome}?`) && agir(() => apagarArquivo(a.id, f.id))}><Trash2 className="size-4" /></Button>
@@ -181,6 +215,7 @@ function Arquivos({ a }: { a: Criativo }) {
         {ehVideo ? "Pode escolher vários takes de uma vez: eles formam um anúncio só, nesta ordem. " : "Suba a versão Feed (1:1 ou 4:5) e a versão Stories (9:16) juntas: o painel marca cada uma pela proporção, e dá para trocar. "}
         Use &quot;Só PT&quot; ou &quot;Só EN&quot; quando o arquivo tiver texto ou fala de um idioma.
       </p>
+      <input ref={reenvio} type="file" accept={ehVideo ? "video/*,image/*" : "image/*"} className="hidden" onChange={(e) => reenviar(e.target.files?.[0])} />
       <input ref={input} type="file" multiple accept={ehVideo ? "video/*,image/*" : "image/*"} className="hidden" onChange={(e) => escolher(e.target.files)} />
     </div>
   );

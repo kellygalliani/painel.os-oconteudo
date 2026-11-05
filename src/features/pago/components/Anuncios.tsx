@@ -46,6 +46,8 @@ function Miniatura({ a }: { a: Criativo }) {
 async function baixarZip(ids: string[]) {
   const r = await paraBaixar(ids);
   if (!avisar(r)) return;
+  const faltam = r.dados.flatMap((x) => x.faltam);
+  if (faltam.length) toast(`Não chegaram e ficam de fora: ${faltam.join(", ")}. Abra o anúncio e toque em "Enviar este arquivo".`, { duration: 10000 });
   const zip: Record<string, Uint8Array> = {};
   for (const { anuncio, links } of r.dados) {
     const pasta = pastaDoAnuncio(anuncio);
@@ -132,6 +134,7 @@ export function Anuncios({ criativos, hoje }: { criativos: Criativo[]; hoje: str
                         <span>{FORMATOS[a.formato]}</span>·<span>{ROTULO_STATUS[a.status]}</span>
                         {a.noArDesde && <span>· desde {ddmm(a.noArDesde)}</span>}
                         {a.origem === "api" && <span className="inline-flex items-center gap-0.5 rounded bg-muted px-1 font-medium text-foreground"><Sparkles className="size-3" /> IA</span>}
+                        {a.arquivos.some((f) => !f.enviado) && <span className="rounded bg-[var(--carga-alta)] px-1 font-semibold text-background">faltam {a.arquivos.filter((f) => !f.enviado).length} arquivo(s)</span>}
                       </span>
                       <span className="line-clamp-2 text-sm font-medium leading-snug">{a.titulo}</span>
                       {texto && <span className="line-clamp-2 text-xs text-muted-foreground">{texto}</span>}

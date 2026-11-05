@@ -1139,6 +1139,16 @@ export type Database = {
         Returns: Json
       }
       api_listar_naies_para_postar: { Args: { p_chave: string }; Returns: Json }
+      api_marcar_enviado: {
+        Args: {
+          p_arquivo: string
+          p_chave: string
+          p_criativo: string
+          p_tamanho: number
+          p_tipo: string
+        }
+        Returns: undefined
+      }
       api_marcar_pronto: {
         Args: { p_chave: string; p_criativo: string; p_enviados: string[] }
         Returns: undefined

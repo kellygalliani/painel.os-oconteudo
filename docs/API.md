@@ -74,10 +74,14 @@ Um nome terminando em `-pt` ou `-en` (ex.: `take2-en.mp4`) fica só naquele idio
 
 ## 4. MCP
 
+> **No ChatGPT e no Claude.ai** a IA não consegue fazer o PUT do envio direto. Ela manda cada imagem em `base64` (até 3 MB, uma por chamada, porque a chamada tem limite de 4 MB): cria o anúncio com a primeira imagem e manda as outras com `enviar_arquivo_anuncio`. Se um arquivo ficou com `enviado: false` (não chegou), `enviar_arquivo_anuncio` com o `arquivo_id` completa no mesmo lugar, ou a sócia abre o anúncio no painel e toca em **Enviar este arquivo**.
+
+
 Endereço: `https://painel-os-oconteudo.vercel.app/api/mcp`. É MCP por HTTP, sem streaming, e tem nove ferramentas: `criar_anuncio`, `confirmar_anuncio`, `listar_anuncios`, e para as NAIEs:
 
 - `listar_naies_para_postar`: as NAIEs não postadas (7 dias atrás até 14 à frente), com data, se têm vídeo final e legenda por idioma, os posts já feitos e as contas conectadas.
 - `publicar_naie`: `id`, `idioma` (`pt` padrão), `redes` (opcional, `instagram` e/ou `tiktok`), `agendar_para` (opcional, `AAAA-MM-DDTHH:MM` em Brasília, de 5 minutos a 6 dias à frente). Publica o vídeo final e a legenda pelo Zernio nas contas do idioma que ainda não têm post ativo; no TikTok sai público. Faz as mesmas checagens da tela. Se a legenda pedir uma palavra ("Comenta TÊNIS") que está numa campanha ativa do idioma, cria também a automação de comentário (a resposta diz qual campanha).
+- `enviar_arquivo_anuncio`: `id` do anúncio, `tipo` e `base64` ou `url`. Com `arquivo_id` completa um arquivo que não chegou (mesma ordem, Feed/Stories e idioma); sem ele, acrescenta um novo (`nome`, `posicionamento`, `idioma`). Quando todos chegam, o anúncio fica "Pronto para subir". `listar_anuncios` mostra o `arquivo_id` e o `enviado` de cada arquivo.
 - `listar_naies`: **todas** as NAIEs, em ordem de data (filtros opcionais `semana`, `desde`, `ate`), com id, semana, dia (1 a 7), data e dia da semana, tipo, título curto, status, dia de editar, título fixo e caracteres de cada idioma, e se têm legenda e vídeo final em PT e EN. Devolve também a lista de semanas.
 - `ler_naie`: `id` e, opcional, `idioma`. A NAIE inteira: semana, dia, data, tipo, status, legendas e o documento `.md` completo (ou só de um idioma, com a ficha).
 - `importar_naies`: `semana`, `data_dia01` (o domingo) e `arquivos` (até 20, cada um `{ nome, texto }` com o `.md` inteiro). Igual à tela "Importar .md": o nome `Dia-0N-GERAL|NICHO|VENDA-Nome.md` diz o dia e o tipo, o Dia N cai em Dia 01 + (N − 1), e a mesma semana e dia **atualiza** (não duplica). Com `so_previa: true`, só mostra o que leu e os avisos, sem gravar. O bloco `**Legenda:**` de cada versão entra como legenda.
@@ -103,7 +107,8 @@ Quando eu disser "sobe no painel", suba o anúncio que eu indicar para o painel 
 - versoes: pt e, se houver, en, cada uma com texto (o texto principal completo), titulo (até 40 caracteres), descricao (até 30), botao e link.
 - arquivos: na ordem certa. Vídeo em vários takes vai como vários arquivos, em sequência. Arquivo só de um idioma leva "idioma": "pt" ou "en".
 - Anúncio de imagem tem duas versões: a de Feed (1:1 ou 4:5) com "posicionamento": "feed" e a de Stories (9:16) com "posicionamento": "stories", no mesmo anúncio.
-- Se a resposta trouxer "enviar", faça o PUT de cada arquivo e chame confirmar_anuncio com o id.
+- No ChatGPT ou no Claude.ai: mande a primeira imagem em base64 no criar_anuncio e cada outra com enviar_arquivo_anuncio (uma por chamada; acima de 3 MB, converta para JPEG). Nunca use "tamanho" se você não consegue fazer PUT.
+- Confira na resposta se cada arquivo voltou com enviado: true. Se algum ficou false, complete com enviar_arquivo_anuncio (arquivo_id).
 - No fim, me diga o título e o link do anúncio no painel.
 ```
 

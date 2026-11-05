@@ -75,4 +75,4 @@ export async function listarChaves(db: ClienteDb): Promise<ChaveApi[]> {
   return (data ?? []).map((k) => ({ id: k.id, nome: k.nome, prefixo: k.prefixo, criadoEm: k.criado_em, ultimoUso: k.ultimo_uso }));
 }
 
-export { apiCriar, apiListar, apiPronto, chaveDaRequisicao, respostaDeErro, ErroApi } from "./server/api";
+export { apiCriar, apiEnviarArquivo, apiListar, apiPronto, chaveDaRequisicao, respostaDeErro, ErroApi } from "./server/api";

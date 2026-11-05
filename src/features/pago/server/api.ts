@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { clienteAnonimo } from "@/lib/supabase/anonimo";
 import { enviarObjeto, existeObjeto, r2Configurado, urlDeEnvio } from "@/lib/r2";
 import { anuncioApiSchema } from "../schema";
@@ -30,6 +31,22 @@ export type RespostaCriar = {
   proximo: string;
 };
 
+/** O arquivo que veio em base64 (até 3 MB) ou por link público (até 100 MB). */
+async function corpoDoArquivo(f: { nome: string; base64?: string; url?: string }): Promise<ArrayBuffer> {
+  if (f.base64) {
+    const buf = Buffer.from(f.base64.replace(/^data:[^,]+,/, ""), "base64");
+    if (!buf.byteLength) throw new ErroApi(400, `${f.nome}: o base64 veio vazio.`);
+    if (buf.byteLength > MAX_BASE64) throw new ErroApi(413, `${f.nome}: base64 passa de 3 MB. Converta para JPEG ou use "url".`);
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+  }
+  const r = await fetch(f.url!).catch(() => null);
+  if (!r?.ok) throw new ErroApi(422, `${f.nome}: não consegui baixar o link (${r?.status ?? "sem resposta"}). O link precisa ser público.`);
+  if (Number(r.headers.get("content-length") ?? 0) > MAX_LINK) throw new ErroApi(413, `${f.nome}: o link passa de 100 MB.`);
+  const corpo = await r.arrayBuffer();
+  if (corpo.byteLength > MAX_LINK) throw new ErroApi(413, `${f.nome}: o link passa de 100 MB.`);
+  return corpo;
+}
+
 /** Cria o anúncio. Arquivo com url/base64 o painel já guarda; os outros voltam com um endereço de envio. */
 export async function apiCriar(chave: string, corpo: unknown): Promise<RespostaCriar> {
   const d = anuncioApiSchema.safeParse(corpo);
@@ -47,18 +64,7 @@ export async function apiCriar(chave: string, corpo: unknown): Promise<RespostaC
     let enviado = false;
     let tamanho = f.tamanho ?? 0;
     if (f.base64 || f.url) {
-      let corpoArq: ArrayBuffer;
-      if (f.base64) {
-        const buf = Buffer.from(f.base64.replace(/^data:[^,]+,/, ""), "base64");
-        if (buf.byteLength > MAX_BASE64) throw new ErroApi(413, `${f.nome}: base64 passa de 3 MB. Use "url" ou o envio direto (tamanho).`);
-        corpoArq = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-      } else {
-        const r = await fetch(f.url!).catch(() => null);
-        if (!r?.ok) throw new ErroApi(422, `${f.nome}: não consegui baixar o link (${r?.status ?? "sem resposta"}).`);
-        if (Number(r.headers.get("content-length") ?? 0) > MAX_LINK) throw new ErroApi(413, `${f.nome}: o link passa de 100 MB. Use o envio direto (tamanho).`);
-        corpoArq = await r.arrayBuffer();
-        if (corpoArq.byteLength > MAX_LINK) throw new ErroApi(413, `${f.nome}: o link passa de 100 MB. Use o envio direto (tamanho).`);
-      }
+      const corpoArq = await corpoDoArquivo(f);
       await enviarObjeto(caminho, corpoArq, f.tipo);
       tamanho = corpoArq.byteLength;
       enviado = true;
@@ -84,7 +90,7 @@ export async function apiCriar(chave: string, corpo: unknown): Promise<RespostaC
     status: faltam ? "producao" : "pronto",
     arquivos,
     proximo: faltam
-      ? `Envie cada arquivo com PUT no "enviar.url" (com o Content-Type indicado, vale 1 hora) e depois chame POST /api/anuncios/${id}/pronto.`
+      ? `Os arquivos ainda NÃO estão no painel. Se você consegue fazer requisições HTTP (Claude Code, script), envie cada um com PUT no "enviar.url" (Content-Type indicado, vale 1 hora) e chame confirmar_anuncio. Se não consegue (ChatGPT, Claude.ai), chame enviar_arquivo_anuncio com id=${id}, o arquivo_id de cada arquivo e o base64 da imagem, uma chamada por arquivo. Ou peça para a pessoa abrir o anúncio no painel e tocar em "Enviar este arquivo".`
       : "Pronto. O anúncio já aparece no painel em Conteúdo › Pago › Anúncios.",
   };
 }
@@ -102,6 +108,65 @@ export async function apiPronto(chave: string, id: string): Promise<{ id: string
   const { error: e2 } = await db.rpc("api_marcar_pronto", { p_chave: chave, p_criativo: id, p_enviados: lista.map((a) => a.id) });
   if (e2) falhaDoBanco(e2);
   return { id, status: "pronto", faltando: [] };
+}
+
+const pedidoEnviar = z
+  .object({
+    id: z.string().uuid("id do anúncio inválido"),
+    arquivo_id: z.string().uuid().optional(),
+    nome: z.string().min(1).max(200).optional(),
+    tipo: z.string().regex(/^(image|video)\//, "Só imagem ou vídeo."),
+    base64: z.string().max(4_200_000).optional(),
+    url: z.string().url().optional(),
+    idioma: z.enum(["pt", "en"]).nullable().optional(),
+    posicionamento: z.enum(["feed", "stories"]).nullable().optional(),
+  })
+  .refine((x) => x.base64 || x.url, "mande base64 ou url")
+  .refine((x) => x.arquivo_id || x.nome, "mande arquivo_id (para completar um arquivo que não chegou) ou nome (para um arquivo novo)");
+
+/**
+ * Um arquivo por vez num anúncio que já existe: completa um que não chegou (arquivo_id) ou
+ * acrescenta um novo. Quando todos estão no R2, o anúncio fica "Pronto para subir".
+ */
+export async function apiEnviarArquivo(chave: string, corpo: unknown) {
+  const d = pedidoEnviar.safeParse(corpo);
+  if (!d.success) throw new ErroApi(400, d.error.issues.map((i) => `${i.path.join(".") || "corpo"}: ${i.message}`).join("; "));
+  if (!r2Configurado()) throw new ErroApi(503, "O armazenamento de arquivos não está configurado.");
+  const p = d.data;
+  const db = clienteAnonimo();
+  const { data, error } = await db.rpc("api_arquivos", { p_chave: chave, p_criativo: p.id });
+  if (error) falhaDoBanco(error);
+  const lista = (data ?? []) as { id: string; chave: string; nome: string }[];
+
+  let nome: string;
+  if (p.arquivo_id) {
+    const alvo = lista.find((a) => a.id === p.arquivo_id);
+    if (!alvo) throw new ErroApi(404, "arquivo_id não é deste anúncio. Veja os ids em listar_anuncios ou na resposta de criar_anuncio.");
+    nome = alvo.nome;
+    const corpoArq = await corpoDoArquivo({ nome, base64: p.base64, url: p.url });
+    await enviarObjeto(alvo.chave, corpoArq, p.tipo);
+    const r = await db.rpc("api_marcar_enviado", { p_chave: chave, p_criativo: p.id, p_arquivo: alvo.id, p_tamanho: corpoArq.byteLength, p_tipo: p.tipo });
+    if (r.error) falhaDoBanco(r.error);
+  } else {
+    nome = p.nome!;
+    const corpoArq = await corpoDoArquivo({ nome, base64: p.base64, url: p.url });
+    const caminho = `criativos/${p.id}/${String(lista.length + 1).padStart(2, "0")}-${Date.now()}.${extDe(nome)}`;
+    await enviarObjeto(caminho, corpoArq, p.tipo);
+    const r = await db.rpc("api_registrar_arquivo", {
+      p_chave: chave,
+      p_criativo: p.id,
+      p_arquivo: { chave: caminho, nome, tipo: p.tipo, tamanho: corpoArq.byteLength, idioma: p.idioma ?? null, posicionamento: p.posicionamento ?? null, ordem: lista.length, enviado: true },
+    });
+    if (r.error) falhaDoBanco(r.error);
+  }
+
+  try {
+    await apiPronto(chave, p.id);
+    return { id: p.id, arquivo: nome, status: "pronto", proximo: "Todos os arquivos chegaram: o anúncio está como 'Pronto para subir' no painel." };
+  } catch (e) {
+    if (e instanceof ErroApi && e.status === 409) return { id: p.id, arquivo: nome, status: "producao", proximo: `${e.message} Mande os outros com enviar_arquivo_anuncio.` };
+    throw e;
+  }
 }
 
 export async function apiListar(chave: string): Promise<unknown> {

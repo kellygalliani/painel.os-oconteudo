@@ -1,5 +1,5 @@
 import { apiImportarNaies, apiLerNaie, apiListarNaies, apiListarParaPostar, apiPublicarNaie, apiSubstituirNaie, ErroNaieApi } from "@/features/naies/server";
-import { apiCriar, apiListar, apiPronto, chaveDaRequisicao, ErroApi } from "@/features/pago/server";
+import { apiCriar, apiEnviarArquivo, apiListar, apiPronto, chaveDaRequisicao, ErroApi } from "@/features/pago/server";
 
 // Servidor MCP (Model Context Protocol) mínimo, por HTTP e sem estado: initialize, tools/list e
 // tools/call. As ferramentas usam o mesmo núcleo da API REST (docs/API.md).
@@ -15,7 +15,7 @@ const FERRAMENTAS = [
   {
     name: "criar_anuncio",
     description:
-      "Cria um anúncio no painel OS oconteudo (Conteúdo › Pago). Imagem: formato 'estatico'; para ter versão Feed e versão Stories do mesmo anúncio, mande os dois arquivos com posicionamento 'feed' e 'stories'. Vídeo: 'video_curto' ou 'falado', com um ou vários takes na ordem. Cada arquivo vai por 'url' (link público, até 100 MB), 'base64' (até 3 MB) ou só 'tamanho' (aí a resposta traz um endereço para enviar com PUT e depois chame confirmar_anuncio). Mande as versões pt, en ou as duas.",
+      "Cria um anúncio no painel OS oconteudo (Conteúdo › Pago). Imagem: formato 'estatico'; para ter versão Feed e versão Stories do mesmo anúncio, mande os dois arquivos com posicionamento 'feed' e 'stories'. Vídeo: 'video_curto' ou 'falado', com um ou vários takes na ordem. Cada arquivo vai por 'base64' (até 3 MB), 'url' (link PÚBLICO, até 100 MB) ou só 'tamanho' (envio direto com PUT). IMPORTANTE no ChatGPT e no Claude.ai: você não consegue fazer o PUT, então NÃO use 'tamanho'. Mande no máximo UMA imagem em base64 por chamada (o limite da chamada é 4 MB): crie o anúncio com a primeira imagem em base64 e mande as outras com enviar_arquivo_anuncio, uma por chamada. Imagem acima de 3 MB: converta para JPEG. Mande as versões pt, en ou as duas. Confira na resposta se cada arquivo voltou com enviado: true.",
     inputSchema: {
       type: "object",
       required: ["titulo", "versoes", "arquivos"],
@@ -49,7 +49,26 @@ const FERRAMENTAS = [
     description: "Depois de enviar os arquivos com PUT: confere se chegaram e marca o anúncio como 'Pronto para subir'.",
     inputSchema: { type: "object", required: ["id"], properties: { id: { type: "string" } } },
   },
-  { name: "listar_anuncios", description: "Lista os 100 anúncios mais novos do painel, com status, idiomas e quantos arquivos têm.", inputSchema: { type: "object", properties: {} } },
+  {
+    name: "enviar_arquivo_anuncio",
+    description:
+      "Manda UM arquivo (imagem ou vídeo) para um anúncio que já existe, em base64 (até 3 MB) ou por link público (até 100 MB). Com 'arquivo_id', completa um arquivo que ficou sem chegar (enviado: false) no mesmo lugar, com o mesmo Feed/Stories e idioma. Sem 'arquivo_id', acrescenta um arquivo novo (mande 'nome' e, se for o caso, 'posicionamento' e 'idioma'). Quando todos os arquivos chegam, o anúncio fica 'Pronto para subir'. Use uma chamada por arquivo.",
+    inputSchema: {
+      type: "object",
+      required: ["id", "tipo"],
+      properties: {
+        id: { type: "string", description: "id do anúncio" },
+        arquivo_id: { type: "string", description: "id do arquivo que não chegou (da resposta de criar_anuncio)" },
+        nome: { type: "string", description: "Para arquivo novo: o nome, ex.: capa-stories.png" },
+        tipo: { type: "string", description: "image/png, image/jpeg, video/mp4..." },
+        base64: { type: "string" },
+        url: { type: "string" },
+        idioma: { type: ["string", "null"], enum: ["pt", "en", null] },
+        posicionamento: { type: ["string", "null"], enum: ["feed", "stories", null] },
+      },
+    },
+  },
+  { name: "listar_anuncios", description: "Lista os 100 anúncios mais novos do painel, com status, idiomas e cada arquivo (arquivo_id, nome, enviado, Feed/Stories, idioma). Arquivo com enviado: false não chegou: complete com enviar_arquivo_anuncio.", inputSchema: { type: "object", properties: {} } },
   {
     name: "listar_naies_para_postar",
     description: "Lista as NAIEs ainda não postadas (de 7 dias atrás até 14 à frente), com a data do post, se já têm vídeo final e legenda em PT e EN, os posts já feitos, e as contas conectadas (Instagram e TikTok de cada idioma).",
@@ -141,6 +160,7 @@ async function responder(p: Pedido, req: Request): Promise<object | null> {
           nome === "criar_anuncio" ? await apiCriar(chave, args)
           : nome === "confirmar_anuncio" ? await apiPronto(chave, String(args.id ?? ""))
           : nome === "listar_anuncios" ? await apiListar(chave)
+          : nome === "enviar_arquivo_anuncio" ? await apiEnviarArquivo(chave, args)
           : nome === "listar_naies_para_postar" ? await apiListarParaPostar(chave)
           : nome === "publicar_naie" ? await apiPublicarNaie(chave, args)
           : nome === "listar_naies" ? await apiListarNaies(chave, args)
