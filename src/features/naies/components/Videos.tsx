@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import { Eye, Trash2, Upload } from "lucide-react";
+import { Download, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { avisar } from "@/components/shared/avisar";
@@ -39,7 +39,7 @@ export function SalvarNoCelular({ naieId, idioma }: { naieId: string; idioma: Id
   );
 }
 
-/** Um espaço de vídeo (bruto ou final) de um idioma: enviar, ver, trocar e apagar. */
+/** Um espaço de vídeo (bruto ou final) de um idioma: enviar, baixar (só este vídeo), trocar e apagar. */
 export function EspacoVideo({ naieId, idioma, tipo, video, dica }: { naieId: string; idioma: Idioma; tipo: TipoVideo; video?: VideoBruto; dica?: string }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -90,7 +90,7 @@ export function EspacoVideo({ naieId, idioma, tipo, video, dica }: { naieId: str
           {video && (
             <>
               <Button variant="outline" size="sm" disabled={pend} onClick={() => start(async () => { const r = await linkDoVideo(naieId, idioma, tipo); if (avisar(r)) window.open(r.dados.url, "_blank"); })}>
-                <Eye className="size-4" /> Ver
+                <Download className="size-4" /> Baixar
               </Button>
               {confirmar ? (
                 <Button variant="destructive" size="sm" disabled={pend} onClick={() => start(async () => { if (avisar(await apagarVideos(naieId, idioma, tipo), "Vídeo apagado.")) router.refresh(); setConfirmar(false); })}>

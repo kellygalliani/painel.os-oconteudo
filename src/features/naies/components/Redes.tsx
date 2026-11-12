@@ -272,11 +272,23 @@ function CartaoPublicar({ naie, idioma, contas, urlVideo, campanhas }: { naie: N
     agendar(`Publicando ${I} em ${nomes} em 5 segundos…`, () => enviar(marcadas, null));
   }
 
+  // Sem conta do idioma no Zernio: dá para subir o vídeo editado e a legenda mesmo assim (para baixar e postar pelo celular).
   if (!contas.length) {
     return (
-      <div className="flex flex-col gap-2 rounded-2xl border bg-background p-4">
-        <span className="font-semibold">{I}</span>
-        <p className="text-sm text-muted-foreground">Nenhuma conta {I} conectada ainda. Conecte no Zernio e acrescente o @ em <code>logic/redes.ts</code>.</p>
+      <div className="flex min-w-0 flex-col gap-4 rounded-2xl border bg-background p-4">
+        <span className="text-lg font-semibold">{I}</span>
+        {final && urlVideo && (
+          <video src={urlVideo} controls playsInline preload="metadata" className="mx-auto max-h-[420px] w-full max-w-[240px] rounded-xl bg-black object-contain" />
+        )}
+        <EspacoVideo naieId={naie.id} idioma={idioma} tipo="final" video={final} dica="o vídeo editado" />
+        <CampoLegenda
+          rotulo="Legenda"
+          valor={legenda}
+          aoMudar={setLegenda}
+          aoSalvar={async (t) => avisar(await salvarLegenda(naie.id, idioma, t))}
+          placeholder="Cole aqui a legenda do post (com as hashtags)."
+        />
+        <p className="text-xs text-muted-foreground">Ainda não há conta {I} conectada para postar pelo painel. Suba o vídeo e a legenda, baixe e poste pelo celular.</p>
       </div>
     );
   }
@@ -436,8 +448,8 @@ export function Publicar({ naie, urls, campanhas = [] }: { naie: Naie; urls: Par
   const { contas, falha } = useContas();
   if (falha) return <p className="text-sm text-muted-foreground">{falha}</p>;
   if (!contas) return <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Buscando as contas conectadas…</p>;
-  // EN só aparece quando tem conta EN ou roteiro EN; PT sempre.
-  const idiomas = (["pt", "en"] as const).filter((i) => i === "pt" || contas.some((c) => c.idioma === i) || naie.finais[i]);
+  // PT e EN sempre: o vídeo editado e a legenda sobem mesmo sem conta do idioma para postar.
+  const idiomas = ["pt", "en"] as const;
   return (
     <div className="grid min-w-0 gap-3 lg:grid-cols-2">
       {idiomas.map((i) => <CartaoPublicar key={i} naie={naie} idioma={i} contas={contas.filter((c) => c.idioma === i)} urlVideo={urls[i]} campanhas={campanhas} />)}
